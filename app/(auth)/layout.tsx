@@ -27,7 +27,7 @@ export default function RootLayout({
         <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <nav className="bg-blue-500 text-white p-4 shadow-y border-y border-gray-200">
+        <nav className="bg-blue-600 text-white p-4 shadow-y border-y border-gray-200">
             <div className="max-w-4xl mx-auto flex justify-between items-center">
                 <h1 className="text-2xl font-bold">KWF_SAAS</h1>
                 <div className="text-sm">

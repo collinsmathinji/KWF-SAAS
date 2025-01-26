@@ -59,18 +59,17 @@ const LoginPage = () => {
                             </Link>
                         </div>
 
-                        <button
-                            type="submit"
+                        <Link href="/admin-dashboard"
                             className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300"
                         >
                             Sign in
                             <ArrowRight className="ml-2 w-4 h-4" />
-                        </button>
+                        </Link>
                     </form>
 
                     <p className="mt-6 text-center text-gray-600">
                         Don't have an account?{' '}
-                        <Link href="/signup">
+                        <Link href="/packages">
                             <span className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
                                 Start your free trial
                             </span>

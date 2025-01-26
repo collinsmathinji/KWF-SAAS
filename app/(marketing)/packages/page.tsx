@@ -6,16 +6,7 @@ const LandingPage = () => {
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
             {/* Header */}
-            <header className="bg-blue-600 text-white py-4">
-                <div className="container mx-auto px-6 flex justify-between items-center">
-                    <h1 className="text-2xl font-bold">KWF SaaS</h1>
-                    <nav>
-                        <Link href="/login"  className="text-white hover:underline">
-                            Login
-                        </Link>
-                    </nav>
-                </div>
-            </header>
+            
 
             {/* Hero Section */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white flex-grow">
@@ -27,18 +18,14 @@ const LandingPage = () => {
                         <p className="text-xl text-blue-100 mb-8">
                             Customizable, secure, and efficient contact management for organizations of all sizes
                         </p>
-                        <div className="flex justify-center gap-4">
-                            <Link href="/signup">
-                                <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
-                                    Start Free Trial
-                                </button>
-                            </Link>
-                            <Link href="/features">
-                                <button className="border border-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
-                                    Learn More
-                                </button>
-                            </Link>
-                        </div>
+                        <div className="container mx-auto px-6 text-center">
+                    <h2 className="text-3xl font-bold mb-8">Ready to get started?</h2>
+                    <Link href="/pricing">
+                        <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition inline-flex items-center">
+                            Start Your Free Trial <ArrowRight className="ml-2 w-4 h-4" />
+                        </button>
+                    </Link>
+                </div>
                     </div>
                 </div>
             </div>
@@ -81,25 +68,9 @@ const LandingPage = () => {
                     </div>
                 </div>
             </div>
+           
 
-            {/* CTA Section */}
-            <div className="py-20">
-                <div className="container mx-auto px-6 text-center">
-                    <h2 className="text-3xl font-bold mb-8">Ready to get started?</h2>
-                    <Link href="/signup">
-                        <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition inline-flex items-center">
-                            Start Your Free Trial <ArrowRight className="ml-2 w-4 h-4" />
-                        </button>
-                    </Link>
-                </div>
-            </div>
-
-            {/* Footer */}
-            <footer className="bg-blue-600 text-white py-4">
-                <div className="container mx-auto px-6 text-center">
-                    <p>&copy; 2023 KWF SaaS. All rights reserved.</p>
-                </div>
-            </footer>
+           
         </div>
     );
 };
