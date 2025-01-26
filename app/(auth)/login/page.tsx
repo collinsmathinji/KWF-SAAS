@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Mail, Lock, Users, Building, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 
 const LoginPage = () => {
     return (
@@ -68,7 +68,7 @@ const LoginPage = () => {
                     </form>
 
                     <p className="mt-6 text-center text-gray-600">
-                        Don't have an account?{' '}
+                        Do not have an account?{' '}
                         <Link href="/packages">
                             <span className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
                                 Start your free trial

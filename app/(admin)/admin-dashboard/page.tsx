@@ -3,16 +3,16 @@ import React, { useState } from 'react';
 import { 
   LayoutDashboard, 
   Users, 
-  Settings, 
+  
   CreditCard, 
   PieChart, 
-  Shield, 
+ 
   Bell, 
   LogOut,
   FileText,
   Database,
   Layers,
-  Sliders,
+  
   Menu
 } from 'lucide-react';
 import SubscriptionManagement from './subscription';
@@ -22,19 +22,9 @@ import UserAnalysis from './analytics';
 import ReportsGenerator from './report';
 import Overview from './overview';
 import OrganizationManagement from './organization';
-interface MenuItem {
-  icon: string;
-  label: string;
-  section: string;
-  description: string;
-}
 
-interface Subscription {
-  id: number;
-  name: string;
-  users: number;
-  price: string;
-}
+
+
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
