@@ -4,43 +4,9 @@ import { Mail, Lock, Users, Building, ArrowRight } from 'lucide-react';
 
 const LoginPage = () => {
     return (
-        <div className="min-h-screen flex bg-gray-50">
-            {/* Left Side - Branding/Features */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-12 flex-col justify-between">
-                <div>
-                    <h1 className="text-5xl font-extrabold mb-4 animate-fade-in">ContactHub</h1>
-                    <p className="text-blue-100 text-lg">Your Ultimate Contact Management Solution</p>
-                </div>
-                
-                <div className="space-y-8">
-                    <div className="flex items-start space-x-4 animate-slide-in">
-                        <div className="p-3 bg-blue-500 rounded-lg">
-                            <Users className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="font-semibold mb-1">Customizable Contact Fields</h3>
-                            <p className="text-blue-100 text-sm">Tailor your contact management to your organization's specific needs</p>
-                        </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-4 animate-slide-in">
-                        <div className="p-3 bg-blue-500 rounded-lg">
-                            <Building className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="font-semibold mb-1">Multi-Organization Support</h3>
-                            <p className="text-blue-100 text-sm">Perfect for businesses of all types and sizes</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="text-sm text-blue-100">
-                    Trusted by hundreds of organizations worldwide
-                </div>
-            </div>
-
-            {/* Right Side - Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+        <div className="min-h-screen  lg:w-1/2 flex bg-gray-50">
+          
+            <div className="w-full  flex items-center justify-center p-8">
                 <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
                     <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>

@@ -10,8 +10,8 @@ const LandingPage = () => {
                 <div className="container mx-auto px-6 flex justify-between items-center">
                     <h1 className="text-2xl font-bold">KWF SaaS</h1>
                     <nav>
-                        <Link href="/login">
-                            <a className="text-white hover:underline">Login</a>
+                        <Link href="/login"  className="text-white hover:underline">
+                            Login
                         </Link>
                     </nav>
                 </div>

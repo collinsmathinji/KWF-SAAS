@@ -15,6 +15,13 @@ import {
   Sliders,
   Menu
 } from 'lucide-react';
+import SubscriptionManagement from './subscription';
+import DataManagement from './databaseConfig';
+import UserManagement from './users';
+import UserAnalysis from './analytics';
+import ReportsGenerator from './report';
+import Overview from './overview';
+import OrganizationManagement from './organization';
 interface MenuItem {
   icon: string;
   label: string;
@@ -75,24 +82,6 @@ const AdminDashboard = () => {
       section: 'data',
       description: 'Import, export, and manage data'
     },
-    { 
-      icon: <Sliders />, 
-      label: 'Configurations', 
-      section: 'config',
-      description: 'Platform-wide configurations'
-    },
-    { 
-      icon: <Shield />, 
-      label: 'Security', 
-      section: 'security',
-      description: 'Security and access controls'
-    },
-    { 
-      icon: <Settings />, 
-      label: 'Settings', 
-      section: 'settings',
-      description: 'Platform and account settings'
-    }
   ];
   
 
@@ -100,6 +89,18 @@ const AdminDashboard = () => {
     switch (activeSection) {
       case 'subscriptions':
         return <SubscriptionManagement />;
+      case 'data':
+        return <DataManagement />;
+      case 'users':
+        return <UserManagement />;
+      case 'organization':  
+        return <OrganizationManagement />;
+      case 'analytics':
+        return <UserAnalysis />;
+      case 'overview':  
+        return <Overview />;
+      case 'reporting':
+        return <ReportsGenerator />;
       default:
         return <div className="text-center text-gray-500">{activeSection} section content goes here</div>;
     }
@@ -109,9 +110,9 @@ const AdminDashboard = () => {
     <div className="flex min-h-screen bg-blue-50">
       {/* Sidebar */}
       <div className={`fixed inset-0 z-30 transition-transform transform lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:w-80 bg-white border-r shadow-md p-4 flex flex-col`}>
-        <div className="text-2xl font-bold mb-8 text-center text-blue-600">ContactHub</div>
+        <div className="text-2xl font-bold mb-8 text-center text-blue-600">KWF-SAAS</div>
         
-        <nav className="flex-grow space-y-2">
+        <nav className="flex-grow ">
           {menuItems.map((item) => (
             <div 
               key={item.section}
@@ -155,7 +156,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-grow p-8 bg-blue-50 lg:ml-80">
+      <div className="flex-grow p-8 bg-blue-50">
         <header className="flex justify-between items-center mb-8">
           <button 
             className="lg:hidden text-blue-600" 
@@ -189,30 +190,4 @@ const AdminDashboard = () => {
     </div>
   );
 };
-
-const SubscriptionManagement = () => {
-  const [subscriptions, setSubscriptions] = useState([
-    { id: 1, name: 'Basic Plan', users: 10, price: '$10/month' },
-    { id: 2, name: 'Pro Plan', users: 50, price: '$50/month' },
-    { id: 3, name: 'Enterprise Plan', users: 200, price: '$200/month' },
-  ]);
-
-  return (
-    <div className="space-y-4">
-      {subscriptions.map((subscription) => (
-        <div key={subscription.id} className="p-4 bg-white rounded-lg shadow-md">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-bold text-blue-800">{subscription.name}</h2>
-              <p className="text-gray-600">{subscription.users} users</p>
-            </div>
-            <div className="text-blue-600 font-semibold">{subscription.price}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-
 export default AdminDashboard;
