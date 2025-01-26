@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Users, Database, Settings, Shield, ArrowRight, Check } from 'lucide-react';
+import { Users, Database, Settings, Shield, ArrowRight } from 'lucide-react';
 
 const LandingPage = () => {
     return (
@@ -13,7 +13,7 @@ const LandingPage = () => {
                 <div className="container mx-auto px-6 py-20">
                     <div className="max-w-4xl mx-auto text-center">
                         <h1 className="text-5xl font-bold mb-6">
-                            Manage Your Organization's Contacts with Confidence
+                            Manage Your Organizations Contacts with Confidence
                         </h1>
                         <p className="text-xl text-blue-100 mb-8">
                             Customizable, secure, and efficient contact management for organizations of all sizes

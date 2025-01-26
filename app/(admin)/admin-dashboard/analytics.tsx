@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { 
   Users, 
   UserPlus, 
@@ -13,7 +12,6 @@ import {
   Filter, 
   Trash2 
 } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function UserAnalysis() {
   const userManagementData = {

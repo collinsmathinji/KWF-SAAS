@@ -143,7 +143,7 @@ export default function DataManagement() {
               </div>
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-medium mb-2">Outdated Data</h3>
-                <p className="text-sm text-gray-600 mb-4">154 records haven't been updated in over 12 months</p>
+                <p className="text-sm text-gray-600 mb-4">154 records have not been updated in over 12 months</p>
                 <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
                   <Trash2 className="mr-2 h-4 w-4" />
                   Clean Old Data

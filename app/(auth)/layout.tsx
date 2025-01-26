@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
-import { Mail, Lock, Users, Building, ArrowRight } from 'lucide-react';
+import {  Users, Building, ArrowRight } from 'lucide-react';
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -49,7 +49,7 @@ export default function RootLayout({
                         </div>
                         <div>
                             <h3 className="font-semibold mb-1">Customizable Contact Fields</h3>
-                            <p className="text-blue-100 text-sm">Tailor your contact management to your organization's specific needs</p>
+                            <p className="text-blue-100 text-sm">Tailor your contact management to your organizations specific needs</p>
                         </div>
                     </div>
                     

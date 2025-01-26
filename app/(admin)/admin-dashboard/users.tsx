@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { 
   Users, 
   UserPlus, 
@@ -49,7 +48,7 @@ export default function UserManagement() {
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="text-xl font-bold text-blue-900">User Statistics</CardTitle>
-            <CardDescription>Overview of your platform's user base</CardDescription>
+            <CardDescription>Overview of your platforms user base</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid md:grid-cols-3 gap-4">

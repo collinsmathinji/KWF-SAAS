@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { CalendarDays, CreditCard, Download, Users } from 'lucide-react'
+import { CalendarDays, CreditCard, Download } from 'lucide-react'
 
 export default function SubscriptionManagement() {
   // This would typically come from your backend

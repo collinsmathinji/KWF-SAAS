@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Database, Settings, Shield, LineChart, Mail, Filter, Clock } from 'lucide-react';
+import { Users, Database,  Shield, LineChart, Filter, Clock } from 'lucide-react';
 
 const FeaturesPage = () => {
   const features = [
@@ -51,7 +51,7 @@ const FeaturesPage = () => {
               Powerful Features for Modern Contact Management
             </h1>
             <p className="text-xl text-blue-100">
-              Everything you need to manage your organization's contacts efficiently
+              Everything you need to manage your organizations contacts efficiently
             </p>
           </div>
         </div>

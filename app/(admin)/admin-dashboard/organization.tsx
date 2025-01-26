@@ -47,7 +47,7 @@ export default function OrganizationManagement() {
     <div className="container mx-auto p-6 max-w-5xl">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-blue-900">Organization Management</h1>
-        <p className="text-gray-600">Configure your organization's navigation structure</p>
+        <p className="text-gray-600">Configure your organizations navigation structure</p>
       </div>
 
       <div className="grid gap-6">

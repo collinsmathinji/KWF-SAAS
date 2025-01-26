@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { 
     FileText, 
     Download, 
-    Filter, 
+
     Calendar, 
     Users, 
     List, 
-    ChevronDown 
 } from 'lucide-react';
 
 type ReportType = 'contacts' | 'organizations' | 'interactions' | 'growth';

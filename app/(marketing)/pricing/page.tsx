@@ -21,12 +21,7 @@ interface Plan {
   features: string[];
 }
 
-interface PaymentMethod {
-  id: string;
-  name: string;
-  icon: JSX.Element;
-  description: string;
-}
+
 
 interface PaymentMethodSelection {
   id: string;
@@ -131,7 +126,7 @@ const PricingAndBillingPage = () => {
           {/* Pricing Section */}
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h1 className="text-4xl font-bold mb-4 text-blue-900">Simple, Transparent Pricing</h1>
-            <p className="text-gray-600">Choose the perfect plan for your organization's needs</p>
+            <p className="text-gray-600">Choose the perfect plan for your organizations needs</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
