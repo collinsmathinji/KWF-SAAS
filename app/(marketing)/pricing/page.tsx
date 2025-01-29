@@ -11,6 +11,8 @@ import {
   DialogDescription 
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useRouter } from 'next/navigation';
+
 
 interface Plan {
   id: string;
@@ -33,6 +35,7 @@ const PricingAndBillingPage = () => {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodSelection | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const router = useRouter()
   const plans = [
     {
       id: 'starter',
@@ -115,7 +118,8 @@ const PricingAndBillingPage = () => {
   };
 
   const handlePayment = () => {
-    // Implement payment logic based on selected plan and payment method
+;
+  router.push('/signUp');
     console.log('Processing payment', { plan: selectedPlan, method: selectedPaymentMethod });
   };
 
