@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {  Image as ImageIcon } from 'lucide-react'
 
-
+import { useRouter } from 'next/navigation';
 interface OrganizationType {
     id: string
     connectAccountId: string
@@ -48,7 +48,7 @@ const OrganizationSetup = ({ onComplete, onClose }: OrganizationSetupProps) => {
     logoPreview: '',
     organizationLogo: null
   })
-
+const router = useRouter()
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -92,6 +92,7 @@ const OrganizationSetup = ({ onComplete, onClose }: OrganizationSetupProps) => {
 
   const handleClose = () => {
     setOpen(false)
+    router.push('/login')
     onClose()
   }
   const renderStep1 = () => (
