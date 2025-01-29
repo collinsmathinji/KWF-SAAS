@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Mail, Lock, ArrowRight, User } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 
 import { Button } from "@/components/ui/button"
 
@@ -21,7 +21,7 @@ const AdminSignupPage = () => {
     const router = useRouter()
     const [errors, setErrors] = useState<Partial<SignupForm>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+    const [showVerificationMessage] = useState(false);
 
     const validateForm = () => {
         const newErrors: Partial<SignupForm> = {};
@@ -96,12 +96,12 @@ const AdminSignupPage = () => {
                             Verify your email
                         </h2>
                         <p className="text-gray-600 mb-6">
-                            We've sent a verification link to<br />
+                            We have sent a verification link to<br />
                             <span className="font-medium">{formData.email}</span>
                         </p>
                         <p className="text-sm text-gray-500">
                             Please check your email and click the verification link to activate your admin account.
-                            Once verified, you'll be able to log in.
+                            Once verified, you will be able to log in.
                         </p>
                         <Link href="/login" className="mt-6 inline-block text-blue-600 hover:text-blue-500">
                             Return to login

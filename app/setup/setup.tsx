@@ -99,7 +99,7 @@ const router = useRouter()
     <div className="space-y-6">
       <div className="text-center pb-6">
         <h2 className="text-xl font-semibold text-gray-900">Basic Information</h2>
-        <p className="text-gray-500">Let's start with your organization's basic details</p>
+        <p className="text-gray-500">Lets start with your organizations basic details</p>
       </div>
 
       <div className="space-y-6">
@@ -283,14 +283,7 @@ const router = useRouter()
             {currentStep === 1 ? renderStep1() : renderStep2()}
 
             <div className="flex justify-between mt-8">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => currentStep === 1 ? setOpen(false) : setCurrentStep(1)}
-                className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-50"
-              >
-                {currentStep === 1 ? 'Cancel' : 'Back'}
-              </Button>
+             
               <Button
                 type="submit"
                 className="bg-blue-600 text-white hover:bg-blue-700"
