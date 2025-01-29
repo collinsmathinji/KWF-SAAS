@@ -76,6 +76,7 @@ const router = useRouter()
     if (currentStep === 1) {
       setCurrentStep(2)
     } else {
+        router.push('/organisation')
       // Generate temporary ID for the organization
       const completeFormData = {
         ...formData,
