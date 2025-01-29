@@ -22,6 +22,7 @@ const OrganizationManagement = () => {
   const [organization, setOrganization] = useState<Organization | null>(null);
 
   const handleSetupComplete = (orgData: Organization) => {
+    console.log(organization)
     setOrganization(orgData);
     setShowSetup(false);
   };

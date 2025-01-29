@@ -36,7 +36,7 @@ export function DashboardContent({ memberTypes, groups }: DashboardContentProps)
     <div className="space-y-8 p-8">
       <div>
         <h2 className="text-3xl font-bold">Organization Overview</h2>
-        <p className="text-muted-foreground">Here's what's happening across your organization</p>
+        <p className="text-muted-foreground">Here is what is happening across your organization</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
