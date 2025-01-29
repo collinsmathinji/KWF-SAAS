@@ -1,4 +1,4 @@
-"use"
+"use client"
 import React, { useState } from 'react';
 import {  Users, Calendar, LayoutDashboard, Group, ChevronRight, CalendarDays } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
