@@ -10,7 +10,7 @@ export function Footer() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 font-semibold text-white">
                 O
               </div>
-              <span className="text-xl font-semibold">OrgFlow</span>
+              <span className="text-xl font-semibold">KWF_SAAS</span>
             </div>
             <p className="mt-4 text-sm text-gray-500">
               Streamline your organization&apos;s operations with our all-in-one platform.

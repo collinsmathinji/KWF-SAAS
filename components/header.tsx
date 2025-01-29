@@ -10,7 +10,7 @@ export function Header() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 font-semibold text-white">
             O
           </div>
-          <span className="text-xl font-semibold">OrgFlow</span>
+          <span className="text-xl font-semibold">KWF_SAAS</span>
         </div>
         <nav className="hidden gap-6 md:flex">
           <Link className="text-sm font-medium hover:text-blue-600" href="#features">
@@ -28,7 +28,7 @@ export function Header() {
             <Link href="/login">Sign In</Link>
           </Button>
           <Button asChild>
-            <Link href="/register">Get Started</Link>
+            <Link href="/pricing">Get Started</Link>
           </Button>
         </div>
       </div>

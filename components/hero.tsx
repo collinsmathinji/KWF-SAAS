@@ -20,14 +20,12 @@ export function Hero() {
           </p>
           <div className="flex gap-4">
             <Button size="lg" asChild>
-              <Link href="/register">
+              <Link href="/pricing">
                 Get Started
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="#features">Learn More</Link>
-            </Button>
+           
           </div>
           <div className="mt-8">
             <div className="rounded-xl border bg-white/50 p-1 backdrop-blur-xl">
