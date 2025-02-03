@@ -49,7 +49,7 @@ const groups = [
     id: "1",
     name: "Marketing Team",
     type: "department",
-    members: 15,
+    members: 45,
     activeProjects: 5,
     lead: "Sarah Johnson",
   },
