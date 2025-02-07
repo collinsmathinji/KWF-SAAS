@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from "react"
-import { Calendar, CalendarDays, ChevronDown, Group, LayoutDashboard,  Users } from "lucide-react"
+import { Calendar, CalendarDays, ChevronDown, Group, Plus,LayoutDashboard,  Users } from "lucide-react"
 
 import  DashboardContent  from "./dashboard-content"
 import { EventsTable } from "./events-table"
@@ -190,7 +190,7 @@ export default function OrganizationDashboard() {
                             // Add member type logic
                           }}
                         >
-                          {/* <Plus className="h-4 w-4" /> */}
+                          <Plus className="h-4 w-4" />
                         </Button>
                         <ChevronDown className="h-4 w-4" />
                       </div>
@@ -236,7 +236,7 @@ export default function OrganizationDashboard() {
                             // Add group logic
                           }}
                         >
-                          {/* <Plus className="h-4 w-4" /> */}
+                          <Plus className="h-4 w-4" />
                         </Button>
                         <ChevronDown className="h-4 w-4" />
                       </div>
