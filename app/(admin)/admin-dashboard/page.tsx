@@ -7,7 +7,7 @@ import {
   CreditCard, 
   PieChart, 
  
-  Bell, 
+  
   LogOut,
   FileText,
   Database,
@@ -156,7 +156,7 @@ const AdminDashboard = () => {
             {activeSection.replace(/([A-Z])/g, ' $1')}
           </h1>
           <div className="flex items-center">
-            <Bell className="mr-4 text-blue-600" />
+            {/* <Bell className="mr-4 text-blue-600" /> */}
             <div className="flex items-center">
               <img 
                 src="/api/placeholder/40/40" 

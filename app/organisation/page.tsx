@@ -1,11 +1,13 @@
 "use client"
 import React, { useState } from "react"
+import Link from "next/link"
 import { Calendar, CalendarDays, ChevronDown, Group, Plus,LayoutDashboard,  Users } from "lucide-react"
 
 import  DashboardContent  from "./dashboard-content"
 import { EventsTable } from "./events-table"
 import { GroupsContent } from "./groups-content"
 import { MemberTypesContent } from "./member-types-content"
+import UserProfile from "../profile-page/page"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -297,9 +299,26 @@ export default function OrganizationDashboard() {
 
         {/* Main Content with flex-grow to take remaining space */}
         <main className="flex-1 overflow-auto p-8">
+        <header className="flex justify-end items-center mb-8">
+       
+          <div className="flex items-center">
+            {/* <Bell className="mr-4 text-blue-600" /> */}
+            <div className="flex items-center">
+              <img 
+                src="/api/placeholder/40/40" 
+                alt="Admin" 
+                className="w-10 h-10 rounded-full mr-2 border-2 border-blue-200" 
+              />
+              <button onClick={() => handleMainMenuClick("userProfile")}>User Profile</button>
+             
+            </div>
+          </div>
+        </header>
+
           <Card className="h-full border-none bg-white/50 backdrop-blur-xl">
             {activeMainMenu === "dashboard" && <DashboardContent member={memberData} />}
             {activeMainMenu === "events" && <EventsTable events={events} />}
+            {activeMainMenu === "userProfile" && <UserProfile/>}
             {activeMainMenu === "membertypes" && (
               <MemberTypesContent memberType={memberTypes.find((t) => t.id === activeSubMenu)} />
             )}
