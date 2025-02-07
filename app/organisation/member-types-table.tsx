@@ -3,7 +3,7 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 interface MemberType {
   id: string
   name: string
-  type: string
+  level: string
 }
 
 interface MemberTypesTableProps {
@@ -41,4 +41,3 @@ export function MemberTypesTable({ memberType }: MemberTypesTableProps) {
     </div>
   )
 }
-

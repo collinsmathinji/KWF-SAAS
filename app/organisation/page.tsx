@@ -2,7 +2,7 @@
 import React, { useState } from "react"
 import { Calendar, CalendarDays, ChevronDown, Group, LayoutDashboard,  Users } from "lucide-react"
 
-import { DashboardContent } from "./dashboard-content"
+import  DashboardContent  from "./dashboard-content"
 import { EventsTable } from "./events-table"
 import { GroupsContent } from "./groups-content"
 import { MemberTypesContent } from "./member-types-content"
@@ -25,24 +25,87 @@ import {
 } from "@/components/ui/sidebar"
 
 const memberTypes = [
-  {
+    {
+      id: "1",
+      name: "Executives",
+      level: "Top Management",
+      totalMembers: 10,
+      responsibilities: [
+        "Strategic decision-making",
+        "Overseeing company operations",
+        "High-level partnerships",
+      ],
+    },
+    {
+      id: "2",
+      name: "Managers",
+      level: "Middle Management",
+      totalMembers: 50,
+      responsibilities: [
+        "Supervising teams",
+        "Implementing company policies",
+        "Project management",
+      ],
+    },
+    {
+      id: "3",
+      name: "Team Leads",
+      level: "Operational Leadership",
+      totalMembers: 100,
+      responsibilities: [
+        "Managing daily tasks",
+        "Mentoring team members",
+        "Ensuring productivity",
+      ],
+    },
+    {
+      id: "4",
+      name: "Employees",
+      level: "General Staff",
+      totalMembers: 500,
+      responsibilities: [
+        "Executing assigned tasks",
+        "Collaborating with teams",
+        "Following company guidelines",
+      ],
+    },
+    {
+      id: "5",
+      name: "Interns",
+      level: "Entry Level",
+      totalMembers: 50,
+      responsibilities: [
+        "Learning company processes",
+        "Assisting teams",
+        "Gaining work experience",
+      ],
+    },
+  ];
+const memberData = {
     id: "1",
-    name: "Premium",
-    type: "paid",
-    totalMembers: 150,
-    monthlyRevenue: 7500,
-    benefits: ["Access to all features", "Priority support", "Custom branding"],
-  },
-  {
-    id: "2",
-    name: "Basic",
-    type: "free",
-    totalMembers: 300,
-    monthlyRevenue: 0,
-    benefits: ["Basic features", "Community support", "Standard branding"],
-  },
-]
-
+    name: "John Doe",
+    type: "Executive",
+    joinDate: "Jan 2024",
+    projectsCompleted: 12,
+    currentProjects: 3,
+    monthlyContribution: 99,
+    groupMemberships: [
+      {
+        groupName: "Development",
+        role: "Lead",
+        projectsInvolved: 2
+      },
+      // ... more memberships
+    ],
+    recentActivity: [
+      {
+        date: "2024-02-07",
+        action: "Completed",
+        project: "Dashboard UI"
+      },
+      // ... more activities
+    ]
+  };
 const groups = [
   {
     id: "1",
@@ -117,7 +180,7 @@ export default function OrganizationDashboard() {
                         <Users className="h-4 w-4" />
                         <span>Member Types</span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -135,7 +198,7 @@ export default function OrganizationDashboard() {
                   </SidebarGroupLabel>
                   <CollapsibleContent>
                     <SidebarGroupContent>
-                      <SidebarMenu>
+                      <SidebarMenu className="p-7">
                         {memberTypes.map((type) => (
                           <SidebarMenuItem key={type.id}>
                             <SidebarMenuButton
@@ -181,10 +244,11 @@ export default function OrganizationDashboard() {
                   </SidebarGroupLabel>
                   <CollapsibleContent>
                     <SidebarGroupContent>
-                      <SidebarMenu>
+                      <SidebarMenu className="px-7">
                         {groups.map((group) => (
                           <SidebarMenuItem key={group.id}>
                             <SidebarMenuButton
+                               className="text-blue text-sm"
                               onClick={() => {
                                 setActiveMainMenu("groups")
                                 setActiveSubMenu(group.id)
@@ -234,7 +298,7 @@ export default function OrganizationDashboard() {
         {/* Main Content with flex-grow to take remaining space */}
         <main className="flex-1 overflow-auto p-8">
           <Card className="h-full border-none bg-white/50 backdrop-blur-xl">
-            {activeMainMenu === "dashboard" && <DashboardContent memberTypes={memberTypes} groups={groups} />}
+            {activeMainMenu === "dashboard" && <DashboardContent member={memberData} />}
             {activeMainMenu === "events" && <EventsTable events={events} />}
             {activeMainMenu === "membertypes" && (
               <MemberTypesContent memberType={memberTypes.find((t) => t.id === activeSubMenu)} />

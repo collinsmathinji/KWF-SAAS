@@ -6,10 +6,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 interface MemberType {
   id: string
   name: string
-  type: string
+  level: string
   totalMembers: number
-  monthlyRevenue: number
-  benefits: string[]
+  responsibilities: string[]
 }
 
 interface MemberTypesContentProps {
@@ -24,7 +23,7 @@ export function MemberTypesContent({ memberType }: MemberTypesContentProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold">{memberType.name}</h2>
-          <p className="text-muted-foreground">{memberType.type} membership type</p>
+          <p className="text-muted-foreground">{memberType.level} Level</p>
         </div>
       </div>
 
@@ -42,22 +41,18 @@ export function MemberTypesContent({ memberType }: MemberTypesContentProps) {
                   <p className="text-2xl font-bold">{memberType.totalMembers}</p>
                 </div>
               </div>
-              <div>
-                <p className="font-medium">Monthly Revenue</p>
-                <p className="text-2xl font-bold">${memberType.monthlyRevenue}</p>
-              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Benefits</CardTitle>
+            <CardTitle>Responsibilities</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="list-inside list-disc space-y-2">
-              {memberType.benefits.map((benefit, index) => (
-                <li key={index}>{benefit}</li>
+              {memberType.responsibilities.map((responsibility, index) => (
+                <li key={index}>{responsibility}</li>
               ))}
             </ul>
           </CardContent>
@@ -96,4 +91,3 @@ export function MemberTypesContent({ memberType }: MemberTypesContentProps) {
     </div>
   )
 }
-

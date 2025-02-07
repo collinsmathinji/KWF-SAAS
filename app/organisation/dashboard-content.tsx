@@ -1,88 +1,85 @@
-import { Activity, DollarSign, Group, Users } from "lucide-react"
+import React from 'react';
+import { Activity, DollarSign, Users, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-
-interface MemberType {
-  id: string
-  name: string
-  type: string
-  totalMembers: number
-  monthlyRevenue: number
-  benefits: string[]
+interface MemberDashboardProps {
+  member: {
+    id: string;
+    name: string;
+    type: string;
+    joinDate: string;
+    projectsCompleted: number;
+    currentProjects: number;
+    monthlyContribution: number;
+    groupMemberships: {
+      groupName: string;
+      role: string;
+      projectsInvolved: number;
+    }[];
+    recentActivity: {
+      date: string;
+      action: string;
+      project: string;
+    }[];
+  };
 }
 
-interface Group {
-  id: string
-  name: string
-  type: string
-  members: number
-  activeProjects: number
-  lead: string
-}
-
-interface DashboardContentProps {
-  memberTypes: MemberType[]
-  groups: Group[]
-}
-
-export function DashboardContent({ memberTypes, groups }: DashboardContentProps) {
-  const totalMembers = memberTypes.reduce((acc, type) => acc + type.totalMembers, 0)
-  const totalRevenue = memberTypes.reduce((acc, type) => acc + type.monthlyRevenue, 0)
-  const totalGroups = groups.length
-  const activeProjects = groups.reduce((acc, group) => acc + group.activeProjects, 0)
-
+const MemberDashboard = ({ member }: MemberDashboardProps) => {
   return (
     <div className="space-y-8 p-8">
       <div>
-        <h2 className="text-3xl font-bold">Organization Overview</h2>
-        <p className="text-muted-foreground">Here is what is happening across your organization</p>
+        <h2 className="text-3xl font-bold">Member Dashboard - {member.name}</h2>
+        <p className="text-muted-foreground">Member Type: {member.type}</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-white">Total Members</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Member Since</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold text-white">{totalMembers}</div>
-              <Users className="h-4 w-4 text-blue-100" />
+              <div className="text-2xl font-bold text-white">{member.joinDate}</div>
+              <Clock className="h-4 w-4 text-blue-100" />
             </div>
-            <p className="text-xs text-blue-100">Across all member types</p>
+            <p className="text-xs text-blue-100">Active member</p>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-blue-600 to-blue-700">
+
+        {/* <Card className="bg-gradient-to-br from-blue-600 to-blue-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-white">Monthly Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Monthly Contribution</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold text-white">${totalRevenue}</div>
+              <div className="text-2xl font-bold text-white">${member.monthlyContribution}</div>
               <DollarSign className="h-4 w-4 text-blue-100" />
             </div>
-            <p className="text-xs text-blue-100">From premium memberships</p>
+            <p className="text-xs text-blue-100">Current plan</p>
           </CardContent>
-        </Card>
+        </Card> */}
+
         <Card className="bg-gradient-to-br from-blue-700 to-blue-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-white">Total Groups</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Group Memberships</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold text-white">{totalGroups}</div>
-              <Group className="h-4 w-4 text-blue-100" />
+              <div className="text-2xl font-bold text-white">{member.groupMemberships.length}</div>
+              <Users className="h-4 w-4 text-blue-100" />
             </div>
-            <p className="text-xs text-blue-100">Active departments</p>
+            <p className="text-xs text-blue-100">Active groups</p>
           </CardContent>
         </Card>
+
         <Card className="bg-gradient-to-br from-blue-800 to-blue-900">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-white">Active Projects</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Current Projects</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold text-white">{activeProjects}</div>
+              <div className="text-2xl font-bold text-white">{member.currentProjects}</div>
               <Activity className="h-4 w-4 text-blue-100" />
             </div>
             <p className="text-xs text-blue-100">In progress</p>
@@ -93,23 +90,23 @@ export function DashboardContent({ memberTypes, groups }: DashboardContentProps)
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Member Types Overview</CardTitle>
+            <CardTitle>Group Memberships</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Members</TableHead>
-                  <TableHead>Revenue</TableHead>
+                  <TableHead>Group</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Projects</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {memberTypes.map((type) => (
-                  <TableRow key={type.id}>
-                    <TableCell className="font-medium">{type.name}</TableCell>
-                    <TableCell>{type.totalMembers}</TableCell>
-                    <TableCell>${type.monthlyRevenue}</TableCell>
+                {member.groupMemberships.map((membership, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{membership.groupName}</TableCell>
+                    <TableCell>{membership.role}</TableCell>
+                    <TableCell>{membership.projectsInvolved}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -119,23 +116,23 @@ export function DashboardContent({ memberTypes, groups }: DashboardContentProps)
 
         <Card>
           <CardHeader>
-            <CardTitle>Groups Overview</CardTitle>
+            <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Members</TableHead>
-                  <TableHead>Projects</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Project</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {groups.map((group) => (
-                  <TableRow key={group.id}>
-                    <TableCell className="font-medium">{group.name}</TableCell>
-                    <TableCell>{group.members}</TableCell>
-                    <TableCell>{group.activeProjects}</TableCell>
+                {member.recentActivity.map((activity, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{activity.date}</TableCell>
+                    <TableCell>{activity.action}</TableCell>
+                    <TableCell>{activity.project}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -144,6 +141,7 @@ export function DashboardContent({ memberTypes, groups }: DashboardContentProps)
         </Card>
       </div>
     </div>
-  )
-}
+  );
+};
 
+export default MemberDashboard;

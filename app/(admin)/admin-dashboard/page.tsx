@@ -12,7 +12,7 @@ import {
   FileText,
   Database,
   Layers,
-  
+  Sliders,
   Menu
 } from 'lucide-react';
 import SubscriptionManagement from './subscription';
@@ -22,8 +22,6 @@ import UserAnalysis from './analytics';
 import ReportsGenerator from './report';
 import Overview from './overview';
 import OrganizationManagement from './organization';
-
-
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('overview');

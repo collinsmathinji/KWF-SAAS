@@ -6,6 +6,7 @@ import {
     TrendingUp, 
     TrendingDown, 
     Activity, 
+
     ShieldCheck, 
     CreditCard, 
     FileText, 
@@ -91,16 +92,10 @@ const Overview = () => {
                     change={8.2}
                     positive={true}
                 />
-                <MetricCard 
-                    icon={<Phone />}
-                    title="Phone Subscribers"
-                    value="1,142"
-                    change={-3.5}
-                    positive={false}
-                />
+                
                 <MetricCard 
                     icon={<Activity />}
-                    title="Active Organizations"
+                    title="Active Members"
                     value="87"
                     change={15.7}
                     positive={true}
@@ -109,7 +104,7 @@ const Overview = () => {
 
             {/* Subscription Revenue Chart */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-50">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Subscription Revenue</h2>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Memebers Growth</h2>
                 <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={subscriptionData}>
                         <XAxis dataKey="name" />
@@ -125,22 +120,7 @@ const Overview = () => {
                 </ResponsiveContainer>
             </div>
 
-            {/* Upcoming Expirations */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-50">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Upcoming Expirations</h2>
-                <ul>
-                    {upcomingExpirations.map((expiration) => (
-                        <li key={expiration.name}>
-                            <div className="flex items-center mb-2">
-                                <span className="text-gray-500 mr-2">{expiration.name}</span>
-                                <span className="text-red-500">{expiration.subscriptionDate}</span>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-
-            {/* Support */}
+          
             <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-50">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Support</h2>
                 <ul>
@@ -173,56 +153,7 @@ const Overview = () => {
                 </ul>
             </div>
 
-            {/* Database */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-50">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Database</h2>
-                <ul>
-                    <li>
-                        <div className="flex items-center mb-2">
-                            <Database className="text-blue-500 mr-2" />
-                            <span>MongoDB</span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
-            {/* Layers */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-50">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Layers</h2>
-                <ul>
-                    <li>
-                        <div className="flex items-center mb-2">
-                            <Layers className="text-gray-500 mr-2" />
-                            <span>Layer 1</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div className="flex items-center mb-2">
-                            <Layers className="text-gray-500 mr-2" />
-                            <span>Layer 2</span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
-            {/* Sliders */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-50">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Sliders</h2>
-                <ul>
-                    <li>
-                        <div className="flex items-center mb-2">
-                            <Sliders className="text-gray-500 mr-2" />
-                            <span>Slider 1</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div className="flex items-center mb-2">
-                            <Sliders className="text-gray-500 mr-2" />
-                            <span>Slider 2</span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+          
 
             {/* Menu */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-50">
