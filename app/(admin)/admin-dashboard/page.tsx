@@ -12,7 +12,7 @@ import {
   FileText,
   Database,
   Layers,
-  Sliders,
+  
   Menu
 } from 'lucide-react';
 import SubscriptionManagement from './subscription';

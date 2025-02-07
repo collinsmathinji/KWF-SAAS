@@ -2,7 +2,7 @@ import React from 'react';
 import { 
     Users, 
     Mail, 
-    Phone, 
+   
     TrendingUp, 
     TrendingDown, 
     Activity, 
@@ -10,9 +10,7 @@ import {
     ShieldCheck, 
     CreditCard, 
     FileText, 
-    Database, 
-    Layers, 
-    Sliders, 
+   
     Menu 
 } from 'lucide-react';
 import { 
@@ -33,11 +31,6 @@ const subscriptionData = [
     { name: 'Jun', subscribers: 750, revenue: 2500 }
 ];
 
-const upcomingExpirations = [
-    { name: 'John Doe', subscriptionDate: '2023-07-10' },
-    { name: 'Jane Doe', subscriptionDate: '2023-08-15' },
-    { name: 'Bob Smith', subscriptionDate: '2023-09-20' }
-];
 
 interface MetricCardProps {
     icon: React.ReactNode;
