@@ -26,7 +26,7 @@ export function Header() {
             <Link href="/login">Sign In</Link>
           </Button>
           <Button asChild>
-            <Link href="/signup">Get Started</Link>
+            <Link href="/signUp">Get Started</Link>
           </Button>
         </div>
       </div>
