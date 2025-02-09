@@ -3,11 +3,23 @@ import { stripe } from "@/app/api/stripe/config"
 import { CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export default async function SuccessPage({
-  searchParams,
-}: {
+import { GetServerSideProps } from 'next'
+
+interface SuccessPageProps {
   searchParams: { session_id: string }
-}) {
+}
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { session_id } = context.query
+
+  return {
+    props: {
+      searchParams: { session_id: session_id as string }
+    }
+  }
+}
+
+export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const sessionId = searchParams.session_id
 
   if (!sessionId) {
