@@ -36,7 +36,7 @@ export function Hero() {
             className="flex gap-4"
           >
             <Button size="lg" asChild>
-              <Link href="/signUp">
+              <Link href="/pricing">
                 Get Started
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>

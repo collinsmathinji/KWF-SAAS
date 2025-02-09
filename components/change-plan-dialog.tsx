@@ -11,9 +11,6 @@ import { useToast } from "@/components/ui/use-toast"
 import { createCheckoutSession } from "@/app/actions/create-checkout-session"
 
 
-// Make sure to add your publishable key to your environment variables
-// const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
-
 interface PlanFeature {
   free: boolean
   standard: boolean

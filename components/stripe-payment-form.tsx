@@ -30,7 +30,7 @@ export function StripePaymentForm({ onSuccess, amount }: StripePaymentFormProps)
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/signup`,
+          return_url: `${window.location.origin}/signUp`,
         },
       })
 
