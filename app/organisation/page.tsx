@@ -190,7 +190,7 @@ export default function OrganizationDashboard() {
                             // Add member type logic
                           }}
                         >
-                          <Plus className="h-4 w-4" />
+                          {/* <Plus className="h-4 w-4" /> */}
                         </Button>
                         <ChevronDown className="h-4 w-4" />
                       </div>
@@ -207,8 +207,9 @@ export default function OrganizationDashboard() {
                                 setActiveSubMenu(type.id)
                               }}
                               isActive={activeMainMenu === "membertypes" && activeSubMenu === type.id}
+                              className="flex justify-between"
                             >
-                              {type.name}
+                             <span>{type.name}</span>  <Plus className="h-4 w-4" />
                             </SidebarMenuButton>
                           </SidebarMenuItem>
                         ))}
@@ -236,7 +237,7 @@ export default function OrganizationDashboard() {
                             // Add group logic
                           }}
                         >
-                          <Plus className="h-4 w-4" />
+                          {/* <Plus className="h-4 w-4" /> */}
                         </Button>
                         <ChevronDown className="h-4 w-4" />
                       </div>
@@ -248,14 +249,15 @@ export default function OrganizationDashboard() {
                         {groups.map((group) => (
                           <SidebarMenuItem key={group.id}>
                             <SidebarMenuButton
-                               className="text-blue text-sm"
+                               className="text-blue text-sm flex justify-between"
                               onClick={() => {
                                 setActiveMainMenu("groups")
                                 setActiveSubMenu(group.id)
                               }}
                               isActive={activeMainMenu === "groups" && activeSubMenu === group.id}
+                               
                             >
-                              {group.name}
+                              <span>{group.name}</span> <Plus className="h-4 w-4" />
                             </SidebarMenuButton>
                           </SidebarMenuItem>
                         ))}

@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { CalendarDays, CreditCard, Download } from 'lucide-react'
+import { CalendarDays, CreditCard, Download } from "lucide-react"
+import { ChangePlanDialog } from "../../../components/change-plan-dialog"
 
 export default function SubscriptionManagement() {
   // This would typically come from your backend
@@ -11,8 +12,8 @@ export default function SubscriptionManagement() {
     plan: "Pro Plan",
     status: "Active",
     nextBilling: "December 1, 2023",
-    usedSeats: 42,
-    totalSeats: 50,
+    usedUsers: 42,
+    totalUsers: 50,
     cardLast4: "4242",
     price: "$50.00",
   }
@@ -45,24 +46,24 @@ export default function SubscriptionManagement() {
                   <p className="text-sm font-semibold">{subscription.nextBilling}</p>
                 </div>
               </div>
-              <div className="text-xl font-bold text-blue-900">{subscription.price}<span className="text-sm text-gray-500">/month</span></div>
+              <div className="text-xl font-bold text-blue-900">
+                {subscription.price}
+                <span className="text-sm text-gray-500">/month</span>
+              </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Seats used</span>
-                <span className="font-medium">{subscription.usedSeats} of {subscription.totalSeats}</span>
+                <span className="text-gray-500">Users used</span>
+                <span className="font-medium">
+                  {subscription.usedUsers} of {subscription.totalUsers}
+                </span>
               </div>
-              <Progress 
-                value={(subscription.usedSeats / subscription.totalSeats) * 100} 
-                className="h-2 bg-blue-100"
-              />
+              <Progress value={(subscription.usedUsers / subscription.totalUsers) * 100} className="h-2 bg-blue-100" />
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50">
-              Change Plan
-            </Button>
+            <ChangePlanDialog />
             <Button variant="ghost" className="text-red-600 hover:bg-red-50 hover:text-red-700">
               Cancel Subscription
             </Button>
@@ -122,3 +123,4 @@ export default function SubscriptionManagement() {
     </div>
   )
 }
+
