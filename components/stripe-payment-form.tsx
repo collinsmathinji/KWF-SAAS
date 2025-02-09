@@ -41,6 +41,7 @@ export function StripePaymentForm({ onSuccess, amount }: StripePaymentFormProps)
 
       onSuccess()
     } catch (error) {
+      console.log("Error confirming payment:", error)
       setMessage("An unexpected error occurred.")
     } finally {
       setIsLoading(false)

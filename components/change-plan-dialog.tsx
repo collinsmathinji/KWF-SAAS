@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { useToast } from "@/components/ui/use-toast"
 import { createCheckoutSession } from "@/app/actions/create-checkout-session"
-import { loadStripe } from "@stripe/stripe-js"
 
 
 // Make sure to add your publishable key to your environment variables

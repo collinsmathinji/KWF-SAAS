@@ -23,7 +23,7 @@ export async function POST(req: Request): Promise<Response> {
 
     switch (event.type) {
       case "checkout.session.completed":
-        const session = event.data.object
+     console.log( event.data.object)
         // Handle successful payment
         // Update user's subscription in your database
         break
