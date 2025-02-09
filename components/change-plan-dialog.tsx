@@ -13,7 +13,7 @@ import { loadStripe } from "@stripe/stripe-js"
 
 
 // Make sure to add your publishable key to your environment variables
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+// const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 interface PlanFeature {
   free: boolean
@@ -67,7 +67,7 @@ export function ChangePlanDialog() {
     try {
       setLoading(true)
 
-      const { sessionId, url } = await createCheckoutSession(selectedPlan, users)
+      const { url } = await createCheckoutSession(selectedPlan, users)
 
       if (!url) {
         throw new Error("Failed to create checkout session")

@@ -1,7 +1,7 @@
 import { headers } from "next/headers"
 import { stripe } from "../stripe/config"
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<Response> {
   // In development, just return success
   if (process.env.NODE_ENV !== "production") {
     return new Response(null, { status: 200 })
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   }
 
   const body = await req.text()
-  const signature = headers().get("stripe-signature")
+  const signature = (await headers()).get("stripe-signature")
 
   if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
     return new Response("Webhook signature missing", { status: 400 })
@@ -33,6 +33,8 @@ export async function POST(req: Request) {
       case "customer.subscription.deleted":
         // Handle subscription cancellations
         break
+      default:
+        console.warn(`Unhandled event type ${event.type}`)
     }
 
     return new Response(null, { status: 200 })
@@ -41,4 +43,3 @@ export async function POST(req: Request) {
     return new Response("Webhook error", { status: 400 })
   }
 }
-

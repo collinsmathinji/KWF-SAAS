@@ -16,7 +16,7 @@ export function StripePaymentForm({ onSuccess, amount }: StripePaymentFormProps)
   const [message, setMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     if (!stripe || !elements) {
@@ -40,7 +40,7 @@ export function StripePaymentForm({ onSuccess, amount }: StripePaymentFormProps)
       }
 
       onSuccess()
-    } catch (e: any) {
+    } catch (error) {
       setMessage("An unexpected error occurred.")
     } finally {
       setIsLoading(false)
