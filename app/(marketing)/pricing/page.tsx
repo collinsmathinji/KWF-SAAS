@@ -27,7 +27,7 @@ const PricingAndBillingPage = () => {
   const [clientSecret, setClientSecret] = useState<string>("")
   const router = useRouter()
   const { toast } = useToast()
-  const isDevelopment = process.env.NODE_ENV !== "production"
+  const isDevelopment =true
 
   const plans = [
     {
