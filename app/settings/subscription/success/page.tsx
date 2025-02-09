@@ -1,3 +1,5 @@
+"use client"
+
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { stripe } from "@/app/api/stripe/config"
