@@ -40,7 +40,7 @@ export function StripePaymentForm({ onSuccess, amount }: StripePaymentFormProps)
       }
 
       onSuccess()
-    } catch (e) {
+    } catch (e: any) {
       setMessage("An unexpected error occurred.")
     } finally {
       setIsLoading(false)

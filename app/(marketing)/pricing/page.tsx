@@ -120,18 +120,18 @@ const PricingAndBillingPage = () => {
     }, 1500)
   }
 
-  const appearance = {
-    theme: "stripe",
-    variables: {
-      colorPrimary: "#2563eb",
-      colorBackground: "#ffffff",
-      colorText: "#1e3a8a",
-      colorDanger: "#df1b41",
-      fontFamily: "system-ui, sans-serif",
-      spacingUnit: "4px",
-      borderRadius: "8px",
-    },
-  }
+  // const appearance = {
+  //   theme: "stripe",
+  //   variables: {
+  //     colorPrimary: "#2563eb",
+  //     colorBackground: "#ffffff",
+  //     colorText: "#1e3a8a",
+  //     colorDanger: "#df1b41",
+  //     fontFamily: "system-ui, sans-serif",
+  //     spacingUnit: "4px",
+  //     borderRadius: "8px",
+  //   },
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12">
@@ -203,7 +203,7 @@ const PricingAndBillingPage = () => {
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-600">
-                    Development Mode: Payment processing is simulated. In production, you'll see the actual Stripe
+                    Development Mode: Payment processing is simulated. In production, you will see the actual Stripe
                     payment form.
                   </p>
                 </div>
