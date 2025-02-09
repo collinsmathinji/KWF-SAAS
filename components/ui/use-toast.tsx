@@ -17,15 +17,7 @@ type ToasterToast = ToastProps & {
   action?: ToastActionElement
 }
 
-// Changed from object to const assertion
-type ActionType = {
-  ADD_TOAST: "ADD_TOAST"
-  UPDATE_TOAST: "UPDATE_TOAST"
-  DISMISS_TOAST: "DISMISS_TOAST"
-  REMOVE_TOAST: "REMOVE_TOAST"
-}
-
-// Using const assertion
+// Using const assertion - removed unused ActionType type
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",
