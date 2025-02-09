@@ -76,7 +76,7 @@ const router = useRouter()
     if (currentStep === 1) {
       setCurrentStep(2)
     } else {
-        router.push('/organisation')
+        router.push('/admin-dashboard')
      
       const completeFormData = {
         ...formData,
