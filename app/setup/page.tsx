@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from 'react';
-import OrganizationDashboard from '../organisation/page';
+import OrganizationDashboard from '../member-portal/page';
 import OrganizationSetup from '../setup/setup';
 
 interface Organization {

@@ -2,7 +2,7 @@ import { Features } from "@/components/features"
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 import { Hero } from "@/components/hero"
-import PricingAndBillingPage from "../app/(marketing)/pricing/page"
+import { Pricing } from "@/components/pricing"
 import { Screenshots } from "@/components/screenshots"
 
 export default function LandingPage() {
@@ -13,7 +13,7 @@ export default function LandingPage() {
         <Hero />
         <Features />
         <Screenshots />
-        <PricingAndBillingPage />
+        <Pricing />
       </main>
       <Footer />
     </div>
