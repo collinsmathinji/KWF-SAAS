@@ -3,18 +3,14 @@ import Stripe from "stripe"
 import { NextResponse } from "next/server"
 
 // Environment variable check
-if (!process.env.NEXT_STRIPE_SECRET_KEY) {
-  throw new Error("Missing STRIPE_SECRET_KEY environment variable")
-} else {
-  console.log("✅ STRIPE_SECRET_KEY is present")
-}
-
-// Initialize Stripe with the latest API version
 const stripeSecretKey = process.env.NEXT_STRIPE_SECRET_KEY;
 if (!stripeSecretKey) {
   throw new Error("Missing NEXT_STRIPE_SECRET_KEY environment variable");
+} else {
+  console.log("✅ STRIPE_SECRET_KEY is present:", stripeSecretKey);
 }
 
+// Initialize Stripe with the latest API version
 const stripeClient = new Stripe(stripeSecretKey, {
   apiVersion: "2025-01-27.acacia", 
   typescript: true,

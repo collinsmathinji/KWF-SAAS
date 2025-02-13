@@ -1,21 +1,25 @@
 import Stripe from "stripe"
 
-const stripe =
-  typeof window === "undefined"
-    ? new Stripe(process.env.NEXT_STRIPE_SECRET_KEY|| "", {
-        apiVersion: "2025-01-27.acacia", 
-        typescript: true,
-      })
-    : null
+// Ensure environment variable exists
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+if (!stripeSecretKey) {
+  throw new Error("Missing required environment variable: STRIPE_SECRET_KEY")
+}
 
+// Initialize Stripe with proper configuration
+export const stripe = new Stripe(stripeSecretKey, {
+  apiVersion: "2025-01-27.acacia",
+  typescript: true,
+})
 
+// Client-safe plan configuration
 export const PLANS = {
   starter: {
     name: "Starter",
     id: "starter",
     description: "For small organizations starting their journey",
     basePrice: 19.99,
-    priceId: "price_starter", 
+    priceId: "price_starter", // Replace with your actual Stripe price ID
     maxContacts: 50,
     maxGroups: 2,
     maxStaff: 1,
@@ -124,22 +128,10 @@ export const PLANS = {
   },
 } as const
 
-// Type for the plans
 export type PlanId = keyof typeof PLANS
 export type Plan = (typeof PLANS)[PlanId]
 
-// Helper function to get plan by ID with type safety
 export function getPlan(planId: PlanId): Plan {
   return PLANS[planId]
 }
-
-// Helper function to check if Stripe is initialized
-export function getStripe() {
-  if (!stripe) {
-    throw new Error("Stripe is not initialized. This method should only be called on the server side.")
-  }
-  return stripe
-}
-
-export { stripe }
 
