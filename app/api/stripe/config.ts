@@ -1,7 +1,7 @@
 import Stripe from "stripe"
 
 // Ensure environment variable exists
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+const stripeSecretKey = process.env.NEXT_STRIPE_SECRET_KEY
 if (!stripeSecretKey) {
   throw new Error("Missing required environment variable: STRIPE_SECRET_KEY")
 }
