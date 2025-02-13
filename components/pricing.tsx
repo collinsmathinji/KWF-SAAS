@@ -420,9 +420,9 @@ export function Pricing() {
         <AnimatedSection className="mt-12">
           <Dialog open={showAddOns} onOpenChange={setShowAddOns}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="mx-auto block">
+              {/* <Button variant="outline" className="mx-auto block">
                 View Available Add-ons
-              </Button>
+              </Button> */}
             </DialogTrigger>
             <DialogContent className="max-w-4xl">
               <DialogHeader>
