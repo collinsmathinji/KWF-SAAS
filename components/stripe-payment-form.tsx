@@ -10,7 +10,7 @@ interface StripePaymentFormProps {
   amount: number
 }
 
-export function StripePaymentForm({ onSuccess, amount }: StripePaymentFormProps) {
+export function StripePaymentForm({ onSuccess }: StripePaymentFormProps) {
   const stripe = useStripe()
   const elements = useElements()
   const [message, setMessage] = useState<string | null>(null)
