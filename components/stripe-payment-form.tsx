@@ -67,7 +67,7 @@ export function StripePaymentForm({ onSuccess, amount }: StripePaymentFormProps)
             Processing...
           </>
         ) : (
-          `Pay $${amount}/month`
+          `Pay`
         )}
       </Button>
     </form>

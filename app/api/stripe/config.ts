@@ -19,7 +19,7 @@ export const PLANS = {
     id: "starter",
     description: "For small organizations starting their journey",
     basePrice: 19.99,
-    priceId: "price_starter", // Replace with your actual Stripe price ID
+    priceId: "price_1QsOWpQKV3Rv0sYpuYPNnUEZ", 
     maxContacts: 50,
     maxGroups: 2,
     maxStaff: 1,
@@ -35,7 +35,7 @@ export const PLANS = {
     id: "basic",
     description: "Perfect for growing organizations",
     basePrice: 39.99,
-    priceId: "price_basic", // Replace with your actual Stripe price ID
+    priceId: "price_1QsOY1QKV3Rv0sYphgqFoZzn",
     maxContacts: 200,
     maxGroups: 5,
     maxStaff: 3,
@@ -51,7 +51,7 @@ export const PLANS = {
     id: "pro",
     description: "Ideal for established organizations",
     basePrice: 79.99,
-    priceId: "price_pro", // Replace with your actual Stripe price ID
+    priceId: "price_1QsOacQKV3Rv0sYpXL52NwBt", 
     maxContacts: 1000,
     maxGroups: 10,
     maxStaff: 10,
@@ -67,7 +67,7 @@ export const PLANS = {
     id: "business",
     description: "For larger organizations",
     basePrice: 149.99,
-    priceId: "price_business", // Replace with your actual Stripe price ID
+    priceId: "price_1QsObTQKV3Rv0sYp9DoF2LGd", 
     maxContacts: 5000,
     maxGroups: 20,
     maxStaff: 25,
@@ -83,7 +83,7 @@ export const PLANS = {
     id: "enterprise",
     description: "Enterprise-grade features and support",
     basePrice: 299.99,
-    priceId: "price_enterprise", // Replace with your actual Stripe price ID
+    priceId: "price_1QsOVYQKV3Rv0sYpeSbd2edt", 
     maxContacts: 10000,
     maxGroups: 40,
     maxStaff: 50,
@@ -99,7 +99,7 @@ export const PLANS = {
     id: "scale",
     description: "For rapidly growing organizations",
     basePrice: 499.99,
-    priceId: "price_scale", // Replace with your actual Stripe price ID
+    priceId: "price_1QsOcLQKV3Rv0sYplkwnf3uI", 
     maxContacts: 20000,
     maxGroups: 80,
     maxStaff: 100,
@@ -115,7 +115,7 @@ export const PLANS = {
     id: "ultra",
     description: "Maximum capabilities and support",
     basePrice: 799.99,
-    priceId: "price_ultra", // Replace with your actual Stripe price ID
+    priceId: "price_1QsOdRQKV3Rv0sYprlJA3IHY", 
     maxContacts: 30000,
     maxGroups: 150,
     maxStaff: 200,

@@ -4,43 +4,40 @@ import { Check, HelpCircle, X } from "lucide-react"
 import { useState, useMemo } from "react"
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
+import { useRouter } from "next/navigation"
 
 import { AnimatedSection } from "./ui/animated-section"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useRouter } from "next/navigation"
-import { StripePaymentForm } from "@/components/stripe-payment-form"
 import { useToast } from "@/components/ui/use-toast"
+import { StripePaymentForm } from "@/components/stripe-payment-form"
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
-
-interface Plan {
-  id: string
-  name: string
-  description: string
-  basePrice: number | string
-  maxContacts: number | string
-  maxGroups: number | string
-  maxStaff: number | string
-  maxEventStaff: number | string
-  features: {
-    memberPortal: number | string | boolean
-    stripePayments: boolean
-    prioritySupport: boolean
-  }
+// Type definitions
+interface PlanFeatures {
+  memberPortal: number | false
+  stripePayments: boolean
+  prioritySupport: boolean
 }
 
-const basePlans: Plan[] = [
+interface Plan {
+  id: PlanId
+  name: string
+  description: string
+  basePrice: number | "Contact Us"
+  maxContacts: number | "Custom"
+  maxGroups: number | "Custom"
+  maxStaff: number | "Custom"
+  maxEventStaff: number | "Custom"
+  features: PlanFeatures
+}
+
+type PlanId = "starter" | "basic" | "pro" | "business" | "enterprise" | "scale" | "ultra" | "custom"
+
+// Constants
+const PLANS: Plan[] = [
   {
     id: "starter",
     name: "Starter",
@@ -81,7 +78,7 @@ const basePlans: Plan[] = [
     maxStaff: 10,
     maxEventStaff: 20,
     features: {
-      memberPortal: 100 ,
+      memberPortal: 100,
       stripePayments: true,
       prioritySupport: false,
     },
@@ -96,7 +93,7 @@ const basePlans: Plan[] = [
     maxStaff: 25,
     maxEventStaff: 50,
     features: {
-      memberPortal: 500 ,
+      memberPortal: 500,
       stripePayments: true,
       prioritySupport: true,
     },
@@ -126,7 +123,7 @@ const basePlans: Plan[] = [
     maxStaff: 100,
     maxEventStaff: 200,
     features: {
-      memberPortal: 2000 ,
+      memberPortal: 2000,
       stripePayments: true,
       prioritySupport: true,
     },
@@ -141,7 +138,7 @@ const basePlans: Plan[] = [
     maxStaff: 200,
     maxEventStaff: 500,
     features: {
-      memberPortal: 3000 ,
+      memberPortal: 3000,
       stripePayments: true,
       prioritySupport: true,
     },
@@ -156,14 +153,14 @@ const basePlans: Plan[] = [
     maxStaff: "Custom",
     maxEventStaff: "Custom",
     features: {
-      memberPortal: "Custom",
+      memberPortal: false,
       stripePayments: true,
       prioritySupport: true,
     },
   },
 ]
 
-const contactOptions = [
+const CONTACT_OPTIONS = [
   { value: "50", label: "Up to 50" },
   { value: "200", label: "Up to 200" },
   { value: "1000", label: "Up to 1,000" },
@@ -174,46 +171,57 @@ const contactOptions = [
   { value: "more", label: "More than 30,000" },
 ]
 
-const membersPortalOptions = [
+const MEMBER_PORTAL_OPTIONS = [
   { value: "0", label: "None" },
   { value: "100", label: "Up to 100" },
   { value: "500", label: "Up to 500" },
-  { value: "1000", label: "Up to 1000" },
-  { value: "2000", label: "Up to 2000" },
-  { value: "3000", label: "Up to 3000" },
-  { value: "more", label: "More than 3000" },
+  { value: "1000", label: "Up to 1,000" },
+  { value: "2000", label: "Up to 2,000" },
+  { value: "3000", label: "Up to 3,000" },
+  { value: "more", label: "More than 3,000" },
 ]
 
-const addOns = [
-  { name: "+500 Members", price: 40.0, description: "Adds 500 members to your plan" },
-  { name: "+1,000 Members", price: 75.0, description: "Adds 1,000 members to your plan" },
-  { name: "+5,000 Members", price: 299.0, description: "Adds 5,000 members to your plan" },
-  { name: "+10,000 Members", price: 599.0, description: "Adds 10,000 members to your plan" },
-  { name: "+5 Groups", price: 20.0, description: "Adds 5 groups to your plan" },
-  { name: "+10 Groups", price: 35.0, description: "Adds 10 groups to your plan" },
-  { name: "+5 Staff Members", price: 30.0, description: "Adds 5 staff members to your plan" },
-  { name: "+10 Staff Members", price: 50.0, description: "Adds 10 staff members to your plan" },
-  { name: "+10 Event Staff", price: 25.0, description: "Adds 10 event staff to your plan" },
-  {
-    name: "Enable Member Portal",
-    price: 14.99,
-    description: "Unlocks portal access for all members (Basic plan only)",
-  },
-]
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 export function Pricing() {
-  const [showAddOns, setShowAddOns] = useState(false)
   const [selectedContacts, setSelectedContacts] = useState("200")
-  const [memberOptions, setMemberOptions] = useState("3")
+  const [memberOptions, setMemberOptions] = useState("0")
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [clientSecret, setClientSecret] = useState<string>("")
   const router = useRouter()
   const { toast } = useToast()
 
+  // Filter and sort plans based on selected contacts and member portal requirements
+  const filteredPlans = useMemo(() => {
+    if (selectedContacts === "more" || memberOptions === "more") {
+      return [PLANS.find((plan) => plan.id === "custom")!]
+    }
+
+    const contactsNum = Number.parseInt(selectedContacts)
+    const membersNum = Number.parseInt(memberOptions)
+
+    return PLANS.filter((plan) => {
+      if (typeof plan.maxContacts === "string") return false
+
+      const hasEnoughContacts = plan.maxContacts >= contactsNum
+      const hasEnoughPortalAccess =
+        membersNum === 0
+          ? true
+          : typeof plan.features.memberPortal === "number" && plan.features.memberPortal >= membersNum
+
+      return hasEnoughContacts && hasEnoughPortalAccess
+    }).slice(0, 4)
+  }, [selectedContacts, memberOptions])
+
+  // Find recommended plan (first matching plan)
+  const recommendedPlan = useMemo(() => {
+    if (selectedContacts === "more" || memberOptions === "more") return null
+    return filteredPlans[0] || null
+  }, [filteredPlans])
+
   const handlePlanSelection = async (plan: Plan) => {
-    if (plan.id === "custom") {
-      // Handle custom plan differently
+    if (plan.basePrice === "Contact Us") {
       router.push("/contact-sales")
       return
     }
@@ -229,11 +237,13 @@ export function Pricing() {
         },
         body: JSON.stringify({
           planId: plan.id,
+          contacts: Number.parseInt(selectedContacts),
+          memberPortalUsers: Number.parseInt(memberOptions),
         }),
       })
 
       if (!response.ok) {
-        throw new Error("Failed to create subscription")
+        throw new Error(await response.text())
       }
 
       const data = await response.json()
@@ -242,36 +252,12 @@ export function Pricing() {
       console.error("Error:", error)
       toast({
         title: "Error",
-        description: "Failed to initialize payment. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to initialize payment. Please try again.",
         variant: "destructive",
       })
       setIsPaymentModalOpen(false)
     }
   }
-
-  // Filter and sort plans based on selected contacts and staff
-  const filteredPlans = useMemo(() => {
-    if (selectedContacts === "more" || memberOptions === "more") {
-      return [basePlans[basePlans.length - 1]] // Show only Custom plan
-    }
-
-    const contactsNum = Number.parseInt(selectedContacts)
-    const staffNum = Number.parseInt(memberOptions)
-
-    return basePlans
-      .filter((plan) => {
-        if (typeof plan.maxContacts === "string") return false
-        if (typeof plan.features.memberPortal === "string") return false
-        return plan.maxContacts >= contactsNum && typeof plan.features.memberPortal === "number" && plan.features.memberPortal >= staffNum
-      })
-      .slice(0, 4) // Show only the first 4 matching plans
-  }, [selectedContacts, memberOptions])
-
-  // Find recommended plan
-  const recommendedPlan = useMemo(() => {
-    if (selectedContacts === "more" || memberOptions === "more") return null
-    return filteredPlans[0]
-  }, [filteredPlans])
 
   return (
     <section className="container py-24 space-y-8">
@@ -284,7 +270,7 @@ export function Pricing() {
 
       <AnimatedSection>
         <div className="max-w-xl mx-auto space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Number of Contacts</label>
               <Select value={selectedContacts} onValueChange={setSelectedContacts}>
@@ -292,7 +278,7 @@ export function Pricing() {
                   <SelectValue placeholder="Select contacts" />
                 </SelectTrigger>
                 <SelectContent>
-                  {contactOptions.map((option) => (
+                  {CONTACT_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -301,29 +287,31 @@ export function Pricing() {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Number of Members with Portal Access</label>
-                <Select value={memberOptions} onValueChange={setMemberOptions}>
+              <label className="text-sm font-medium">Members with Portal Access</label>
+              <Select value={memberOptions} onValueChange={setMemberOptions}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select members with portal access" />
+                  <SelectValue placeholder="Select portal access" />
                 </SelectTrigger>
                 <SelectContent>
-                  {membersPortalOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
+                  {MEMBER_PORTAL_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
-                </Select>
+              </Select>
             </div>
           </div>
         </div>
       </AnimatedSection>
 
-      <div className="grid gap-6 lg:grid-cols-4 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {filteredPlans.map((plan, index) => (
           <AnimatedSection key={plan.id} delay={index * 0.1}>
             <Card
-              className={`flex h-full flex-col transition-all hover:shadow-lg ${plan === recommendedPlan ? "border-primary" : ""}`}
+              className={`relative flex h-full flex-col transition-all hover:shadow-lg ${
+                plan === recommendedPlan ? "border-primary" : ""
+              }`}
             >
               {plan === recommendedPlan && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-primary-foreground text-sm rounded-full">
@@ -341,66 +329,7 @@ export function Pricing() {
                 </div>
               </CardHeader>
               <CardContent className="flex-1 space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <HelpCircle className="h-4 w-4 text-gray-400" />
-                        </TooltipTrigger>
-                        <TooltipContent>Maximum number of contacts allowed</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <span>Max Contacts: {plan.maxContacts}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>Max Groups: {plan.maxGroups}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>Max Staff: {plan.maxStaff}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>Max Event Staff: {plan.maxEventStaff}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>Members With Portal Access: {plan.name==='custom' ? (
-                      <span>Custom</span>
-                    ) : plan.name==='Basic' ? (
-                      <span>None</span>
-                    ) : (
-                      <span>{plan.features.memberPortal}</span>
-                    )}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    {typeof plan.features.memberPortal === "string" ? (
-                      <Check className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <X className="h-4 w-4 text-red-500" />
-                    )}
-                    <span>
-                      Member Portal{" "}
-                      {typeof plan.features.memberPortal === "string" && `(${plan.features.memberPortal})`}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {plan.features.stripePayments ? (
-                      <Check className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <X className="h-4 w-4 text-red-500" />
-                    )}
-                    <span>Stripe Payments</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {plan.features.prioritySupport ? (
-                      <Check className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <X className="h-4 w-4 text-red-500" />
-                    )}
-                    <span>Priority Support</span>
-                  </div>
-                </div>
+                <PlanFeatures plan={plan} />
               </CardContent>
               <CardFooter>
                 <Button
@@ -408,7 +337,7 @@ export function Pricing() {
                   className="w-full"
                   variant={plan === recommendedPlan ? "default" : "outline"}
                 >
-                  {plan.name === "Custom" ? "Contact Sales" : "Get Started"}
+                  {plan.basePrice === "Contact Us" ? "Contact Sales" : "Get Started"}
                 </Button>
               </CardFooter>
             </Card>
@@ -416,61 +345,19 @@ export function Pricing() {
         ))}
       </div>
 
-      {filteredPlans.length > 0 && filteredPlans[0].name !== "Custom" && (
-        <AnimatedSection className="mt-12">
-          <Dialog open={showAddOns} onOpenChange={setShowAddOns}>
-            <DialogTrigger asChild>
-              {/* <Button variant="outline" className="mx-auto block">
-                View Available Add-ons
-              </Button> */}
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl">
-              <DialogHeader>
-                <DialogTitle>Add-ons & Extensions</DialogTitle>
-                <DialogDescription>
-                  Customize your plan with these additional features and capacity increases
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {addOns.map((addon) => (
-                  <Card key={addon.name}>
-                    <CardHeader>
-                      <CardTitle className="text-lg">{addon.name}</CardTitle>
-                      <div className="mt-2">
-                        <span className="text-2xl font-bold">${addon.price}</span>
-                        <span className="text-gray-500">/month</span>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-gray-500">{addon.description}</p>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" className="w-full">
-                        Add to Plan
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            </DialogContent>
-          </Dialog>
-        </AnimatedSection>
-      )}
-
       <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Complete Your Subscription</DialogTitle>
             <DialogDescription>
-              {selectedPlan && (
+              {selectedPlan && typeof selectedPlan.basePrice === "number" && (
                 <span>
-                  You selected the {selectedPlan.id} plan at $
-                  {typeof selectedPlan.basePrice === "number" ? selectedPlan.basePrice : 0}/month
+                  You selected the {selectedPlan.name} plan at ${selectedPlan.basePrice}/month
                 </span>
               )}
             </DialogDescription>
           </DialogHeader>
-          {clientSecret && selectedPlan && (
+          {clientSecret && selectedPlan && typeof selectedPlan.basePrice === "number" && (
             <Elements
               stripe={stripePromise}
               options={{
@@ -494,13 +381,88 @@ export function Pricing() {
                   setIsPaymentModalOpen(false)
                   router.push("/signup")
                 }}
-                amount={typeof selectedPlan.basePrice === "number" ? selectedPlan.basePrice * 100 : 0}
+                amount={selectedPlan.basePrice * 100}
               />
             </Elements>
           )}
         </DialogContent>
       </Dialog>
     </section>
+  )
+}
+
+function PlanFeatures({ plan }: { plan: Plan }) {
+  return (
+    <>
+      <div className="space-y-2">
+        <FeatureItem label="Max Contacts" value={plan.maxContacts} tooltip="Maximum number of contacts allowed" />
+        <FeatureItem label="Max Groups" value={plan.maxGroups} />
+        <FeatureItem label="Max Staff" value={plan.maxStaff} />
+        <FeatureItem label="Max Event Staff" value={plan.maxEventStaff} />
+        <FeatureItem
+          label="Members With Portal Access"
+          value={plan.features.memberPortal === false ? "None" : plan.features.memberPortal}
+        />
+      </div>
+      <div className="space-y-2">
+        <BooleanFeature
+          value={plan.features.memberPortal !== false}
+          label="Member Portal"
+          suffix={plan.features.memberPortal ? `(Up to ${plan.features.memberPortal})` : undefined}
+        />
+        <BooleanFeature value={plan.features.stripePayments} label="Stripe Payments" />
+        <BooleanFeature value={plan.features.prioritySupport} label="Priority Support" />
+      </div>
+    </>
+  )
+}
+
+function FeatureItem({
+  label,
+  value,
+  tooltip,
+}: {
+  label: string
+  value: number | string
+  tooltip?: string
+}) {
+  const content = (
+    <div className="flex items-center gap-2">
+      {tooltip && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <HelpCircle className="h-4 w-4 text-gray-400" />
+            </TooltipTrigger>
+            <TooltipContent>{tooltip}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+      <span>
+        {label}: {value}
+      </span>
+    </div>
+  )
+
+  return tooltip ? content : <div className="flex items-center gap-2">{content}</div>
+}
+
+function BooleanFeature({
+  value,
+  label,
+  suffix,
+}: {
+  value: boolean
+  label: string
+  suffix?: string
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      {value ? <Check className="h-4 w-4 text-green-500" /> : <X className="h-4 w-4 text-red-500" />}
+      <span>
+        {label} {suffix && `${suffix}`}
+      </span>
+    </div>
   )
 }
 
