@@ -5,8 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Users, Shield, Trash2, Edit } from "lucide-react";
-
-export default function GroupMemberManagement() {
+import { WorkspaceCreateDialog } from '@/components/workspace-create-dialog';
+export default function WorkspaceMemberManagement() {
   // Interfaces
   interface MemberType {
     id: number;
@@ -14,7 +14,7 @@ export default function GroupMemberManagement() {
     permissions: string[];
   }
 
-  interface Group {
+  interface Workspace {
     id: number;
     name: string;
     description: string;
@@ -27,9 +27,9 @@ export default function GroupMemberManagement() {
     { id: 2, name: 'Member', permissions: ['view', 'edit'] }
   ]);
 
-  const [groups, setGroups] = useState<Group[]>([
-    { id: 1, name: 'Marketing Team', description: 'Marketing department group', memberTypeId: 2 },
-    { id: 2, name: 'Development Team', description: 'Development department group', memberTypeId: 2 }
+  const [Workspaces, setWorkspaces] = useState<Workspace[]>([
+    { id: 1, name: 'Marketing Team', description: 'Marketing department Workspace', memberTypeId: 2 },
+    { id: 2, name: 'Development Team', description: 'Development department Workspace', memberTypeId: 2 }
   ]);
 
   const [newMemberType, setNewMemberType] = useState<Omit<MemberType, 'id'>>({
@@ -37,7 +37,7 @@ export default function GroupMemberManagement() {
     permissions: []
   });
 
-  const [newGroup, setNewGroup] = useState<Omit<Group, 'id'>>({
+  const [newWorkspace, setNewWorkspace] = useState<Omit<Workspace, 'id'>>({
     name: '',
     description: '',
     memberTypeId: 0
@@ -55,22 +55,22 @@ export default function GroupMemberManagement() {
     setNewMemberType({ name: '', permissions: [] });
   };
 
-  const handleCreateGroup = () => {
-    if (!newGroup.name) return;
+  const handleCreateWorkspace = () => {
+    if (!newWorkspace.name) return;
     
-    const group: Group = {
-      id: groups.length + 1,
-      ...newGroup
+    const Workspace: Workspace = {
+      id: Workspaces.length + 1,
+      ...newWorkspace
     };
-    setGroups([...groups, group]);
-    setNewGroup({ name: '', description: '', memberTypeId: 0 });
+    setWorkspaces([...Workspaces, Workspace]);
+    setNewWorkspace({ name: '', description: '', memberTypeId: 0 });
   };
 
   return (
     <div className="container mx-auto p-6 max-w-5xl">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-blue-900">Organization Structure</h1>
-        <p className="text-gray-600">Manage member types and groups</p>
+        <p className="text-gray-600">Manage member types and Workspaces</p>
       </div>
 
       <Tabs defaultValue="member-types">
@@ -78,8 +78,8 @@ export default function GroupMemberManagement() {
           <TabsTrigger value="member-types" className="flex items-center">
             <Shield className="mr-2 h-4 w-4" /> Member Types
           </TabsTrigger>
-          <TabsTrigger value="groups" className="flex items-center">
-            <Users className="mr-2 h-4 w-4" /> Groups
+          <TabsTrigger value="Workspaces" className="flex items-center">
+            <Users className="mr-2 h-4 w-4" /> Workspaces
           </TabsTrigger>
         </TabsList>
 
@@ -134,45 +134,27 @@ export default function GroupMemberManagement() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="groups">
+        <TabsContent value="Workspaces">
           <Card>
             <CardHeader>
-              <CardTitle>Groups</CardTitle>
+              <CardTitle>Workspaces</CardTitle>
             </CardHeader>
             <CardContent>
               <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="mb-4">
-                    <Plus className="mr-2" /> Create Group
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Create New Group</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <Input
-                      placeholder="Group Name"
-                      value={newGroup.name}
-                      onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Description"
-                      value={newGroup.description}
-                      onChange={(e) => setNewGroup({ ...newGroup, description: e.target.value })}
-                    />
-                    <Button onClick={handleCreateGroup}>Create</Button>
-                  </div>
-                </DialogContent>
+
+                <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Workspace Settings</h1>
+        <WorkspaceCreateDialog onSubmit={handleCreateWorkspace} />
+      </div>
               </Dialog>
 
               <div className="space-y-4">
-                {groups.map((group) => (
-                  <div key={group.id} className="border rounded-lg p-4">
+                {Workspaces.map((Workspace) => (
+                  <div key={Workspace.id} className="border rounded-lg p-4">
                     <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="font-bold">{group.name}</h3>
-                        <p className="text-sm text-gray-600">{group.description}</p>
+                        <h3 className="font-bold">{Workspace.name}</h3>
+                        <p className="text-sm text-gray-600">{Workspace.description}</p>
                       </div>
                       <div>
                         <Button variant="ghost" size="sm" className="mr-2">

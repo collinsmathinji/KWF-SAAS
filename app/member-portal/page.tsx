@@ -1,7 +1,8 @@
 "use client"
 import React, { useState } from "react"
-import { Calendar, CalendarDays, ChevronDown, Group, Plus,LayoutDashboard,  Users } from "lucide-react"
+import { Calendar, CalendarDays,Group, Lock, Plus,LayoutDashboard,  Users } from "lucide-react"
 import  DashboardContent  from "./dashboard-content"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { EventsTable } from "./events-table"
 import { GroupsContent } from "./groups-content"
 import { MemberTypesContent } from "./member-types-content"
@@ -23,7 +24,34 @@ import {
   SidebarProvider,
   SidebarRail,
 } from "@/components/ui/sidebar"
+interface GroupInfo {
+  id: string
+  name: string
+  visibility: "public" | "private"
+  memberCount: number
+  isMember: boolean
+  isPending?: boolean
+}
 
+interface GroupData {
+  id: string
+  name: string
+  visibility: "public" | "private"
+  memberCount: number
+  isMember: boolean
+  isPending?: boolean
+  type: string
+  members: number
+  activeProjects: number
+  lead: string
+}
+
+interface GroupsSectionProps {
+  activeGroup?: string
+  onGroupSelect: (groupId: string) => void
+  onCreateGroup?: () => void
+  onJoinGroup: (groupId: string) => void
+}
 const memberTypes = [
     {
       id: "1",
@@ -106,31 +134,22 @@ const memberData = {
       // ... more activities
     ]
   };
-const groups = [
-  {
-    id: "1",
-    name: "Marketing Team",
-    type: "department",
-    members: 95,
-    activeProjects: 5,
-    lead: "Sarah Johnson",
-  },
-  {
-    id: "2",
-    name: "Engineering",
-    type: "department",
-    members: 25,
-    activeProjects: 8,
-    lead: "Mike Chen",
-  },
-]
+  const groups: GroupInfo[] = [
+    { id: "1", name: "Engineering", visibility: "public", memberCount: 25, isMember: true },
+    { id: "2", name: "Design", visibility: "public", memberCount: 12, isMember: true },
+    { id: "3", name: "Marketing", visibility: "public", memberCount: 8, isMember: false },
+    { id: "4", name: "Leadership", visibility: "private", memberCount: 5, isMember: false, isPending: true },
+  ]
+
+  const memberGroups = groups.filter((g) => g.isMember)
+  const availableGroups = groups.filter((g) => !g.isMember)
 
 const events = [
   { id: "1", title: "Annual Meeting", date: "2025-02-15", location: "Main Hall" },
   { id: "2", title: "Team Building", date: "2025-02-20", location: "Conference Room" },
 ]
 
-export default function OrganizationDashboard() {
+export default function OrganizationDashboard({ activeGroup, onGroupSelect, onCreateGroup, onJoinGroup }: GroupsSectionProps){
   const [activeMainMenu, setActiveMainMenu] = useState<string>("dashboard")
   const [activeSubMenu, setActiveSubMenu] = useState<string>("")
 
@@ -172,100 +191,121 @@ export default function OrganizationDashboard() {
                 </SidebarGroupContent>
               </SidebarGroup>
 
-              <SidebarGroup>
-                <Collapsible defaultOpen>
-                  <SidebarGroupLabel asChild>
-                    <CollapsibleTrigger className="flex w-full items-center justify-between p-2">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        <span>Member Types</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            // Add member type logic
-                          }}
-                        >
-                          {/* <Plus className="h-4 w-4" /> */}
-                        </Button>
-                        <ChevronDown className="h-4 w-4" />
-                      </div>
-                    </CollapsibleTrigger>
-                  </SidebarGroupLabel>
-                  <CollapsibleContent>
-                    <SidebarGroupContent>
-                      <SidebarMenu className="p-7">
-                        {memberTypes.map((type) => (
-                          <SidebarMenuItem key={type.id}>
-                            <SidebarMenuButton
-                              onClick={() => {
-                                setActiveMainMenu("membertypes")
-                                setActiveSubMenu(type.id)
-                              }}
-                              isActive={activeMainMenu === "membertypes" && activeSubMenu === type.id}
-                              className="flex justify-between"
-                            >
-                             <span>{type.name}</span>  <Plus className="h-4 w-4" />
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </SidebarGroupContent>
-                  </CollapsibleContent>
-                </Collapsible>
-              </SidebarGroup>
+           
+              <div className="space-y-4">
+        {/* Your Groups Section */}
+        <SidebarGroup>
+          <Collapsible defaultOpen>
+            <SidebarGroupLabel asChild>
+              <CollapsibleTrigger className="flex w-full items-center justify-between p-2">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span>Your Groups</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onCreateGroup?.()
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Create new group</TooltipContent>
+                  </Tooltip>
+                </div>
+              </CollapsibleTrigger>
+            </SidebarGroupLabel>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {memberGroups.map((group) => (
+                    <SidebarMenuItem key={group.id}>
+                      <SidebarMenuButton
+                        className="w-full"
+                        onClick={() => onGroupSelect(group.id)}
+                        isActive={activeGroup === group.id}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            <Group className="h-4 w-4" />
+                            <span>{group.name}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">{group.memberCount}</span>
+                        </div>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </Collapsible>
+        </SidebarGroup>
 
-              <SidebarGroup>
-                <Collapsible defaultOpen>
-                  <SidebarGroupLabel asChild>
-                    <CollapsibleTrigger className="flex w-full items-center justify-between p-2">
-                      <div className="flex items-center gap-2">
-                        <Group className="h-4 w-4" />
-                        <span>Groups</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            // Add group logic
-                          }}
+        {/* Available Groups Section */}
+        {availableGroups.length > 0 && (
+          <SidebarGroup>
+            <Collapsible defaultOpen>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center justify-between p-2">
+                  <div className="flex items-center gap-2">
+                    <Group className="h-4 w-4" />
+                    <span>Available Groups</span>
+                  </div>
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {availableGroups.map((group) => (
+                      <SidebarMenuItem key={group.id}>
+                        <SidebarMenuButton
+                          className="w-full"
+                          onClick={() => onGroupSelect(group.id)}
+                          isActive={activeGroup === group.id}
                         >
-                          {/* <Plus className="h-4 w-4" /> */}
-                        </Button>
-                        <ChevronDown className="h-4 w-4" />
-                      </div>
-                    </CollapsibleTrigger>
-                  </SidebarGroupLabel>
-                  <CollapsibleContent>
-                    <SidebarGroupContent>
-                      <SidebarMenu className="px-7">
-                        {groups.map((group) => (
-                          <SidebarMenuItem key={group.id}>
-                            <SidebarMenuButton
-                               className="text-blue text-sm flex justify-between"
-                              onClick={() => {
-                                setActiveMainMenu("groups")
-                                setActiveSubMenu(group.id)
+                          <div className="flex items-center justify-between w-full group">
+                            <div className="flex items-center gap-2">
+                              {group.visibility === "private" ? (
+                                <Lock className="h-4 w-4" />
+                              ) : (
+                                <Group className="h-4 w-4" />
+                              )}
+                              <span>{group.name}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onJoinGroup(group.id)
                               }}
-                              isActive={activeMainMenu === "groups" && activeSubMenu === group.id}
-                               
+                              disabled={group.isPending}
                             >
-                              <span>{group.name}</span> <Plus className="h-4 w-4" />
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </SidebarGroupContent>
-                  </CollapsibleContent>
-                </Collapsible>
-              </SidebarGroup>
+                              {group.isPending ? (
+                                <span className="text-xs text-muted-foreground">Pending</span>
+                              ) : (
+                                <span className="text-xs">Join</span>
+                              )}
+                            </Button>
+                          </div>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
+        )}
+      </div>
 
               <SidebarGroup>
                 <SidebarGroupLabel>Schedule</SidebarGroupLabel>
@@ -322,7 +362,7 @@ export default function OrganizationDashboard() {
             {activeMainMenu === "membertypes" && (
               <MemberTypesContent memberType={memberTypes.find((t) => t.id === activeSubMenu)} />
             )}
-            {activeMainMenu === "groups" && <GroupsContent group={groups.find((g) => g.id === activeSubMenu)} />}
+            {activeMainMenu === "groups" && <GroupsContent group={groups.find((g) => g.id === activeSubMenu) as GroupData} />}
           </Card>
         </main>
       </div>

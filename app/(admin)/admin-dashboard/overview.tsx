@@ -1,168 +1,168 @@
-import React from 'react';
-import { 
-    Users, 
-    Mail, 
-   
-    TrendingUp, 
-    TrendingDown, 
-    Activity, 
+"use client"
 
-    ShieldCheck, 
-    CreditCard, 
-    FileText, 
-   
-    Menu 
-} from 'lucide-react';
-import { 
-    LineChart, 
-    Line, 
-    XAxis, 
-    YAxis, 
-    Tooltip, 
-    ResponsiveContainer 
-} from 'recharts';
+import type React from "react"
+import { Users, UserCircle, Building2, ArrowUpRight, ArrowDownRight, CircleDollarSign, UserPlus } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
-const subscriptionData = [
-    { name: 'Jan', subscribers: 450, revenue: 1500 },
-    { name: 'Feb', subscribers: 520, revenue: 1700 },
-    { name: 'Mar', subscribers: 620, revenue: 2000 },
-    { name: 'Apr', subscribers: 580, revenue: 1800 },
-    { name: 'May', subscribers: 680, revenue: 2200 },
-    { name: 'Jun', subscribers: 750, revenue: 2500 }
-];
+// Sample data
+const memberTypes = [
+  { type: "Executives", count: 5, growth: 12 },
+  { type: "Designers", count: 6, growth: 8 },
+  { type: "Programmers", count: 8, growth: 15 },
+]
 
+const groupsData = [
+  { name: "Technology", members: 450, active: 380 },
+  { name: "Business", members: 320, active: 290 },
+  { name: "Design", members: 280, active: 230 },
+  { name: "Marketing", members: 190, active: 150 },
+]
+
+const recentDonations = [
+  { id: 1, donor: "John Doe", amount: 500, date: "2024-02-14" },
+  { id: 2, donor: "Jane Smith", amount: 1000, date: "2024-02-13" },
+  { id: 3, donor: "Bob Wilson", amount: 250, date: "2024-02-12" },
+  { id: 4, donor: "Alice Brown", amount: 750, date: "2024-02-11" },
+]
 
 interface MetricCardProps {
-    icon: React.ReactNode;
-    title: string;
-    value: string | number;
-    change: number;
-    positive: boolean;
+  icon: React.ReactNode
+  title: string
+  value: string | number
+  change?: number
+  description?: string
 }
 
-const MetricCard = ({ icon, title, value, change, positive }: MetricCardProps) => (
-    <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-50 hover:shadow-md transition-all duration-300">
-        <div className="flex justify-between items-center mb-4">
-            <div className="bg-blue-50 p-3 rounded-lg text-blue-600">
-                {icon}
-            </div>
-            <div className="flex items-center text-sm">
-                {positive ? (
-                    <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                ) : (
-                    <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
-                )}
-                <span className={positive ? 'text-green-600' : 'text-red-600'}>
-                    {change}%
-                </span>
-            </div>
+const MetricCard = ({ icon, title, value, change, description }: MetricCardProps) => (
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      <div className="bg-primary/10 p-2 rounded-full text-primary">{icon}</div>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{value}</div>
+      {change && (
+        <div className="flex items-center text-xs text-muted-foreground">
+          {change > 0 ? (
+            <ArrowUpRight className="mr-1 h-4 w-4 text-green-500" />
+          ) : (
+            <ArrowDownRight className="mr-1 h-4 w-4 text-red-500" />
+          )}
+          <span className={change > 0 ? "text-green-500" : "text-red-500"}>{Math.abs(change)}% from last month</span>
         </div>
-        <div>
-            <h3 className="text-gray-500 text-sm mb-1">{title}</h3>
-            <p className="text-2xl font-bold text-gray-800">{value}</p>
-        </div>
+      )}
+      {description && <p className="text-xs text-muted-foreground mt-2">{description}</p>}
+    </CardContent>
+  </Card>
+)
+
+export default function AdminDashboard() {
+  return (
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
+      </div>
+
+      {/* Main Metrics */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard icon={<Users className="h-4 w-4" />} title="Total Users" value="5,335" change={12.5} />
+        <MetricCard icon={<Building2 className="h-4 w-4" />} title="Active Groups" value="24" change={8.2} />
+        <MetricCard
+          icon={<CircleDollarSign className="h-4 w-4" />}
+          title="Total Donations"
+          value="$42,500"
+          change={15.7}
+        />
+        <MetricCard icon={<UserPlus className="h-4 w-4" />} title="New Members" value="126" change={-2.3} />
+      </div>
+
+      <Tabs defaultValue="members" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="members">Member Types</TabsTrigger>
+          <TabsTrigger value="groups">Groups</TabsTrigger>
+          <TabsTrigger value="donations">Recent Donations</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="members" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            {memberTypes.map((type) => (
+              <Card key={type.type}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-sm font-medium">{type.type} Members</CardTitle>
+                  <UserCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{type.count}</div>
+                  <p className="text-xs text-muted-foreground">+{type.growth}% from last month</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="groups" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Groups Overview</CardTitle>
+              <CardDescription>Active groups and their member counts</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Group Name</TableHead>
+                    <TableHead>Total Members</TableHead>
+                    <TableHead>Active Members</TableHead>
+                    <TableHead>Activity Rate</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {groupsData.map((group) => (
+                    <TableRow key={group.name}>
+                      <TableCell className="font-medium">{group.name}</TableCell>
+                      <TableCell>{group.members}</TableCell>
+                      <TableCell>{group.active}</TableCell>
+                      <TableCell>{Math.round((group.active / group.members) * 100)}%</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="donations" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Donations</CardTitle>
+              <CardDescription>Latest donations received through Stripe</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Donor</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentDonations.map((donation) => (
+                    <TableRow key={donation.id}>
+                      <TableCell className="font-medium">{donation.donor}</TableCell>
+                      <TableCell>${donation.amount.toLocaleString()}</TableCell>
+                      <TableCell>{new Date(donation.date).toLocaleDateString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
-);
+  )
+}
 
-const Overview = () => {
-    return (
-        <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">Overview</h1>
-            
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <MetricCard 
-                    icon={<Users />}
-                    title="Total Subscribers"
-                    value="3,245"
-                    change={12.5}
-                    positive={true}
-                />
-                <MetricCard 
-                    icon={<Mail />}
-                    title="Email Subscribers"
-                    value="2,103"
-                    change={8.2}
-                    positive={true}
-                />
-                
-                <MetricCard 
-                    icon={<Activity />}
-                    title="Active Members"
-                    value="87"
-                    change={15.7}
-                    positive={true}
-                />
-            </div>
-
-            {/* Subscription Revenue Chart */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-50">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Memebers Growth</h2>
-                <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={subscriptionData}>
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Line 
-                            type="monotone" 
-                            dataKey="revenue" 
-                            stroke="#3B82F6" 
-                            strokeWidth={3}
-                        />
-                    </LineChart>
-                </ResponsiveContainer>
-            </div>
-
-          
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-50">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Support</h2>
-                <ul>
-                    <li>
-                        <div className="flex items-center mb-2">
-                            <ShieldCheck className="text-green-500 mr-2" />
-                            <span>General Support</span>
-                        </div>
-                    </li>
-                    
-                </ul>
-            </div>
-
-            {/* Payment Methods */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-50">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Payment Methods</h2>
-                <ul>
-                    <li>
-                        <div className="flex items-center mb-2">
-                            <CreditCard className="text-blue-500 mr-2" />
-                            <span>Credit Card</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div className="flex items-center mb-2">
-                            <FileText className="text-gray-500 mr-2" />
-                            <span>Bank Transfer</span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
-          
-
-            {/* Menu */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-50">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Menu</h2>
-                <ul>
-                    <li>
-                        <div className="flex items-center mb-2">
-                            <Menu className="text-gray-500 mr-2" />
-                            <span>Main Menu</span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
-        </div>
-    );
-};
-
-export default Overview;

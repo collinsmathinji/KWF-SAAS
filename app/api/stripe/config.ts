@@ -1,12 +1,14 @@
+
 import Stripe from "stripe"
-
-// Ensure environment variable exists
-const stripeSecretKey = process.env.NEXT_STRIPE_SECRET_KEY
+const stripeSecretKey ='sk_test_51Qqb1BQKV3Rv0sYp2UDCxaB9fHvlhjKlHz5nogC4Hnh1peIiFpvLc5T8A7E55pk9raKzqBI0Nm6wyhov4ZKChF2y00TJ7lmCIG'
 if (!stripeSecretKey) {
+  console.log("stripesecret",stripeSecretKey)
   throw new Error("Missing required environment variable: STRIPE_SECRET_KEY")
-}
+}else(
+  console.log("✅ STRIPE_SECRET_KEY is present:", stripeSecretKey)
+)
 
-// Initialize Stripe with proper configuration
+
 export const stripe = new Stripe(stripeSecretKey, {
   apiVersion: "2025-01-27.acacia",
   typescript: true,
