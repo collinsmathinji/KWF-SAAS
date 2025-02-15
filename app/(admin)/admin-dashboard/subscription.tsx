@@ -26,7 +26,7 @@ interface Addon {
 }
 
 interface Subscription {
-  plan:any,
+  plan: keyof typeof PLANS
   status: "Active" | "Canceled" | "Past Due"
   nextBilling: string
   usedUsers: number
@@ -93,7 +93,7 @@ export default function SubscriptionManagement() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to remove add-on. Please try again.",
+        description: `Failed to remove add-on. Please try again${error}`,
         variant: "destructive",
       })
     }
@@ -117,7 +117,7 @@ export default function SubscriptionManagement() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add add-on. Please try again.",
+        description: `Failed to remove add-on. Please try again${error}`,
         variant: "destructive",
       })
     }

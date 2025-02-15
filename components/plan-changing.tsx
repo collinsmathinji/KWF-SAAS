@@ -42,7 +42,7 @@ export function ChangePlanDialog({ currentPlan }: ChangePlanDialogProps) {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update plan. Please try again.",
+        description: `Failed to update plan. Please try again${error}`,
         variant: "destructive",
       })
     } finally {

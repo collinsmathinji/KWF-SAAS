@@ -152,7 +152,7 @@ const events = [
 export default function OrganizationDashboard({ activeGroup, onGroupSelect, onCreateGroup, onJoinGroup }: GroupsSectionProps){
   const [activeMainMenu, setActiveMainMenu] = useState<string>("dashboard")
   const [activeSubMenu, setActiveSubMenu] = useState<string>("")
-
+console.log(setActiveSubMenu)
   const handleMainMenuClick = (menu: string) => {
     setActiveMainMenu(menu)
   }
