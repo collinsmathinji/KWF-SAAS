@@ -149,7 +149,14 @@ const events = [
   { id: "2", title: "Team Building", date: "2025-02-20", location: "Conference Room" },
 ]
 
-export default function OrganizationDashboard({ activeGroup, onGroupSelect, onCreateGroup, onJoinGroup }: GroupsSectionProps){
+interface OrganizationDashboardProps {
+  activeGroup?: string
+  onGroupSelect: (groupId: string) => void
+  onCreateGroup?: () => void
+  onJoinGroup: (groupId: string) => void
+}
+
+export default function OrganizationDashboard({ activeGroup, onGroupSelect, onCreateGroup, onJoinGroup }: OrganizationDashboardProps){
   const [activeMainMenu, setActiveMainMenu] = useState<string>("dashboard")
   const [activeSubMenu, setActiveSubMenu] = useState<string>("")
 console.log(setActiveSubMenu)
