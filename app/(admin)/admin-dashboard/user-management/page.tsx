@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Users, UserPlus, Download, Plus, Settings2, ChevronDown, Search, Filter, MoreHorizontal, FileText, LayoutDashboard } from "lucide-react"
+import { Users, UserPlus, Download, Plus, Settings2, ChevronDown, Search, Filter, MoreHorizontal } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import DataManagement from "./databaseConfig"
+
 // Sample data
 const membershipTypes = [
   { id: 1, name: "Basic", members: 234 },
@@ -48,7 +48,7 @@ export default function UserManagementPage() {
   const router = useRouter()
   const [view, setView] = useState("members")
   const [selectedColumns, setSelectedColumns] = useState<string[]>(["name", "email", "type", "status", "joinDate"])
-  const [activeSection, setActiveSection] = useState("")
+
   const columns = {
     members: {
       name: "Name",
@@ -121,23 +121,10 @@ export default function UserManagementPage() {
         </DropdownMenu>
 
         <div className="flex gap-2">
-        <Button 
-          variant="outline"
-          onClick={() => setActiveSection(activeSection === 'data' ? '' : 'data')}
-          className="flex items-center gap-2 transition-all hover:gap-3"
-        >
-          {activeSection === 'data' ? (
-        <>
-          <LayoutDashboard className="h-4 w-4" />
-          Back to User Management
-        </>
-          ) : (
-        <>
-          <FileText className="h-4 w-4" />
-           Data management
-        </>
-          )}
-        </Button>
+          <Button variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
           {view === "members" ? (
             <Button>
               <UserPlus className="mr-2 h-4 w-4" />
@@ -152,8 +139,6 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      {activeSection === "data" ?(<DataManagement/>):(
-            <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {view === "members" ? (
           <>
@@ -198,13 +183,11 @@ export default function UserManagementPage() {
         <CardContent>
           <div className="flex items-center gap-4 mb-4">
             <div className="flex-1">
-              <div className="relative max-w-sm">
-                <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder={`Search ${view}...`}
-                  className="pl-8"
-                />
-              </div>
+              <Input
+                placeholder={`Search ${view}...`}
+                className="max-w-sm"
+                prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+              />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -311,10 +294,8 @@ export default function UserManagementPage() {
               </TableBody>
             </Table>
           </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -1,10 +1,11 @@
+"use client"
 import React, { useState } from 'react';
 import { 
     FileText, 
     Download, 
-
     Calendar, 
     Users, 
+
     List, 
 } from 'lucide-react';
 
@@ -26,16 +27,12 @@ const ReportsGenerator: React.FC = () => {
             label: 'Contacts Overview', 
             description: 'Detailed breakdown of contact demographics and distribution' 
         },
-        { 
-            value: 'organizations', 
-            label: 'Organization Insights', 
-            description: 'Comprehensive analysis of organizational contacts' 
-        },
-        { 
-            value: 'interactions', 
-            label: 'Communication Logs', 
-            description: 'Interaction history and communication patterns' 
-        },
+        // { 
+        //     value: 'organizations', 
+        //     label: 'Organization Insights', 
+        //     description: 'Comprehensive analysis of organizational contacts' 
+        // },
+      
         { 
             value: 'growth', 
             label: 'Contact Growth', 
@@ -62,7 +59,7 @@ const ReportsGenerator: React.FC = () => {
             </div>
 
             {/* Report Type Selection */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
                 {reportTypes.map((type) => (
                     <div 
                         key={type.value}

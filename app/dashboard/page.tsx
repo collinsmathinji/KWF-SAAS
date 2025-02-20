@@ -3,12 +3,10 @@
 import React from "react"
 
 import { useState } from "react"
-import { Bell, CreditCard, Database, Layers, LayoutDashboard, LogOut, Menu, PieChart, Settings, Users } from "lucide-react"
+import { Bell, CreditCard, Database, Layers, LayoutDashboard, LogOut, Menu, PieChart, Users } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Overview from "./overview"
-import UserManagementPage from "./users"
-import SubscriptionsPage from "./subscription"
-import OrganizationProfile from "./organization"
+
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("overview")
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -33,27 +31,30 @@ export default function DashboardPage() {
       description: "Manage plans and billing",
     },
     {
+      icon: <PieChart />,
+      label: "Analytics",
+      section: "analytics",
+      description: "Detailed platform insights",
+    },
+    {
       icon: <Layers />,
       label: "Organization",
       section: "organization",
       description: "Manage organization settings",
     },
- 
+    {
+      icon: <Database />,
+      label: "Data Management",
+      section: "data",
+      description: "Import, export, and manage data",
+    },
   ]
 
   const renderContent = () => {
     switch (activeSection) {
       case "overview":
         return <Overview />
-      case "users":
-        return <UserManagementPage />
-      case "subscriptions":
-        return <SubscriptionsPage />
-        case "organization":
-          return <OrganizationProfile />
-  
       default:
-
         return (
           <div className="text-center text-muted-foreground">
             {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)} content goes here
@@ -102,7 +103,7 @@ export default function DashboardPage() {
 
         <div className="mt-4 border-t pt-4">
           <button className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50">
-            <Settings className="mr-3" /> Setting
+            <LogOut className="mr-3" /> Logout
           </button>
         </div>
       </div>

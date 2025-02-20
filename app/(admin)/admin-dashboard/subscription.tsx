@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { CalendarDays, CreditCard, Download, Plus, X } from "lucide-react"
+import { CalendarDays, CreditCard, LayoutDashboard,FileText, Plus, X } from "lucide-react"
 import { ChangePlanDialog } from "@/components/plan-changing"
 import {
   Dialog,
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/use-toast"
 import { PLANS } from "@/app/api/stripe/config"
-
+import SubscriptionReportsPage from "./subscription-reports/page"
 interface Addon {
   id: string
   name: string
@@ -71,7 +71,7 @@ const availableAddons: Addon[] = [
 export default function SubscriptionManagement() {
   const [activeSubscription, setActiveSubscription] = useState<Subscription>(subscription)
   const [showAddonsDialog, setShowAddonsDialog] = useState(false)
-
+  const [activeSection, setActiveSection] = useState("")
   const currentPlan = PLANS[activeSubscription.plan]
   const monthlyTotal =
     currentPlan.basePrice + activeSubscription.addons.reduce((total, addon) => total + addon.price, 0)
@@ -124,13 +124,35 @@ export default function SubscriptionManagement() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-blue-900">Subscription Management</h1>
         <p className="text-gray-600">Manage your subscription and billing details</p>
       </div>
-
-      <div className="space-y-6">
+      <div>
+      <Button 
+          variant="outline"
+          onClick={() => setActiveSection(activeSection === 'billings' ? '' : 'billings')}
+          className="flex items-center gap-2 transition-all hover:gap-3"
+        >
+          {activeSection === 'billings' ? (
+        <>
+          <LayoutDashboard className="h-4 w-4" />
+          Back to Subscription
+        </>
+          ) : (
+        <>
+          <FileText className="h-4 w-4" />
+           Billing reports
+        </>
+          )}
+        </Button>
+        </div>
+        </div>
+        {activeSection === "billings" ?(<SubscriptionReportsPage />):(
+            <>
+      <div className="space-y-3">
         {/* Current Plan Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -258,35 +280,8 @@ export default function SubscriptionManagement() {
             </Button>
           </CardFooter>
         </Card>
-
-        {/* Billing History Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-blue-900">Billing History</CardTitle>
-            <CardDescription>View and download your billing history</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { date: "Nov 1, 2023", amount: monthlyTotal },
-                { date: "Oct 1, 2023", amount: monthlyTotal },
-                { date: "Sep 1, 2023", amount: monthlyTotal },
-              ].map((invoice, index) => (
-                <div key={index} className="flex items-center justify-between py-2 border-b last:border-0">
-                  <div>
-                    <p className="font-medium">{invoice.date}</p>
-                    <p className="text-sm text-gray-500">${invoice.amount.toFixed(2)}</p>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:bg-blue-50">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
+      </>)}
     </div>
   )
 }
