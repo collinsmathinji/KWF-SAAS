@@ -3,12 +3,14 @@
 import React from "react"
 
 import { useState } from "react"
-import { Bell, CreditCard, Database, Layers, LayoutDashboard, LogOut, Menu, PieChart, Settings, Users } from "lucide-react"
+import { Bell, CreditCard, Calendar, Layers, LayoutDashboard, Menu,  Settings, Users } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Overview from "./overview"
 import UserManagementPage from "./users"
 import SubscriptionsPage from "./subscription"
+import SettingsPage from "./settings/page"
 import OrganizationProfile from "./organization"
+import EventPage from "./event/page"
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("overview")
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -38,6 +40,12 @@ export default function DashboardPage() {
       section: "organization",
       description: "Manage organization settings",
     },
+    {
+      icon: <Calendar />,
+      label: "Events",
+      section: "event",
+      description: "Manage organization events",
+    },
  
   ]
 
@@ -51,7 +59,10 @@ export default function DashboardPage() {
         return <SubscriptionsPage />
         case "organization":
           return <OrganizationProfile />
-  
+      case "event":
+        return  <EventPage />
+      case 'settings':
+        return <SettingsPage />
       default:
 
         return (
@@ -101,8 +112,12 @@ export default function DashboardPage() {
         </nav>
 
         <div className="mt-4 border-t pt-4">
-          <button className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50">
-            <Settings className="mr-3" /> Setting
+          <button className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50"  onClick={() => {
+                setActiveSection('settings')
+                setSidebarOpen(false)
+              
+              }}>
+            <Settings  className="mr-3" /> Settings
           </button>
         </div>
       </div>

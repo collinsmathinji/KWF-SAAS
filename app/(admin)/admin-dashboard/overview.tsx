@@ -99,7 +99,7 @@ const [activeSection, setActiveSection] = useState("")
               <MetricCard 
                 icon={<UserPlus className="h-4 w-4" />} 
                 title="Registered Members" 
-                value="5,335" 
+                value="500" 
                 change={8.2}
                 description="Including portal access members" 
               />

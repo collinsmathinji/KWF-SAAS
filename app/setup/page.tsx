@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from 'react';
-import OrganizationDashboard from '../member-portal/page';
+import DashboardPage from '../(admin)/admin-dashboard/page';
 import OrganizationSetup from '../setup/setup';
 
 interface Organization {
@@ -31,7 +31,7 @@ const OrganizationManagement = () => {
     <div className="relative">
       {/* Main Dashboard */}
       <div className={`h-screen ${showSetup ? 'pointer-events-none' : ''}`}>
-        <OrganizationDashboard />
+        <DashboardPage />
       </div>
 
       {/* Setup Dialog */}
