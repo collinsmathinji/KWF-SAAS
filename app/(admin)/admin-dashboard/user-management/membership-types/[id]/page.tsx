@@ -8,7 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
-export default function MembershipTypePage({ }: { params: { id: string } }) {
+type PageProps = {
+  params: {
+    id: string
+  }
+}
+
+export default function MembershipTypePage({ params }: PageProps) {
   const router = useRouter()
 
   return (
@@ -73,4 +79,3 @@ export default function MembershipTypePage({ }: { params: { id: string } }) {
     </div>
   )
 }
-
