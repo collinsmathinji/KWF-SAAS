@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Roboto_Mono } from "next/font/google";
 import "../globals.css";
-import {  Users, Building } from 'lucide-react';
-const geistSans = Geist({
+import { Users, Building } from 'lucide-react';
+
+// Using Inter instead of Geist
+const inter = Inter({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
+// Using Roboto Mono instead of Geist Mono
+const robotoMono = Roboto_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
@@ -22,56 +25,69 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-    return (
-        <html lang="en">
-        <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <nav className="bg-blue-600 text-white p-4 shadow-y border-y border-gray-200">
-            <div className="max-w-4xl mx-auto flex justify-between items-center">
-                <h1 className="text-2xl font-bold">KWF_SAAS</h1>
-                <div className="text-sm">
-                    <span>Your go-to solution for business management</span>
+  return (
+    <html lang="en" className={`${inter.variable} ${robotoMono.variable}`}>
+      <body>
+        <div className="flex min-h-screen flex-col">
+          <main className="flex-1">
+            <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-900">
+              <div className="container px-4 md:px-6">
+                <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                  <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">KWF_SAAS</h1>
+                  <p className="max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                    Your go-to solution for business management
+                  </p>
                 </div>
-            </div>
-        </nav>
-        <div className="min-h-screen flex bg-gray-50">
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-12 flex-col justify-between">
-                <div>
-                    <h1 className="text-5xl font-extrabold mb-4 animate-fade-in">KWF-SAAS</h1>
-                    <p className="text-blue-100 text-lg">Your Ultimate Contact Management Solution</p>
+              </div>
+            </section>
+            
+            <section className="w-full py-12 md:py-24 lg:py-32">
+              <div className="container px-4 md:px-6">
+                <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                  <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">KWF-SAAS</h2>
+                  <p className="max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                    Your Ultimate Contact Management Solution
+                  </p>
                 </div>
                 
-                <div className="space-y-8">
-                    <div className="flex items-start space-x-4 animate-slide-in">
-                        <div className="p-3 bg-blue-500 rounded-lg">
-                            <Users className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="font-semibold mb-1">Customizable Contact Fields</h3>
-                            <p className="text-blue-100 text-sm">Tailor your contact management to your organizations specific needs</p>
-                        </div>
+                <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:gap-12 mt-12">
+                  <div className="flex flex-col items-start space-y-4">
+                    <div className="p-2 bg-blue-100 rounded-full dark:bg-blue-900">
+                      <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                     </div>
-                    
-                    <div className="flex items-start space-x-4 animate-slide-in">
-                        <div className="p-3 bg-blue-500 rounded-lg">
-                            <Building className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="font-semibold mb-1">Multi-Organization Support</h3>
-                            <p className="text-blue-100 text-sm">Perfect for businesses of all types and sizes</p>
-                        </div>
+                    <h3 className="text-xl font-bold">Customizable Contact Fields</h3>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Tailor your contact management to your organization's specific needs
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-col items-start space-y-4">
+                    <div className="p-2 bg-blue-100 rounded-full dark:bg-blue-900">
+                      <Building className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                     </div>
+                    <h3 className="text-xl font-bold">Multi-Organization Support</h3>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Perfect for businesses of all types and sizes
+                    </p>
+                  </div>
                 </div>
-
-                <div className="text-sm text-blue-100">
+              </div>
+            </section>
+            
+            <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-900">
+              <div className="container px-4 md:px-6">
+                <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                  <p className="text-gray-500 dark:text-gray-400">
                     Trusted by hundreds of organizations worldwide
+                  </p>
                 </div>
-            </div>
-        {children}
+              </div>
+            </section>
+            
+            {children}
+          </main>
         </div>
       </body>
     </html>
-    );
-};
-
+  );
+}
