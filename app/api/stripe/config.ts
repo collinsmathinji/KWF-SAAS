@@ -1,6 +1,6 @@
 
 import Stripe from "stripe"
-const stripeSecretKey = 'sk_test_51Qqb1BQKV3Rv0sYp2UDCxaB9fHvlhjKlHz5nogC4Hnh1peIiFpvLc5T8A7E55pk9raKzqBI0Nm6wyhov4ZKChF2y00TJ7lmCIG';
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 if (!stripeSecretKey) {
   console.log("stripesecret",stripeSecretKey)
   throw new Error("Missing required environment variable: STRIPE_SECRET_KEY")
