@@ -13,7 +13,6 @@ export const stripe = new Stripe(stripeSecretKey, {
   typescript: true,
 })
 
-// Client-safe plan configuration
 export const PLANS = {
   starter: {
     name: "Starter",
