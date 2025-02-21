@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar, CalendarDays, Group, Lock, Plus, LayoutDashboard, Users } from "lucide-react"
+import { CalendarDays, Group, Lock, Plus, LayoutDashboard, Users } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -22,7 +22,7 @@ import {
 
 // Import your components
 import DashboardContent from "./dashboard-content"
-import { EventsTable } from "./events-table"
+import EventsTable from "./events-table"
 import { GroupsContent } from "./groups-content"
 import { MemberTypesContent } from "./member-types-content"
 import UserProfile from "../profile-page/page"
@@ -275,7 +275,7 @@ export default function Page() {
                           <span>Events</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
-                      <SidebarMenuItem>
+                      {/* <SidebarMenuItem>
                         <SidebarMenuButton
                           onClick={() => handleMainMenuClick("calendar")}
                           isActive={activeMainMenu === "calendar"}
@@ -283,7 +283,7 @@ export default function Page() {
                           <Calendar className="h-4 w-4" />
                           <span>Calendar</span>
                         </SidebarMenuButton>
-                      </SidebarMenuItem>
+                      </SidebarMenuItem> */}
                     </SidebarMenu>
                   </SidebarGroupContent>
                 </SidebarGroup>
@@ -308,7 +308,7 @@ export default function Page() {
 
             <Card className="h-full border-none bg-white/50 backdrop-blur-xl">
               {activeMainMenu === "dashboard" && <DashboardContent member={memberData} />}
-              {activeMainMenu === "events" && <EventsTable events={events} />}
+              {activeMainMenu === "events" && <EventsTable  />}
               {activeMainMenu === "userProfile" && <UserProfile />}
               {activeMainMenu === "membertypes" && (
                 <MemberTypesContent memberType={memberTypes.find((t) => t.id === activeSubMenu)} />
