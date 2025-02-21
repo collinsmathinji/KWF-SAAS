@@ -182,13 +182,15 @@ export default function UserManagementPage() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-4">
-            <div className="flex-1">
-              <Input
-                placeholder={`Search ${view}...`}
-                className="max-w-sm"
-                prefix={<Search className="h-4 w-4 text-muted-foreground" />}
-              />
-            </div>
+          <div className="flex-1">
+  <div className="relative max-w-sm">
+    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+    <Input
+      placeholder={`Search ${view}...`}
+      className="pl-9 max-w-sm"
+    />
+  </div>
+</div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
