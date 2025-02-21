@@ -46,7 +46,7 @@ interface GroupData {
   lead: string
 }
 
-interface GroupsSectionProps {
+interface OrganizationDashboardProps {
   activeGroup?: string
   onGroupSelect: (groupId: string) => void
   onCreateGroup?: () => void
@@ -155,8 +155,12 @@ interface OrganizationDashboardProps {
   onCreateGroup?: () => void
   onJoinGroup: (groupId: string) => void
 }
-
-export default function OrganizationDashboard({ activeGroup, onGroupSelect, onCreateGroup, onJoinGroup }: OrganizationDashboardProps){
+export default function OrganizationDashboard({
+  activeGroup,
+  onGroupSelect,
+  onCreateGroup,
+  onJoinGroup
+}: OrganizationDashboardProps) {
   const [activeMainMenu, setActiveMainMenu] = useState<string>("dashboard")
   const [activeSubMenu, setActiveSubMenu] = useState<string>("")
 console.log(setActiveSubMenu)
