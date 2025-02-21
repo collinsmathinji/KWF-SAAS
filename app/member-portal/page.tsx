@@ -149,14 +149,16 @@ const events = [
   { id: "2", title: "Team Building", date: "2025-02-20", location: "Conference Room" },
 ]
 
+
 interface OrganizationDashboardProps {
   activeGroup?: string
   onGroupSelect: (groupId: string) => void
   onCreateGroup?: () => void
   onJoinGroup: (groupId: string) => void
 }
+
 export default function OrganizationDashboard({
-  activeGroup,
+  activeGroup = "",
   onGroupSelect,
   onCreateGroup,
   onJoinGroup
