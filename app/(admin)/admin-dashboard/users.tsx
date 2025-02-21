@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Users, UserPlus, Download, Plus, Settings2, ChevronDown, Search, Filter, MoreHorizontal, FileText, LayoutDashboard } from "lucide-react"
+import { Users, UserPlus, Plus, Settings2, ChevronDown, Search, Filter, MoreHorizontal, FileText, LayoutDashboard } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,

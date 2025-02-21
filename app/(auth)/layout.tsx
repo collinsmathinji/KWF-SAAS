@@ -57,7 +57,7 @@ export default function RootLayout({
                     </div>
                     <h3 className="text-xl font-bold">Customizable Contact Fields</h3>
                     <p className="text-gray-500 dark:text-gray-400">
-                      Tailor your contact management to your organization's specific needs
+                      Tailor your contact management to your organizations specific needs
                     </p>
                   </div>
                   

@@ -138,12 +138,6 @@ interface Event {
 
 type EventStage = "Planning" | "Invitations" | "Registration" | "In Progress" | "Completed"
 
-interface EmailTemplate {
-  id: string
-  name: string
-  subject: string
-  content: string
-}
 
 // Sample data with proper types
 const sampleVenues: Venue[] = [
@@ -432,18 +426,16 @@ const StageBadge = ({ stage }: StageBadgeProps) => {
 export default function EventManagementPage() {
   const [events, setEvents] = useState<Event[]>(sampleEvents as Event[]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
-  const [selectedTab, setSelectedTab] = useState("overview")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const [isVenueDialogOpen, setIsVenueDialogOpen] = useState(false)
   const [isSendThankYouOpen, setIsSendThankYouOpen] = useState(false)
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
-  const [selectedContacts, setSelectedContacts] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [showConfirmation, setShowConfirmation] = useState(false)
-
+console.log(selectedVenue)
   const ITEMS_PER_PAGE = 5
 
   const form = useForm<EventFormValues>({
@@ -549,7 +541,6 @@ export default function EventManagementPage() {
             ticketId: `TK${Math.floor(1000 + Math.random() * 9000)}`,
           }
         })
-
         return {
           ...event,
           attendees: [...event.attendees, ...newAttendees],

@@ -62,7 +62,7 @@ export default function OrganizationProfile() {
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-blue-900">Organization Profile</h1>
-        <p className="text-gray-600">Manage your organization's information</p>
+        <p className="text-gray-600">Manage your organizations information</p>
       </div>
 
       <Form {...form}>
@@ -85,7 +85,7 @@ export default function OrganizationProfile() {
               <Card>
                 <CardHeader>
                   <CardTitle>Organization Logo</CardTitle>
-                  <CardDescription>Your organization's visual identity</CardDescription>
+                  <CardDescription>Your organizations visual identity</CardDescription>
                 </CardHeader>
                 <CardContent className="flex items-center gap-6">
                   <Avatar className="h-24 w-24">

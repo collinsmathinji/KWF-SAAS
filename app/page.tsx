@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Check, ChevronRight, Laptop, Users, Calendar, FileText, Zap, Shield } from 'lucide-react'
+import { Check, ChevronRight, Laptop, Users, Calendar,  Zap} from 'lucide-react'
 import Image from "next/image"
 import { Pricing } from "@/components/pricing"
 import UPF from '@/public/download.png'
@@ -57,7 +57,7 @@ export default function Page() {
           <div className="container flex flex-col md:flex-row items-center gap-8">
             <div className="flex-1 space-y-6">
               <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tighter">
-                Organize your team's work in one place
+                Organize your teams work in one place
               </h1>
               <p className="text-xl text-slate-600 md:max-w-[85%]">
                 The all-in-one workspace for your notes, tasks, and team collaboration. Boost productivity like never before.
@@ -101,7 +101,7 @@ export default function Page() {
                   <Laptop className="h-10 w-10 text-blue-600 mb-2" />
                   <CardTitle>Smart Workspace</CardTitle>
                   <CardDescription>
-                    Customizable workspace that adapts to your team's needs
+                    Customizable workspace that adapts to your teams needs
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

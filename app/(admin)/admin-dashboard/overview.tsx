@@ -61,7 +61,6 @@ const MetricCard = ({ icon, title, value, change, description }: MetricCardProps
 )
 
 export default function Overview() {
-  const router = useRouter()
 const [activeSection, setActiveSection] = useState("")
 
   return (

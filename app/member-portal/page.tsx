@@ -95,7 +95,7 @@ export default function Page() {
   const [activeMainMenu, setActiveMainMenu] = useState<string>("dashboard")
   const [activeSubMenu, setActiveSubMenu] = useState<string>("")
   const [activeGroup, setActiveGroup] = useState<string>("")
-
+  console.log(setActiveSubMenu)
   const memberGroups = groups.filter((g) => g.isMember)
   const availableGroups = groups.filter((g) => !g.isMember)
 
