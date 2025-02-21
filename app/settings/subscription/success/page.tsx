@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { stripe } from "@/app/api/stripe/config"
+import { stripe } from "@/app/api/stripe/stripehook"
 import { CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
