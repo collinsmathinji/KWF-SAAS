@@ -3,23 +3,23 @@ import Stripe from "stripe"
 import { NextResponse } from "next/server"
 
 // Environment variable check
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY
 if (!stripeSecretKey) {
-  throw new Error("Missing STRIPE_SECRET_KEY environment variable");
+  throw new Error("Missing STRIPE_SECRET_KEY environment variable")
 } else {
-  console.log("✅ STRIPE_SECRET_KEY is present:", stripeSecretKey);
+  console.log("✅ STRIPE_SECRET_KEY is present:", stripeSecretKey)
 }
 
 // Initialize Stripe with the latest API version
 const stripeClient = new Stripe(stripeSecretKey, {
-  apiVersion: "2025-01-27.acacia", 
+  apiVersion: "2025-01-27.acacia", // Updated to latest stable version
   typescript: true,
 })
 
 export async function POST(req: Request) {
   try {
     console.log("⏳ Receiving subscription request...")
-    
+
     const { planId } = await req.json()
     console.log("✅ Received Plan ID:", planId)
 
@@ -27,25 +27,18 @@ export async function POST(req: Request) {
 
     if (!plan || !plan.priceId) {
       console.error("❌ Invalid Plan Selected:", planId)
-      return NextResponse.json(
-        { error: "Invalid plan selected" }, 
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Invalid plan selected" }, { status: 400 })
     }
 
     // Ensure Stripe is initialized
     if (!stripeClient) {
       console.error("❌ Stripe is not initialized!")
-      return NextResponse.json(
-        { error: "Stripe is not initialized" }, 
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Stripe is not initialized" }, { status: 500 })
     }
 
     console.log("✅ Creating subscription for Plan:", plan.priceId)
 
     // Create a customer first if you don't have one
-    // In a real application, this should be tied to your user system
     const customer = await stripeClient.customers.create({
       metadata: {
         planId: plan.id,
@@ -79,15 +72,12 @@ export async function POST(req: Request) {
     })
   } catch (error) {
     console.error("🚨 Error creating subscription:", error)
-    
-    // Provide more detailed error messages in development
-    const errorMessage = process.env.NODE_ENV === "development" 
-      ? (error as Error).message 
-      : "Error creating subscription"
 
-    return NextResponse.json(
-      { error: errorMessage }, 
-      { status: 500 }
-    )
+    // Provide more detailed error messages in development
+    const errorMessage =
+      process.env.NODE_ENV === "development" ? (error as Error).message : "Error creating subscription"
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
+
