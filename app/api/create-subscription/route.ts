@@ -3,7 +3,7 @@ import Stripe from "stripe"
 import { NextResponse } from "next/server"
 
 // Environment variable check
-const stripeSecretKey = process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY
 if (!stripeSecretKey) {
   throw new Error("Missing STRIPE_SECRET_KEY environment variable")
 } else {
