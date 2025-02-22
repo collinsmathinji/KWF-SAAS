@@ -21,7 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import DataManagement from "./databaseConfig"
-// Sample data
+import AddMemberForm from "./invite-member"
 const membershipTypes = [
   { id: 1, name: "Basic", members: 234 },
   { id: 2, name: "Premium", members: 156 },
@@ -139,7 +139,7 @@ export default function UserManagementPage() {
           )}
         </Button>
           {view === "members" ? (
-            <Button>
+            <Button onClick={() => setActiveSection(activeSection === 'add-member' ? '' : 'add-member')}>
               <UserPlus className="mr-2 h-4 w-4" />
               Add Member
             </Button>
@@ -152,7 +152,10 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      {activeSection === "data" ?(<DataManagement/>):(
+      {activeSection === "data" ?(<DataManagement/>):activeSection ==='add-member'?
+      <>
+      <AddMemberForm/>
+      </>:(
             <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {view === "members" ? (
