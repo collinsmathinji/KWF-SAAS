@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import DataManagement from "./databaseConfig"
 import AddMemberForm from "./invite-member"
+import AddMemberTypeForm from "./add-memberType"
 const membershipTypes = [
   { id: 1, name: "Basic", members: 234 },
   { id: 2, name: "Premium", members: 156 },
@@ -100,8 +101,10 @@ export default function UserManagementPage() {
                 ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <Plus className="mr-2 h-4 w-4" />
+                 <button className="flex  " onClick={() => setActiveSection('add-memberType')}>
+                  <Plus className="mr-2 h-5 w-5 mr-5 " />
                   <span>Add New Type</span>
+                 </button>
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
@@ -155,7 +158,7 @@ export default function UserManagementPage() {
       {activeSection === "data" ?(<DataManagement/>):activeSection ==='add-member'?
       <>
       <AddMemberForm/>
-      </>:(
+      </>:activeSection==='add-memberType'?<><AddMemberTypeForm/></>:(
             <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {view === "members" ? (
