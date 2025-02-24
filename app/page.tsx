@@ -1,226 +1,153 @@
-'use client'
-import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Check, ChevronRight, Laptop, Users, Calendar, Zap, Menu, X } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Check, ChevronRight, Laptop, Users, Calendar, Zap } from "lucide-react"
 import Image from "next/image"
 import { Pricing } from "@/components/pricing"
-import UPF from '@/public/download.png'
-import Work from '@/public/online.jpg'
-
-const MobileNav = ({ isOpen, setIsOpen }:any) => {
-  return (
-    <div className={`
-      fixed inset-0 bg-white z-50 transform transition-transform duration-300 ease-in-out
-      ${isOpen ? 'translate-x-0' : 'translate-x-full'}
-    `}>
-      <div className="flex justify-between items-center p-4 border-b">
-        <div className="flex items-center gap-2">
-          <Zap className="h-6 w-6 text-blue-600" />
-          <span className="text-xl font-bold">KWF_SAAS</span>
-        </div>
-        <button onClick={() => setIsOpen(false)}>
-          <X className="h-6 w-6" />
-        </button>
-      </div>
-      <nav className="flex flex-col p-4 gap-4">
-        <Link 
-          className="text-lg font-medium hover:text-blue-600 p-2" 
-          href="#features"
-          onClick={() => setIsOpen(false)}
-        >
-          Features
-        </Link>
-        <Link 
-          className="text-lg font-medium hover:text-blue-600 p-2" 
-          href="#pricing"
-          onClick={() => setIsOpen(false)}
-        >
-          Pricing
-        </Link>
-        <Link 
-          className="text-lg font-medium hover:text-blue-600 p-2" 
-          href="#testimonials"
-          onClick={() => setIsOpen(false)}
-        >
-          Testimonials
-        </Link>
-        <Link 
-          className="text-lg font-medium hover:text-blue-600 p-2" 
-          href="#contact"
-          onClick={() => setIsOpen(false)}
-        >
-          Contact
-        </Link>
-        <div className="mt-4 space-y-4">
-          <Link 
-            href="/login"
-            className="block text-center text-lg font-medium hover:text-blue-600 p-2"
-          >
-            Sign In
-          </Link>
-          <Button className="w-full bg-blue-600 hover:bg-blue-700">
-            Get Started
-            <ChevronRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      </nav>
-    </div>
-  )
-}
+import UPF from "@/public/download.png"
+import Work from "@/public/online.jpg"
 
 export default function Page() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
   return (
     <div className="flex min-h-screen flex-col">
       {/* Navigation */}
-      <header className="sticky top-0 z-40 w-full border-b bg-white">
-        <div className="container flex h-16 items-center justify-between">
+      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+        <div className="container flex h-16 items-center justify-between max-w-7xl 2xl:max-w-screen-xl 3xl:max-w-screen-2xl mx-auto px-4">
           <div className="flex items-center gap-2">
-            <Zap className="h-6 w-6 text-blue-600" />
-            <span className="text-xl font-bold">KWF_SAAS</span>
+            <Zap className="h-6 w-6 text-blue-600 2xl:h-8 2xl:w-8" />
+            <span className="text-xl font-bold 2xl:text-2xl">KWF_SAAS</span>
           </div>
-          <nav className="hidden md:flex gap-6">
-            <Link className="text-sm font-medium hover:text-blue-600" href="#features">
-              Features
-            </Link>
-            <Link className="text-sm font-medium hover:text-blue-600" href="#pricing">
-              Pricing
-            </Link>
-            <Link className="text-sm font-medium hover:text-blue-600" href="#testimonials">
-              Testimonials
-            </Link>
-            <Link className="text-sm font-medium hover:text-blue-600" href="#contact">
-              Contact
-            </Link>
+          <nav className="hidden md:flex gap-6 2xl:gap-12">
+            {["Features", "Pricing", "Testimonials", "Contact"].map((item) => (
+              <Link
+                key={item}
+                className="text-sm font-medium hover:text-blue-600 transition-colors 2xl:text-lg"
+                href={`#${item.toLowerCase()}`}
+              >
+                {item}
+              </Link>
+            ))}
           </nav>
-          <div className="hidden md:flex items-center gap-4">
-            <Link 
-              href="/login"
-              className="text-sm font-medium hover:text-blue-600"
-            >
+          <div className="flex items-center gap-4 2xl:gap-6">
+            <Link href="/login" className="text-sm font-medium hover:text-blue-600 transition-colors 2xl:text-lg">
               Sign In
             </Link>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button className="bg-blue-600 hover:bg-blue-700 2xl:text-lg 2xl:px-3 2xl:py-3">
               Get Started
-              <ChevronRight className="ml-2 h-4 w-4" />
+              <ChevronRight className="ml-2 h-4 w-4 2xl:h-5 2xl:w-5" />
             </Button>
           </div>
-          <button 
-            className="md:hidden"
-            onClick={() => setIsMobileMenuOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
         </div>
       </header>
 
-      <MobileNav isOpen={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />
-
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="pt-12 md:pt-20 pb-16 bg-gradient-to-b from-blue-50 to-white">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="flex-1 space-y-4 md:space-y-6 text-center md:text-left">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tighter">
-                  Organize your teams work in one place
+        <section className="pt-20 pb-16 bg-gradient-to-b from-blue-50 to-white lg:pt-32 lg:pb-24 2xl:pt-40 2xl:pb-32">
+          <div className="container max-w-7xl 2xl:max-w-screen-xl 3xl:max-w-screen-2xl mx-auto px-4">
+            <div className="flex flex-col md:flex-row items-center gap-8 lg:gap-12 2xl:gap-20">
+              <div className="flex-1 space-y-6 2xl:space-y-8">
+                <h1 className="text-4xl md:text-6xl 2xl:text-7xl 3xl:text-8xl font-bold leading-tight tracking-tighter">
+                  Organize your team's work in one place
                 </h1>
-                <p className="text-lg md:text-xl text-slate-600 md:max-w-[85%]">
-                  The all-in-one workspace for your notes, tasks, and team collaboration. Boost productivity like never before.
+                <p className="text-xl 2xl:text-2xl text-slate-600 md:max-w-[85%]">
+                  The all-in-one workspace for your notes, tasks, and team collaboration. Boost productivity like never
+                  before.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                <div className="flex gap-4 2xl:gap-6">
+                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 2xl:text-xl 2xl:px-8 2xl:py-7">
                     Start for free
                   </Button>
-                  <Button size="lg" variant="outline">
+                  <Button size="lg" variant="outline" className="2xl:text-xl 2xl:px-8 2xl:py-7">
                     Watch demo
                   </Button>
                 </div>
               </div>
-              <div className="flex-1 w-full">
-                <Image
-                  src={Work}
-                  width={670}
-                  height={500}
-                  alt="Dashboard Preview"
-                  className="rounded-lg shadow-2xl w-full"
-                  priority
-                />
+              <div className="flex-1">
+                <div className="relative w-full aspect-[4/3]">
+                  <Image
+                    src={Work || "/placeholder.svg"}
+                    fill
+                    alt="Dashboard Preview"
+                    className="rounded-lg shadow-2xl object-cover"
+                    priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* Features Grid */}
-        <section className="py-16 md:py-20" id="features">
-          <div className="container px-4 md:px-6">
-            <div className="text-center mb-12 md:mb-16">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
+        <section className="py-20 lg:py-32 2xl:py-40" id="features">
+          <div className="container max-w-7xl 2xl:max-w-screen-xl 3xl:max-w-screen-2xl mx-auto px-4">
+            <div className="text-center mb-16 2xl:mb-24">
+              <h2 className="text-3xl md:text-4xl 2xl:text-5xl 3xl:text-6xl font-bold mb-4 2xl:mb-6">
                 Everything you need to manage your organization
               </h2>
-              <p className="text-lg md:text-xl text-slate-600 md:max-w-[70%] mx-auto">
+              <p className="text-xl 2xl:text-2xl text-slate-600 md:max-w-[70%] mx-auto">
                 Powerful features to help your team stay organized, focused, and productive
               </p>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {/* Feature cards remain the same */}
-              <Card>
-                <CardHeader>
-                  <Laptop className="h-10 w-10 text-blue-600 mb-2" />
-                  <CardTitle>Smart Workspace</CardTitle>
-                  <CardDescription>
-                    Customizable workspace that adapts to your teams needs
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-5 w-5 text-green-500" />
-                      <span>Flexible layouts</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-5 w-5 text-green-500" />
-                      <span>Custom templates</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-5 w-5 text-green-500" />
-                      <span>Rich text editing</span>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-              {/* Repeat other feature cards... */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 2xl:gap-16">
+              {[
+                {
+                  icon: <Laptop className="h-10 w-10 2xl:h-12 2xl:w-12 text-blue-600 mb-2" />,
+                  title: "Smart Workspace",
+                  description: "Customizable workspace that adapts to your team's needs",
+                  features: ["Flexible layouts", "Custom templates", "Rich text editing"],
+                },
+                {
+                  icon: <Users className="h-10 w-10 2xl:h-12 2xl:w-12 text-blue-600 mb-2" />,
+                  title: "Team Collaboration",
+                  description: "Work together seamlessly with your team",
+                  features: ["Real-time editing", "Comments & mentions", "File sharing"],
+                },
+                {
+                  icon: <Calendar className="h-10 w-10 2xl:h-12 2xl:w-12 text-blue-600 mb-2" />,
+                  title: "Project Management",
+                  description: "Keep track of projects and deadlines",
+                  features: ["Task tracking", "Timeline views", "Progress reports"],
+                },
+              ].map((feature, index) => (
+                <Card key={index} className="2xl:p-8">
+                  <CardHeader>
+                    {feature.icon}
+                    <CardTitle className="2xl:text-2xl">{feature.title}</CardTitle>
+                    <CardDescription className="2xl:text-lg">{feature.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2 2xl:space-y-4">
+                      {feature.features.map((item, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <Check className="h-5 w-5 2xl:h-6 2xl:w-6 text-green-500" />
+                          <span className="2xl:text-lg">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </section>
 
         {/* Social Proof */}
-        <section className="py-16 md:py-20 bg-blue-50">
-          <div className="container px-4 md:px-6">
-            <div className="text-center mb-12 md:mb-16">
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Trusted by leading companies
-              </h2>
+        <section className="py-20 lg:py-32 2xl:py-40 bg-blue-50">
+          <div className="container max-w-7xl 2xl:max-w-screen-xl 3xl:max-w-screen-2xl mx-auto px-4">
+            <div className="text-center mb-16 2xl:mb-24">
+              <h2 className="text-3xl 2xl:text-5xl font-bold mb-4">Trusted by leading companies</h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center opacity-80">
-              <Card className="w-full py-6 px-4 flex flex-col items-center justify-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12 2xl:gap-16 items-center justify-items-center opacity-80">
+              <Card className="py-8 px-8 2xl:py-12 2xl:px-12 flex flex-col items-center justify-center">
                 <Image
-                  src={UPF}
+                  src={UPF || "/placeholder.svg"}
                   width={300}
                   height={200}
                   alt="UPF logo"
-                  className="h-12 w-auto"
+                  className="h-12 w-auto 2xl:h-16"
                 />
-                <CardDescription className="mt-4 text-center">
+                <CardDescription className="mt-8 2xl:text-lg">
                   <p>UNIVERSAL PEACE FEDERATION(UPF)</p>
                 </CardDescription>
               </Card>
@@ -231,7 +158,7 @@ export default function Page() {
                   width={160}
                   height={80}
                   alt={`Company ${i} logo`}
-                  className="h-12 w-auto"
+                  className="h-12 w-auto 2xl:h-16"
                 />
               ))}
             </div>
@@ -239,13 +166,13 @@ export default function Page() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-16 md:py-20">
-          <div className="container px-4 md:px-6">
-            <div className="bg-blue-300 text-white rounded-2xl p-6 md:p-12 text-center">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
+        <section className="py-20 lg:py-32 2xl:py-40">
+          <div className="container max-w-7xl 2xl:max-w-screen-xl 3xl:max-w-screen-2xl mx-auto px-4">
+            <div className="bg-blue-300 text-white rounded-2xl p-12 2xl:p-20 text-center">
+              <h2 className="text-3xl md:text-4xl 2xl:text-5xl 3xl:text-6xl font-bold mb-4 2xl:mb-6">
                 Ready to transform your organization?
               </h2>
-              <p className="text-lg md:text-xl mb-8 text-blue-100">
+              <p className="text-xl 2xl:text-2xl mb-8 2xl:mb-12 text-blue-100">
                 Join thousands of teams already using OrgFlow to improve their productivity.
               </p>
               <Pricing />
@@ -255,20 +182,45 @@ export default function Page() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-8 md:py-12">
-        <div className="container px-4 md:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <h3 className="font-bold">Product</h3>
-              <ul className="space-y-2">
-                <li><Link href="#" className="text-sm text-slate-600 hover:text-blue-600">Features</Link></li>
-                <li><Link href="#" className="text-sm text-slate-600 hover:text-blue-600">Pricing</Link></li>
-                <li><Link href="#" className="text-sm text-slate-600 hover:text-blue-600">Security</Link></li>
-              </ul>
-            </div>
-            {/* Repeat other footer columns... */}
+      <footer className="border-t py-12 2xl:py-20">
+        <div className="container max-w-7xl 2xl:max-w-screen-xl 3xl:max-w-screen-2xl mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12 2xl:gap-16">
+            {[
+              {
+                title: "Product",
+                links: ["Features", "Pricing", "Security"],
+              },
+              {
+                title: "Company",
+                links: ["About", "Careers", "Blog"],
+              },
+              {
+                title: "Resources",
+                links: ["Documentation", "Help Center", "Guides"],
+              },
+              {
+                title: "Legal",
+                links: ["Privacy", "Terms", "Cookie Policy"],
+              },
+            ].map((section, index) => (
+              <div key={index} className="space-y-4 2xl:space-y-6">
+                <h3 className="font-bold 2xl:text-xl">{section.title}</h3>
+                <ul className="space-y-2 2xl:space-y-4">
+                  {section.links.map((link, i) => (
+                    <li key={i}>
+                      <Link
+                        href="#"
+                        className="text-sm 2xl:text-base text-slate-600 hover:text-blue-600 transition-colors"
+                      >
+                        {link}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-          <div className="mt-8 md:mt-12 pt-8 border-t text-center text-sm text-slate-600">
+          <div className="mt-12 pt-8 border-t text-center text-sm 2xl:text-base text-slate-600">
             <p>&copy; {new Date().getFullYear()} OrgFlow. All rights reserved.</p>
           </div>
         </div>
@@ -276,3 +228,4 @@ export default function Page() {
     </div>
   )
 }
+
