@@ -2,25 +2,46 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import {
-  ExternalLink,
-  AlertCircle,
-  CheckCircle2,
-  CreditCard,
-  BanknoteIcon as Bank,
-  BarChart3,
-  ArrowRight,
-  DollarSign,
-  Wallet,
-  Building2,
-} from "lucide-react"
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { ExternalLink, AlertCircle, CheckCircle2, CreditCard, BanknoteIcon as Bank, BarChart3, ArrowRight, DollarSign, Wallet, Building2, RefreshCcw, Calendar, User, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+
+// Types for our data
+interface AccountBalance {
+  available: number
+  pending: number
+  currency: string
+}
+
+interface Transaction {
+  id: string
+  amount: number
+  status: string
+  created: number
+  customer: {
+    name: string
+    email: string
+  }
+  currency: string
+  type: "payment" | "payout" | "refund"
+}
 
 export default function ConnectPage() {
   const [loading, setLoading] = useState(true)
+  const [balanceLoading, setBalanceLoading] = useState(false)
+  const [transactionsLoading, setTransactionsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [accountStatus, setAccountStatus] = useState<{
     connected: boolean
@@ -30,6 +51,8 @@ export default function ConnectPage() {
   }>({
     connected: false,
   })
+  const [balance, setBalance] = useState<AccountBalance | null>(null)
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([])
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -44,11 +67,133 @@ export default function ConnectPage() {
 
   const checkAccountStatus = async () => {
     try {
+      // In a real app, this would fetch from your API
+      // const response = await fetch('/api/stripe/account-status')
+      // const data = await response.json()
+      
+      // For demo purposes, we'll simulate a connected account
+      const mockConnected = true
+      
+      if (mockConnected) {
+        setAccountStatus({
+          connected: true,
+          accountId: "acct_1234567890",
+          payoutsEnabled: true,
+          chargesEnabled: true,
+        })
+        
+        // If connected, fetch balance and transactions
+        fetchAccountBalance()
+        fetchRecentTransactions()
+      } else {
+        setAccountStatus({ connected: false })
+      }
+      
       setLoading(false)
-      setAccountStatus({ connected: false })
     } catch (err) {
       setError("Failed to check account status")
       setLoading(false)
+    }
+  }
+
+  const fetchAccountBalance = async () => {
+    setBalanceLoading(true)
+    try {
+      // In a real app, this would fetch from your API
+      // const response = await fetch('/api/stripe/balance')
+      // const data = await response.json()
+      
+      // Mock data for demo
+      setTimeout(() => {
+        setBalance({
+          available: 4250.75,
+          pending: 1200.50,
+          currency: "usd"
+        })
+        setBalanceLoading(false)
+      }, 800)
+    } catch (err) {
+      setError("Failed to fetch account balance")
+      setBalanceLoading(false)
+    }
+  }
+
+  const fetchRecentTransactions = async () => {
+    setTransactionsLoading(true)
+    try {
+      // In a real app, this would fetch from your API
+      // const response = await fetch('/api/stripe/transactions')
+      // const data = await response.json()
+      
+      // Mock data for demo
+      setTimeout(() => {
+        setRecentTransactions([
+          {
+            id: "ch_1234567890",
+            amount: 125.00,
+            status: "succeeded",
+            created: Date.now() - 86400000, // 1 day ago
+            customer: {
+              name: "John Smith",
+              email: "john@example.com"
+            },
+            currency: "usd",
+            type: "payment"
+          },
+          {
+            id: "ch_0987654321",
+            amount: 75.50,
+            status: "succeeded",
+            created: Date.now() - 172800000, // 2 days ago
+            customer: {
+              name: "Sarah Johnson",
+              email: "sarah@example.com"
+            },
+            currency: "usd",
+            type: "payment"
+          },
+          {
+            id: "po_1234567890",
+            amount: 2500.00,
+            status: "paid",
+            created: Date.now() - 259200000, // 3 days ago
+            customer: {
+              name: "Your Bank Account",
+              email: ""
+            },
+            currency: "usd",
+            type: "payout"
+          },
+          {
+            id: "ch_5678901234",
+            amount: 200.00,
+            status: "succeeded",
+            created: Date.now() - 345600000, // 4 days ago
+            customer: {
+              name: "Michael Brown",
+              email: "michael@example.com"
+            },
+            currency: "usd",
+            type: "payment"
+          },
+          {
+            id: "re_1234567890",
+            amount: 50.00,
+            status: "succeeded",
+            created: Date.now() - 432000000, // 5 days ago
+            customer: {
+              name: "Emily Davis",
+              email: "emily@example.com"
+            },
+            currency: "usd",
+            type: "refund"
+          }
+        ])
+        setTransactionsLoading(false)
+      }, 1000)
+    } catch (err) {
+      setError("Failed to fetch recent transactions")
+      setTransactionsLoading(false)
     }
   }
 
@@ -66,6 +211,10 @@ export default function ConnectPage() {
         chargesEnabled: true,
       })
 
+      // Fetch balance and transactions after successful connection
+      fetchAccountBalance()
+      fetchRecentTransactions()
+
       window.history.replaceState({}, document.title, "/dashboard/connect")
     } catch (err) {
       setError("Failed to connect Stripe account")
@@ -77,6 +226,21 @@ export default function ConnectPage() {
   const handleConnect = () => {
     const connectUrl = `https://connect.stripe.com/oauth/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_STRIPE_CLIENT_ID}&scope=read_write`
     window.location.href = connectUrl
+  }
+
+  const formatCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+    }).format(amount);
+  }
+
+  const formatDate = (timestamp: number) => {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(new Date(timestamp));
   }
 
   if (loading) {
@@ -127,56 +291,89 @@ export default function ConnectPage() {
                     </AlertDescription>
                   </Alert>
 
+                  {/* Account Balance Cards */}
                   <div className="grid gap-6 md:grid-cols-3">
-                    <Card>
-                      <CardHeader className="space-y-1">
+                    <Card className="bg-primary/5">
+                      <CardHeader className="space-y-1 pb-2">
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
-                          <CreditCard className="h-4 w-4 text-primary" />
-                          Payments
+                          <Wallet className="h-4 w-4 text-primary" />
+                          Available Balance
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <span className="text-2xl font-bold text-green-600">Active</span>
+                        {balanceLoading ? (
+                          <Skeleton className="h-8 w-32" />
+                        ) : (
+                          <span className="text-2xl font-bold text-green-600">
+                            {balance ? formatCurrency(balance.available, balance.currency) : '$0.00'}
+                          </span>
+                        )}
                       </CardContent>
+                      <CardFooter className="pt-0 text-xs text-muted-foreground">
+                        Ready to be paid out to your bank account
+                      </CardFooter>
                     </Card>
 
-                    <Card>
-                      <CardHeader className="space-y-1">
+                    <Card className="bg-primary/5">
+                      <CardHeader className="space-y-1 pb-2">
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
-                          <Bank className="h-4 w-4 text-primary" />
-                          Payouts
+                          <Clock className="h-4 w-4 text-primary" />
+                          Pending Balance
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <span className="text-2xl font-bold text-green-600">Enabled</span>
+                        {balanceLoading ? (
+                          <Skeleton className="h-8 w-32" />
+                        ) : (
+                          <span className="text-2xl font-bold text-amber-600">
+                            {balance ? formatCurrency(balance.pending, balance.currency) : '$0.00'}
+                          </span>
+                        )}
                       </CardContent>
+                      <CardFooter className="pt-0 text-xs text-muted-foreground">
+                        Will be available for payout soon
+                      </CardFooter>
                     </Card>
 
                     <Card>
                       <CardHeader className="space-y-1">
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
                           <Building2 className="h-4 w-4 text-primary" />
-                          Account
+                          Account Status
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <span className="text-2xl font-bold text-green-600">Verified</span>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Verified
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Account ID: {accountStatus.accountId}
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
 
                   <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                       <TabsTrigger value="overview">Overview</TabsTrigger>
+                      <TabsTrigger value="transactions">Transactions</TabsTrigger>
                       <TabsTrigger value="payouts">Payouts</TabsTrigger>
                       <TabsTrigger value="settings">Settings</TabsTrigger>
                     </TabsList>
+                    
                     <TabsContent value="overview" className="space-y-4">
                       <div className="rounded-lg border p-4 space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="space-y-1">
-                            <p className="text-sm font-medium">Account ID</p>
-                            <p className="text-sm text-muted-foreground font-mono">{accountStatus.accountId}</p>
+                            <p className="text-sm font-medium">Account Summary</p>
+                            <p className="text-sm text-muted-foreground">
+                              View your account details and recent activity
+                            </p>
                           </div>
                           <Button
                             variant="outline"
@@ -187,19 +384,225 @@ export default function ConnectPage() {
                             <ExternalLink className="ml-2 h-4 w-4" />
                           </Button>
                         </div>
+                        
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm">Recent Activity</CardTitle>
+                            </CardHeader>
+                            <CardContent className="text-sm">
+                              {transactionsLoading ? (
+                                <div className="space-y-2">
+                                  <Skeleton className="h-4 w-full" />
+                                  <Skeleton className="h-4 w-full" />
+                                  <Skeleton className="h-4 w-full" />
+                                </div>
+                              ) : recentTransactions.length > 0 ? (
+                                <ul className="space-y-2">
+                                  {recentTransactions.slice(0, 3).map(transaction => (
+                                    <li key={transaction.id} className="flex justify-between items-center">
+                                      <div className="flex items-center gap-2">
+                                        {transaction.type === 'payment' ? (
+                                          <ArrowUpRight className="h-4 w-4 text-green-500" />
+                                        ) : transaction.type === 'payout' ? (
+                                          <ArrowDownRight className="h-4 w-4 text-blue-500" />
+                                        ) : (
+                                          <ArrowDownRight className="h-4 w-4 text-red-500" />
+                                        )}
+                                        <span>
+                                          {transaction.type === 'payment' ? 'Payment' : 
+                                           transaction.type === 'payout' ? 'Payout' : 'Refund'}
+                                        </span>
+                                      </div>
+                                      <span className={
+                                        transaction.type === 'payment' ? 'text-green-600 font-medium' : 
+                                        transaction.type === 'payout' ? 'text-blue-600 font-medium' : 
+                                        'text-red-600 font-medium'
+                                      }>
+                                        {transaction.type === 'payment' ? '+' : '-'}
+                                        {formatCurrency(transaction.amount, transaction.currency)}
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="text-muted-foreground">No recent activity</p>
+                              )}
+                            </CardContent>
+                            <CardFooter className="pt-0">
+                              <Button variant="ghost" size="sm" className="w-full justify-center" asChild>
+                                <a href="#transactions">View all transactions</a>
+                              </Button>
+                            </CardFooter>
+                          </Card>
+                          
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm">Quick Actions</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                <Button variant="outline" size="sm" className="w-full justify-between">
+                                  Create Payment Link
+                                  <ArrowRight className="h-4 w-4" />
+                                </Button>
+                                <Button variant="outline" size="sm" className="w-full justify-between">
+                                  Schedule Payout
+                                  <ArrowRight className="h-4 w-4" />
+                                </Button>
+                                <Button variant="outline" size="sm" className="w-full justify-between">
+                                  View Reports
+                                  <ArrowRight className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
                       </div>
                     </TabsContent>
+                    
+                    <TabsContent value="transactions" id="transactions" className="space-y-4">
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                          <div>
+                            <CardTitle>Recent Transactions</CardTitle>
+                            <CardDescription>View your recent payments and payouts</CardDescription>
+                          </div>
+                          <Button variant="outline" size="sm" onClick={fetchRecentTransactions} disabled={transactionsLoading}>
+                            <RefreshCcw className="h-4 w-4 mr-2" />
+                            Refresh
+                          </Button>
+                        </CardHeader>
+                        <CardContent>
+                          {transactionsLoading ? (
+                            <div className="space-y-4">
+                              <Skeleton className="h-12 w-full" />
+                              <Skeleton className="h-12 w-full" />
+                              <Skeleton className="h-12 w-full" />
+                              <Skeleton className="h-12 w-full" />
+                            </div>
+                          ) : recentTransactions.length > 0 ? (
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Customer</TableHead>
+                                  <TableHead>Type</TableHead>
+                                  <TableHead>Date</TableHead>
+                                  <TableHead>Status</TableHead>
+                                  <TableHead className="text-right">Amount</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {recentTransactions.map(transaction => (
+                                  <TableRow key={transaction.id}>
+                                    <TableCell>
+                                      <div className="flex items-center gap-2">
+                                        <Avatar className="h-8 w-8">
+                                          <AvatarFallback className="bg-primary/10 text-primary">
+                                            {transaction.customer.name.charAt(0)}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex flex-col">
+                                          <span className="font-medium">{transaction.customer.name}</span>
+                                          {transaction.customer.email && (
+                                            <span className="text-xs text-muted-foreground">{transaction.customer.email}</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge variant="outline" className={
+                                        transaction.type === 'payment' ? 'bg-green-50 text-green-700 hover:bg-green-50' : 
+                                        transaction.type === 'payout' ? 'bg-blue-50 text-blue-700 hover:bg-blue-50' : 
+                                        'bg-red-50 text-red-700 hover:bg-red-50'
+                                      }>
+                                        {transaction.type === 'payment' ? 'Payment' : 
+                                         transaction.type === 'payout' ? 'Payout' : 'Refund'}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell>{formatDate(transaction.created)}</TableCell>
+                                    <TableCell>
+                                      <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">
+                                        {transaction.status}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className={`text-right font-medium ${
+                                      transaction.type === 'payment' ? 'text-green-600' : 
+                                      transaction.type === 'payout' ? 'text-blue-600' : 
+                                      'text-red-600'
+                                    }`}>
+                                      {transaction.type === 'payment' ? '+' : '-'}
+                                      {formatCurrency(transaction.amount, transaction.currency)}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          ) : (
+                            <div className="text-center py-8 text-muted-foreground">No transactions found</div>
+                          )}
+                        </CardContent>
+                        <CardFooter className="flex justify-between">
+                          <Button variant="outline" size="sm" disabled>Previous</Button>
+                          <Button variant="outline" size="sm" disabled>Next</Button>
+                        </CardFooter>
+                      </Card>
+                    </TabsContent>
+                    
                     <TabsContent value="payouts">
                       <Card>
                         <CardHeader>
-                          <CardTitle>Recent Payouts</CardTitle>
-                          <CardDescription>Track your latest payouts and upcoming transfers</CardDescription>
+                          <CardTitle>Payout Schedule</CardTitle>
+                          <CardDescription>Manage when and how you receive your funds</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <div className="text-center py-8 text-muted-foreground">No recent payouts</div>
+                          <div className="rounded-lg border p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium">Current Schedule</p>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-primary" />
+                                  <p className="text-sm">Automatic (Every 2 business days)</p>
+                                </div>
+                              </div>
+                              <Button variant="outline" size="sm">
+                                Update Schedule
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="rounded-lg border p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium">Payout Method</p>
+                                <div className="flex items-center gap-2">
+                                  <Bank className="h-4 w-4 text-primary" />
+                                  <p className="text-sm">Bank Account (••••4567)</p>
+                                </div>
+                              </div>
+                              <Button variant="outline" size="sm">
+                                Manage Methods
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="rounded-lg border p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium">Manual Payout</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Transfer your available balance to your bank account
+                                </p>
+                              </div>
+                              <Button variant="default" size="sm" disabled={!balance || balance.available <= 0}>
+                                Initiate Payout
+                              </Button>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
                     </TabsContent>
+                    
                     <TabsContent value="settings">
                       <Card>
                         <CardHeader>
@@ -207,18 +610,75 @@ export default function ConnectPage() {
                           <CardDescription>Manage your payment processing settings</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <Button variant="outline" className="w-full justify-between">
-                            Update Business Information
-                            <ArrowRight className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" className="w-full justify-between">
-                            Manage Payment Methods
-                            <ArrowRight className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" className="w-full justify-between">
-                            Configure Payout Schedule
-                            <ArrowRight className="h-4 w-4" />
-                          </Button>
+                          <div className="rounded-lg border p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium">Business Information</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Update your business details and tax information
+                                </p>
+                              </div>
+                              <Button variant="outline" size="sm">
+                                Update
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="rounded-lg border p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium">Payment Methods</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Configure which payment methods you accept
+                                </p>
+                              </div>
+                              <Button variant="outline" size="sm">
+                                Configure
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="rounded-lg border p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium">Branding</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Customize the appearance of checkout and receipts
+                                </p>
+                              </div>
+                              <Button variant="outline" size="sm">
+                                Customize
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="rounded-lg border p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium">Team Access</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Manage team members who can access your Stripe account
+                                </p>
+                              </div>
+                              <Button variant="outline" size="sm">
+                                Manage Team
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="rounded-lg border p-4 border-destructive/20">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium text-destructive">Disconnect Account</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Remove the connection to your Stripe account
+                                </p>
+                              </div>
+                              <Button variant="destructive" size="sm">
+                                Disconnect
+                              </Button>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
                     </TabsContent>
@@ -311,3 +771,23 @@ export default function ConnectPage() {
   )
 }
 
+// Missing component definition
+function Clock(props:any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  )
+}
