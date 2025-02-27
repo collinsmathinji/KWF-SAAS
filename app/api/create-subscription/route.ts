@@ -12,7 +12,7 @@ if (!stripeSecretKey) {
 
 // Initialize Stripe with the latest API version
 const stripeClient = new Stripe(stripeSecretKey, {
-  apiVersion: "2025-01-27.acacia", // Updated to latest stable version
+  apiVersion: "2025-02-24.acacia", 
   typescript: true,
 })
 
