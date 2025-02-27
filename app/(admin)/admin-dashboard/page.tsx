@@ -3,13 +3,14 @@
 import React from "react"
 
 import { useState } from "react"
-import { Bell, CreditCard, Calendar, Layers, LayoutDashboard, Menu,  Settings, Users } from "lucide-react"
+import { Bell, CreditCard, Calendar, Layers, LayoutDashboard, Menu,  Settings, Users, Landmark } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Overview from "./overview"
 import UserManagementPage from "./users"
 import SubscriptionsPage from "./subscription"
 import SettingsPage from "./settings/page"
 import OrganizationProfile from "./organization"
+import ConnectPage from "./connect/page"
 import EventPage from "./event/page"
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("overview")
@@ -46,7 +47,12 @@ export default function DashboardPage() {
       section: "event",
       description: "Manage organization events",
     },
- 
+    {
+      icon: < Landmark />,
+      label: "Stripe Account Settings",
+      section: "stripe-settings",
+      description: "Manage stripe account settings",
+    },
   ]
 
   const renderContent = () => {
@@ -63,6 +69,8 @@ export default function DashboardPage() {
         return  <EventPage />
       case 'settings':
         return <SettingsPage />
+      case 'stripe-settings':
+        return <ConnectPage />
       default:
 
         return (
