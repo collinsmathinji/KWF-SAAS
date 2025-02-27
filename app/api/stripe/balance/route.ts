@@ -3,13 +3,21 @@ import Stripe from "stripe"
 
 export async function GET() {
   try {
-    // Initialize Stripe with your secret key
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2023-10-16",
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+    if (!stripeSecretKey) {
+      throw new Error("Missing STRIPE_SECRET_KEY environment variable")
+    } else {
+      console.log("✅ STRIPE_SECRET_KEY is present:", stripeSecretKey)
+    }
+    
+    // Initialize Stripe with the latest API version
+    const stripeClient = new Stripe(stripeSecretKey, {
+      apiVersion: "2025-02-24.acacia", // Updated to latest stable version
+      typescript: true,
     })
 
     // Fetch the connected account's balance
-    const balance = await stripe.balance.retrieve({
+    const balance = await stripeClient.balance.retrieve({
       stripeAccount: process.env.STRIPE_ACCOUNT_ID, // Optional: If you're using Connect
     })
 

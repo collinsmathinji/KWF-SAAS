@@ -3,13 +3,20 @@ import Stripe from "stripe"
 
 export async function POST() {
   try {
-    // Initialize Stripe with your secret key
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2023-10-16",
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+    if (!stripeSecretKey) {
+      throw new Error("Missing STRIPE_SECRET_KEY environment variable")
+    } else {
+      console.log("✅ STRIPE_SECRET_KEY is present:", stripeSecretKey)
+    }
+    
+    // Initialize Stripe with the latest API version
+    const stripeClient = new Stripe(stripeSecretKey, {
+      apiVersion: "2025-02-24.acacia", // Updated to latest stable version
+      typescript: true,
     })
-
     // Create a new Express connected account
-    const account = await stripe.accounts.create({
+    const account = await stripeClient.accounts.create({
       type: "express",
       capabilities: {
         card_payments: { requested: true },
@@ -29,7 +36,7 @@ export async function POST() {
     // await db.user.update({ where: { id: userId }, data: { stripeAccountId: account.id } })
 
     // Create an account link for onboarding
-    const accountLink = await stripe.accountLinks.create({
+    const accountLink = await stripeClient.accountLinks.create({
       account: account.id,
       refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/connect?refresh=true`,
       return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/connect?success=true`,

@@ -9,7 +9,7 @@ if (!stripeSecretKey) {
 
 // Initialize Stripe with the latest API version
 const stripeClient = new Stripe(stripeSecretKey, {
-  apiVersion: "2025-01-27.acacia", // Updated to latest stable version
+  apiVersion: "2025-02-24.acacia", // Updated to latest stable version
   typescript: true,
 })
 
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     // based on the authenticated user/organization
     const accountId = "acct_123" // Replace with actual account ID
 
-    const account = await stripe.accounts.retrieve(accountId)
+    const account = await stripeClient.accounts.retrieve(accountId)
 
     return NextResponse.json({
       success: true,
