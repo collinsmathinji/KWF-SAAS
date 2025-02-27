@@ -121,3 +121,14 @@
   transition: all 0.6s ease-out;
 }
 
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+

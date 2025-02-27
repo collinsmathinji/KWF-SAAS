@@ -6,17 +6,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { ExternalLink, AlertCircle, CheckCircle2, CreditCard, BanknoteIcon as Bank, BarChart3, ArrowRight, DollarSign, Wallet, Building2, RefreshCcw, Calendar, User, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+  ExternalLink,
+  AlertCircle,
+  CheckCircle2,
+  BanknoteIcon as Bank,
+  BarChart3,
+  ArrowRight,
+  DollarSign,
+  Wallet,
+  Building2,
+  RefreshCcw,
+  Calendar,
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react"
 
 // Types for our data
 interface AccountBalance {
@@ -57,9 +64,21 @@ export default function ConnectPage() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const code = urlParams.get("code")
+    const success = urlParams.get("success")
+    const refresh = urlParams.get("refresh")
 
     if (code) {
       handleStripeCallback(code)
+    } else if (success === "true") {
+      // Handle successful account creation
+      checkAccountStatus()
+      // Clean up URL
+      window.history.replaceState({}, document.title, "/dashboard/connect")
+    } else if (refresh === "true") {
+      // User canceled or needs to refresh the onboarding process
+      // You might want to show a specific message here
+      setError("Account setup was not completed. Please try again.")
+      window.history.replaceState({}, document.title, "/dashboard/connect")
     } else {
       checkAccountStatus()
     }
@@ -70,10 +89,10 @@ export default function ConnectPage() {
       // In a real app, this would fetch from your API
       // const response = await fetch('/api/stripe/account-status')
       // const data = await response.json()
-      
+
       // For demo purposes, we'll simulate a connected account
       const mockConnected = true
-      
+
       if (mockConnected) {
         setAccountStatus({
           connected: true,
@@ -81,14 +100,14 @@ export default function ConnectPage() {
           payoutsEnabled: true,
           chargesEnabled: true,
         })
-        
+
         // If connected, fetch balance and transactions
         fetchAccountBalance()
         fetchRecentTransactions()
       } else {
         setAccountStatus({ connected: false })
       }
-      
+
       setLoading(false)
     } catch (err) {
       setError("Failed to check account status")
@@ -102,13 +121,13 @@ export default function ConnectPage() {
       // In a real app, this would fetch from your API
       // const response = await fetch('/api/stripe/balance')
       // const data = await response.json()
-      
+
       // Mock data for demo
       setTimeout(() => {
         setBalance({
           available: 4250.75,
-          pending: 1200.50,
-          currency: "usd"
+          pending: 1200.5,
+          currency: "usd",
         })
         setBalanceLoading(false)
       }, 800)
@@ -124,70 +143,70 @@ export default function ConnectPage() {
       // In a real app, this would fetch from your API
       // const response = await fetch('/api/stripe/transactions')
       // const data = await response.json()
-      
+
       // Mock data for demo
       setTimeout(() => {
         setRecentTransactions([
           {
             id: "ch_1234567890",
-            amount: 125.00,
+            amount: 125.0,
             status: "succeeded",
             created: Date.now() - 86400000, // 1 day ago
             customer: {
               name: "John Smith",
-              email: "john@example.com"
+              email: "john@example.com",
             },
             currency: "usd",
-            type: "payment"
+            type: "payment",
           },
           {
             id: "ch_0987654321",
-            amount: 75.50,
+            amount: 75.5,
             status: "succeeded",
             created: Date.now() - 172800000, // 2 days ago
             customer: {
               name: "Sarah Johnson",
-              email: "sarah@example.com"
+              email: "sarah@example.com",
             },
             currency: "usd",
-            type: "payment"
+            type: "payment",
           },
           {
             id: "po_1234567890",
-            amount: 2500.00,
+            amount: 2500.0,
             status: "paid",
             created: Date.now() - 259200000, // 3 days ago
             customer: {
               name: "Your Bank Account",
-              email: ""
+              email: "",
             },
             currency: "usd",
-            type: "payout"
+            type: "payout",
           },
           {
             id: "ch_5678901234",
-            amount: 200.00,
+            amount: 200.0,
             status: "succeeded",
             created: Date.now() - 345600000, // 4 days ago
             customer: {
               name: "Michael Brown",
-              email: "michael@example.com"
+              email: "michael@example.com",
             },
             currency: "usd",
-            type: "payment"
+            type: "payment",
           },
           {
             id: "re_1234567890",
-            amount: 50.00,
+            amount: 50.0,
             status: "succeeded",
             created: Date.now() - 432000000, // 5 days ago
             customer: {
               name: "Emily Davis",
-              email: "emily@example.com"
+              email: "emily@example.com",
             },
             currency: "usd",
-            type: "refund"
-          }
+            type: "refund",
+          },
         ])
         setTransactionsLoading(false)
       }, 1000)
@@ -229,18 +248,38 @@ export default function ConnectPage() {
   }
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency: currency.toUpperCase(),
-    }).format(amount);
+    }).format(amount)
   }
 
   const formatDate = (timestamp: number) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }).format(new Date(timestamp));
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(new Date(timestamp))
+  }
+
+  // Add a new function to handle creating a new Stripe account
+  const handleCreateAccount = async () => {
+    try {
+      setLoading(true)
+      // Call our API to create a new Stripe account
+      const response = await fetch("/api/stripe/create-account", {
+        method: "POST",
+      })
+      const data = await response.json()
+
+      if (!response.ok) throw new Error(data.error)
+
+      // Redirect to Stripe's onboarding URL
+      window.location.href = data.accountLinkUrl
+    } catch (err) {
+      setError("Failed to create Stripe account")
+      setLoading(false)
+    }
   }
 
   if (loading) {
@@ -305,7 +344,7 @@ export default function ConnectPage() {
                           <Skeleton className="h-8 w-32" />
                         ) : (
                           <span className="text-2xl font-bold text-green-600">
-                            {balance ? formatCurrency(balance.available, balance.currency) : '$0.00'}
+                            {balance ? formatCurrency(balance.available, balance.currency) : "$0.00"}
                           </span>
                         )}
                       </CardContent>
@@ -326,7 +365,7 @@ export default function ConnectPage() {
                           <Skeleton className="h-8 w-32" />
                         ) : (
                           <span className="text-2xl font-bold text-amber-600">
-                            {balance ? formatCurrency(balance.pending, balance.currency) : '$0.00'}
+                            {balance ? formatCurrency(balance.pending, balance.currency) : "$0.00"}
                           </span>
                         )}
                       </CardContent>
@@ -350,9 +389,7 @@ export default function ConnectPage() {
                               Verified
                             </Badge>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            Account ID: {accountStatus.accountId}
-                          </div>
+                          <div className="text-xs text-muted-foreground">Account ID: {accountStatus.accountId}</div>
                         </div>
                       </CardContent>
                     </Card>
@@ -365,7 +402,7 @@ export default function ConnectPage() {
                       <TabsTrigger value="payouts">Payouts</TabsTrigger>
                       <TabsTrigger value="settings">Settings</TabsTrigger>
                     </TabsList>
-                    
+
                     <TabsContent value="overview" className="space-y-4">
                       <div className="rounded-lg border p-4 space-y-4">
                         <div className="flex items-center justify-between">
@@ -384,7 +421,7 @@ export default function ConnectPage() {
                             <ExternalLink className="ml-2 h-4 w-4" />
                           </Button>
                         </div>
-                        
+
                         <div className="grid gap-4 md:grid-cols-2">
                           <Card>
                             <CardHeader className="pb-2">
@@ -399,27 +436,34 @@ export default function ConnectPage() {
                                 </div>
                               ) : recentTransactions.length > 0 ? (
                                 <ul className="space-y-2">
-                                  {recentTransactions.slice(0, 3).map(transaction => (
+                                  {recentTransactions.slice(0, 3).map((transaction) => (
                                     <li key={transaction.id} className="flex justify-between items-center">
                                       <div className="flex items-center gap-2">
-                                        {transaction.type === 'payment' ? (
+                                        {transaction.type === "payment" ? (
                                           <ArrowUpRight className="h-4 w-4 text-green-500" />
-                                        ) : transaction.type === 'payout' ? (
+                                        ) : transaction.type === "payout" ? (
                                           <ArrowDownRight className="h-4 w-4 text-blue-500" />
                                         ) : (
                                           <ArrowDownRight className="h-4 w-4 text-red-500" />
                                         )}
                                         <span>
-                                          {transaction.type === 'payment' ? 'Payment' : 
-                                           transaction.type === 'payout' ? 'Payout' : 'Refund'}
+                                          {transaction.type === "payment"
+                                            ? "Payment"
+                                            : transaction.type === "payout"
+                                              ? "Payout"
+                                              : "Refund"}
                                         </span>
                                       </div>
-                                      <span className={
-                                        transaction.type === 'payment' ? 'text-green-600 font-medium' : 
-                                        transaction.type === 'payout' ? 'text-blue-600 font-medium' : 
-                                        'text-red-600 font-medium'
-                                      }>
-                                        {transaction.type === 'payment' ? '+' : '-'}
+                                      <span
+                                        className={
+                                          transaction.type === "payment"
+                                            ? "text-green-600 font-medium"
+                                            : transaction.type === "payout"
+                                              ? "text-blue-600 font-medium"
+                                              : "text-red-600 font-medium"
+                                        }
+                                      >
+                                        {transaction.type === "payment" ? "+" : "-"}
                                         {formatCurrency(transaction.amount, transaction.currency)}
                                       </span>
                                     </li>
@@ -435,7 +479,7 @@ export default function ConnectPage() {
                               </Button>
                             </CardFooter>
                           </Card>
-                          
+
                           <Card>
                             <CardHeader className="pb-2">
                               <CardTitle className="text-sm">Quick Actions</CardTitle>
@@ -460,7 +504,7 @@ export default function ConnectPage() {
                         </div>
                       </div>
                     </TabsContent>
-                    
+
                     <TabsContent value="transactions" id="transactions" className="space-y-4">
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
@@ -468,7 +512,12 @@ export default function ConnectPage() {
                             <CardTitle>Recent Transactions</CardTitle>
                             <CardDescription>View your recent payments and payouts</CardDescription>
                           </div>
-                          <Button variant="outline" size="sm" onClick={fetchRecentTransactions} disabled={transactionsLoading}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={fetchRecentTransactions}
+                            disabled={transactionsLoading}
+                          >
                             <RefreshCcw className="h-4 w-4 mr-2" />
                             Refresh
                           </Button>
@@ -493,7 +542,7 @@ export default function ConnectPage() {
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {recentTransactions.map(transaction => (
+                                {recentTransactions.map((transaction) => (
                                   <TableRow key={transaction.id}>
                                     <TableCell>
                                       <div className="flex items-center gap-2">
@@ -505,19 +554,29 @@ export default function ConnectPage() {
                                         <div className="flex flex-col">
                                           <span className="font-medium">{transaction.customer.name}</span>
                                           {transaction.customer.email && (
-                                            <span className="text-xs text-muted-foreground">{transaction.customer.email}</span>
+                                            <span className="text-xs text-muted-foreground">
+                                              {transaction.customer.email}
+                                            </span>
                                           )}
                                         </div>
                                       </div>
                                     </TableCell>
                                     <TableCell>
-                                      <Badge variant="outline" className={
-                                        transaction.type === 'payment' ? 'bg-green-50 text-green-700 hover:bg-green-50' : 
-                                        transaction.type === 'payout' ? 'bg-blue-50 text-blue-700 hover:bg-blue-50' : 
-                                        'bg-red-50 text-red-700 hover:bg-red-50'
-                                      }>
-                                        {transaction.type === 'payment' ? 'Payment' : 
-                                         transaction.type === 'payout' ? 'Payout' : 'Refund'}
+                                      <Badge
+                                        variant="outline"
+                                        className={
+                                          transaction.type === "payment"
+                                            ? "bg-green-50 text-green-700 hover:bg-green-50"
+                                            : transaction.type === "payout"
+                                              ? "bg-blue-50 text-blue-700 hover:bg-blue-50"
+                                              : "bg-red-50 text-red-700 hover:bg-red-50"
+                                        }
+                                      >
+                                        {transaction.type === "payment"
+                                          ? "Payment"
+                                          : transaction.type === "payout"
+                                            ? "Payout"
+                                            : "Refund"}
                                       </Badge>
                                     </TableCell>
                                     <TableCell>{formatDate(transaction.created)}</TableCell>
@@ -526,12 +585,16 @@ export default function ConnectPage() {
                                         {transaction.status}
                                       </Badge>
                                     </TableCell>
-                                    <TableCell className={`text-right font-medium ${
-                                      transaction.type === 'payment' ? 'text-green-600' : 
-                                      transaction.type === 'payout' ? 'text-blue-600' : 
-                                      'text-red-600'
-                                    }`}>
-                                      {transaction.type === 'payment' ? '+' : '-'}
+                                    <TableCell
+                                      className={`text-right font-medium ${
+                                        transaction.type === "payment"
+                                          ? "text-green-600"
+                                          : transaction.type === "payout"
+                                            ? "text-blue-600"
+                                            : "text-red-600"
+                                      }`}
+                                    >
+                                      {transaction.type === "payment" ? "+" : "-"}
                                       {formatCurrency(transaction.amount, transaction.currency)}
                                     </TableCell>
                                   </TableRow>
@@ -543,12 +606,16 @@ export default function ConnectPage() {
                           )}
                         </CardContent>
                         <CardFooter className="flex justify-between">
-                          <Button variant="outline" size="sm" disabled>Previous</Button>
-                          <Button variant="outline" size="sm" disabled>Next</Button>
+                          <Button variant="outline" size="sm" disabled>
+                            Previous
+                          </Button>
+                          <Button variant="outline" size="sm" disabled>
+                            Next
+                          </Button>
                         </CardFooter>
                       </Card>
                     </TabsContent>
-                    
+
                     <TabsContent value="payouts">
                       <Card>
                         <CardHeader>
@@ -570,7 +637,7 @@ export default function ConnectPage() {
                               </Button>
                             </div>
                           </div>
-                          
+
                           <div className="rounded-lg border p-4">
                             <div className="flex items-center justify-between">
                               <div className="space-y-1">
@@ -585,7 +652,7 @@ export default function ConnectPage() {
                               </Button>
                             </div>
                           </div>
-                          
+
                           <div className="rounded-lg border p-4">
                             <div className="flex items-center justify-between">
                               <div className="space-y-1">
@@ -602,7 +669,7 @@ export default function ConnectPage() {
                         </CardContent>
                       </Card>
                     </TabsContent>
-                    
+
                     <TabsContent value="settings">
                       <Card>
                         <CardHeader>
@@ -623,7 +690,7 @@ export default function ConnectPage() {
                               </Button>
                             </div>
                           </div>
-                          
+
                           <div className="rounded-lg border p-4">
                             <div className="flex items-center justify-between">
                               <div className="space-y-1">
@@ -637,7 +704,7 @@ export default function ConnectPage() {
                               </Button>
                             </div>
                           </div>
-                          
+
                           <div className="rounded-lg border p-4">
                             <div className="flex items-center justify-between">
                               <div className="space-y-1">
@@ -651,7 +718,7 @@ export default function ConnectPage() {
                               </Button>
                             </div>
                           </div>
-                          
+
                           <div className="rounded-lg border p-4">
                             <div className="flex items-center justify-between">
                               <div className="space-y-1">
@@ -665,7 +732,7 @@ export default function ConnectPage() {
                               </Button>
                             </div>
                           </div>
-                          
+
                           <div className="rounded-lg border p-4 border-destructive/20">
                             <div className="flex items-center justify-between">
                               <div className="space-y-1">
@@ -692,17 +759,31 @@ export default function ConnectPage() {
                   <div className="space-y-2">
                     <h3 className="text-2xl font-semibold">Ready to accept payments?</h3>
                     <p className="text-muted-foreground max-w-md mx-auto">
-                      Connect your Stripe account to start accepting donations and managing your revenue in minutes
+                      Connect your Stripe account or create a new one to start accepting donations and managing your
+                      revenue
                     </p>
                   </div>
                   <div className="space-y-4">
-                    <Button onClick={handleConnect} size="lg" className="px-8">
-                      Connect with Stripe
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                    <p className="text-sm text-muted-foreground">
-                      No Stripe account? No problem. We'll help you create one.
-                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      <Button onClick={handleConnect} size="lg" className="px-8">
+                        Connect Existing Account
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                      <Button onClick={handleCreateAccount} size="lg" variant="outline" className="px-8">
+                        Create New Account
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto text-sm text-muted-foreground">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
+                        <span>Connect your existing Stripe account if you already have one</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
+                        <span>Create a new account if you're just getting started with payments</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -791,3 +872,4 @@ function Clock(props:any) {
     </svg>
   )
 }
+

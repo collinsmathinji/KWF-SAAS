@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+if (!stripeSecretKey) {
+  throw new Error("Missing STRIPE_SECRET_KEY environment variable")
+} else {
+  console.log("✅ STRIPE_SECRET_KEY is present:", stripeSecretKey)
+}
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2025-01-27.acacia", // Updated to latest stable version
-    typescript: true,
+// Initialize Stripe with the latest API version
+const stripeClient = new Stripe(stripeSecretKey, {
+  apiVersion: "2025-01-27.acacia", // Updated to latest stable version
+  typescript: true,
 })
 
 export async function GET(request: Request) {
