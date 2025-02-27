@@ -10,7 +10,7 @@ if (!stripeSecretKey) {
   console.log("✅ STRIPE_SECRET_KEY is present:", stripeSecretKey)
 }
 
-// Initialize Stripe with the latest API version
+
 const stripeClient = new Stripe(stripeSecretKey, {
   apiVersion: "2025-02-24.acacia", 
   typescript: true,
