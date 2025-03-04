@@ -78,10 +78,7 @@ export default function DashboardContent({ member }: DashboardContentProps) {
                     <span className="text-sm font-medium">Join Date</span>
                     <span className="text-sm">{member.joinDate}</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Monthly Contribution</span>
-                    <span className="text-sm">${member.monthlyContribution}</span>
-                  </div>
+                 
                   <div className="pt-2">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-medium">Membership Renewal</span>
