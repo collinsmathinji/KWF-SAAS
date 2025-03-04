@@ -1,89 +1,64 @@
-import React from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Settings, Building, Mail, Phone } from 'lucide-react';
+"use client"
 
-const UserProfile = () => {
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Calendar, Mail, Phone } from "lucide-react"
+
+export default function UserProfile() {
+  // Mock user data
   const user = {
-    name: 'Jane Cooper',
-    role: 'Organization Admin',
-    email: 'jane@company.com',
-    phone: '+1 (555) 123-4567',
-    organization: 'Acme Corp',
-    department: 'Operations',
-    joinDate: '2023-06-15'
-  };
+    name: "John Doe",
+    title: "Senior Software Engineer",
+    email: "john.doe@example.com",
+    phone: "123-456-7890",
+    location: "New York, NY",
+    joinDate: "January 15, 2022",
+    avatarUrl: "/placeholder.svg?height=200&width=200",
+    bio: "Passionate software engineer with 10+ years of experience in building scalable and reliable systems.",
+    skills: ["JavaScript", "React", "Node.js", "SQL", "AWS"],
+  }
 
   return (
-    <div className="min-h-screen bg-blue-50">
-      <div className="max-w-4xl mx-auto p-6">
-        <Card className="bg-white shadow-lg">
-          <CardHeader className="bg-blue-600 text-white rounded-t-lg">
-            <div className="flex items-center gap-6">
-              <Avatar className="h-24 w-24 border-4 border-white">
-                <AvatarImage src="/api/placeholder/150/150" />
-                <AvatarFallback>JC</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h1 className="text-2xl font-bold">{user.name}</h1>
-                    <Badge className="mt-2 bg-blue-200 text-blue-800">{user.role}</Badge>
-                  </div>
-                  <Button variant="outline" className="bg-white text-blue-600 hover:bg-blue-50">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Edit Profile
-                  </Button>
-                </div>
-              </div>
+    <div className="p-6">
+      <Card className="border-none shadow-md">
+        <CardHeader className="flex flex-col items-center space-y-4">
+          <Avatar className="h-32 w-32">
+            <AvatarImage src={user.avatarUrl} alt={user.name} />
+            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <CardTitle className="text-2xl font-bold">{user.name}</CardTitle>
+          <CardDescription className="text-muted-foreground">{user.title}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-sm text-muted-foreground">{user.bio}</div>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <span>{user.email}</span>
             </div>
-          </CardHeader>
-          
-          <CardContent className="pt-6 space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p>{user.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm text-gray-500">Phone</p>
-                    <p>{user.phone}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Building className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm text-gray-500">Organization</p>
-                    <p>{user.organization}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-5 w-5 flex items-center justify-center text-blue-600">
-                    <span className="text-lg">•</span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Member Since</p>
-                    <p>{new Date(user.joinDate).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              </div>
+            <div className="flex items-center space-x-2">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <span>{user.phone}</span>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>Joined: {user.joinDate}</span>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-lg font-medium">Skills</h3>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {user.skills.map((skill) => (
+                <Button key={skill} variant="secondary" size="sm">
+                  {skill}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  );
-};
+  )
+}
 
-export default UserProfile;
