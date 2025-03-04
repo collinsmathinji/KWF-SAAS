@@ -136,7 +136,7 @@ export default function Page() {
         <section className="py-20 lg:py-32 2xl:py-40 bg-blue-50">
           <div className="container max-w-7xl 2xl:max-w-screen-xl 3xl:max-w-screen-2xl mx-auto px-4">
             <div className="text-center mb-16 2xl:mb-24">
-              <h2 className="text-3xl 2xl:text-5xl font-bold mb-4">Trusted by leading companies</h2>
+              <h2 className="text-3xl 2xl:text-5xl font-bold mb-4">Trusted by leading companies & non-profits</h2>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12 2xl:gap-16 items-center justify-items-center opacity-80">
               <Card className="py-8 px-8 2xl:py-12 2xl:px-12 flex flex-col items-center justify-center">
