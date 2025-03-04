@@ -5,6 +5,7 @@ import {
   CalendarDays,
   Group,
   Lock,
+  Plus,
   LayoutDashboard,
   Users,
   Bell,
@@ -66,7 +67,7 @@ interface Group {
   members?: number
   activeProjects?: number
   lead?: string
-  activity?: any
+  activity: any
   color?: string
 }
 
@@ -167,6 +168,10 @@ export default function Page() {
     setActiveMainMenu("groups")
   }
 
+  const handleCreateGroup = () => {
+    // Implement group creation logic
+    console.log("Create group")
+  }
 
   const handleJoinGroup = (groupId: string) => {
     // Implement group joining logic
@@ -219,7 +224,22 @@ export default function Page() {
                             <Users className="h-4 w-4 text-blue-600" />
                             <span className="font-medium">Your Groups</span>
                           </div>
-                         
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 hover:bg-blue-200 hover:text-blue-700"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleCreateGroup()
+                                }}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Create new group</TooltipContent>
+                          </Tooltip>
                         </CollapsibleTrigger>
                       </SidebarGroupLabel>
                       <CollapsibleContent>
@@ -437,7 +457,22 @@ export default function Page() {
                           <h2 className="text-2xl font-bold mb-2">Welcome back, {memberData.name}!</h2>
                           <p className="text-blue-100">Your membership journey is progressing well. Keep it up!</p>
                         </div>
-                        
+                        <div className="flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-lg p-4 w-full md:w-auto">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Award className="h-5 w-5 text-amber-300" />
+                            <span className="font-medium">{memberData.points} Points</span>
+                          </div>
+                          <div className="w-full max-w-xs">
+                            <div className="flex justify-between text-xs mb-1">
+                              <span>Level {memberData.level}</span>
+                              <span>Level {memberData.level + 1}</span>
+                            </div>
+                            <Progress value={progress} className="h-2 bg-white/20"  />
+                            <p className="text-xs text-center mt-1">
+                              {memberData.nextLevelPoints - memberData.points} points to next level
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
