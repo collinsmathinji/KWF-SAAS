@@ -117,9 +117,7 @@ export default function DashboardPage() {
               <p className="text-xs text-gray-400 mt-1">{item.description}</p>
             </div>
           ))}
-        </nav>
-
-        <div className="mt-4 border-t pt-4">
+          <div className="mt-4 border-t pt-4">
           <button className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50"  onClick={() => {
                 setActiveSection('settings')
                 setSidebarOpen(false)
@@ -128,6 +126,9 @@ export default function DashboardPage() {
             <Settings  className="mr-3" /> Settings
           </button>
         </div>
+        </nav>
+
+        
       </div>
 
       {/* Main Content */}

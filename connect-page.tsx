@@ -292,7 +292,7 @@ export default function ConnectPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      <div className="container ">
+      <div className="container max-w-6xl py-8 space-y-8">
         {/* Header Section */}
         <div className="text-center space-y-4 mb-8">
           <h1 className="text-4xl font-bold tracking-tight">Payment Settings</h1>
@@ -853,7 +853,7 @@ export default function ConnectPage() {
 }
 
 // Missing component definition
-function Clock(props:any) {
+function Clock(props) {
   return (
     <svg
       {...props}
