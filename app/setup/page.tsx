@@ -20,26 +20,27 @@ interface Organization {
 const OrganizationManagement = () => {
   const [showSetup, setShowSetup] = useState(true);  // Start with setup dialog visible
   const [organization, setOrganization] = useState<Organization | null>(null);
-
-  const handleSetupComplete = (orgData: Organization) => {
+  
+  const handleSetupComplete = (orgData: any) => {
     console.log(organization)
     setOrganization(orgData);
     setShowSetup(false);
   };
-
+  
   return (
     <div className="relative">
       {/* Main Dashboard */}
-      <div className={`h-screen ${showSetup ? 'pointer-events-none' : ''}`}>
+      <div className={`h-screen `}>
         <DashboardPage />
       </div>
-
+      
       {/* Setup Dialog */}
       {showSetup && (
-        <div className="absolute inset-0">
-          <OrganizationSetup 
+        <div  className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
+          <OrganizationSetup
             onComplete={handleSetupComplete}
-            onClose={() => setShowSetup(false)}
+            onClose={() => {}} // Empty function to prevent closing behavior
+            persistent={true} // Add the persistent prop
           />
         </div>
       )}

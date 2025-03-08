@@ -6,8 +6,8 @@ import type React from "react"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "OrgFlow - Organization Management Made Easy",
-  description: "Streamline your organization operations with OrgFlow",
+  title: "KWF_SAAS- Organization Management Made Easy",
+  description: "Streamline your organization operations with KWF_SAAS",
 }
 
 export default function RootLayout({

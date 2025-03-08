@@ -6,31 +6,34 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {  Image as ImageIcon } from 'lucide-react'
+import { Image as ImageIcon } from 'lucide-react'
 
 import { useRouter } from 'next/navigation';
+
 interface OrganizationType {
-    id: string
-    connectAccountId: string
-    customerId: string
-    name: string
-    organizationLogo: File | null
-    logoPreview: string
-    organizationEmail: string
-    organizationPhone: string
-    whiteLabel: boolean
-    address: string
-    city: string
-    zipCode: string
-    state: string
-    country: string
-    email: string
-    phone: string
-  }
+  id: string
+  connectAccountId: string
+  customerId: string
+  name: string
+  organizationLogo: File | null
+  logoPreview: string
+  organizationEmail: string
+  organizationPhone: string
+  address: string
+  city: string
+  zipCode: string
+  state: string
+  country: string
+  email: string
+  phone: string
+}
+
 interface OrganizationSetupProps {
-    onComplete: (organization: OrganizationType) => void;
-    onClose: () => void;
-  }
+  onComplete: (organization: OrganizationType) => void;
+  onClose: () => void;
+  persistent?: boolean;
+}
+
 const countries = [
   { code: 'US', name: 'United States' },
   { code: 'CA', name: 'Canada' },
@@ -39,16 +42,16 @@ const countries = [
   // Add more countries as needed
 ]
 
-const OrganizationSetup = ({ onComplete, onClose }: OrganizationSetupProps) => {
+const OrganizationSetup = ({ onComplete, onClose, persistent = false }: OrganizationSetupProps) => {
   const [open, setOpen] = useState(true)
   const [currentStep, setCurrentStep] = useState(1)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [formData, setFormData] = useState<Partial<OrganizationType>>({
-    whiteLabel: false,
     logoPreview: '',
     organizationLogo: null
   })
-const router = useRouter()
+  const router = useRouter()
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -71,12 +74,13 @@ const router = useRouter()
       reader.readAsDataURL(file)
     }
   }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (currentStep === 1) {
       setCurrentStep(2)
     } else {
-        router.push('/admin-dashboard')
+      router.push('/admin-dashboard')
      
       const completeFormData = {
         ...formData,
@@ -91,11 +95,21 @@ const router = useRouter()
     }
   }
 
-  const handleClose = () => {
-    setOpen(false)
-    router.push('/login')
-    onClose()
+  // Modified to prevent navigation if persistent is true
+  const handleDialogChange = (isOpen: boolean) => {
+    if (!isOpen && persistent) {
+      // If persistent, don't allow closing
+      return;
+    }
+    
+    // Otherwise, proceed with normal close behavior
+    setOpen(isOpen);
+    if (!isOpen) {
+      router.push('/login');
+      onClose();
+    }
   }
+
   const renderStep1 = () => (
     <div className="space-y-6">
       <div className="text-center pb-6">
@@ -195,7 +209,17 @@ const router = useRouter()
             value={formData.address || ''}
           />
         </div>
-
+        <div className="space-y-2">
+          <Label htmlFor="address">Street Address</Label>
+          <Input
+            id="address"
+            name="address"
+            placeholder="Enter street address"
+            onChange={handleInputChange}
+            className="border border-gray-200"
+            value={formData.address || ''}
+          />
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="city">City</Label>
@@ -254,48 +278,33 @@ const router = useRouter()
             </Select>
           </div>
         </div>
-
-        <div className="flex items-center space-x-2 pt-4">
-          <Switch
-            id="whiteLabel"
-            checked={formData.whiteLabel}
-            onCheckedChange={(checked: boolean) => 
-              setFormData(prev => ({ ...prev, whiteLabel: checked }))
-            }
-          />
-          <Label htmlFor="whiteLabel">Enable White Label</Label>
-        </div>
       </div>
     </div>
   )
 
-
   return (
-    
-    <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[600px] bg-white rounded-lg p-6">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-blue-700 text-center">
-              {currentStep === 1 ? 'Create Organization' : 'Organization Details'}
-            </DialogTitle>
-          </DialogHeader>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
+      <DialogContent className="sm:max-w-[600px] bg-white rounded-lg p-6">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-semibold text-blue-700 text-center">
+            {currentStep === 1 ? 'Create Organization' : 'Organization Details'}
+          </DialogTitle>
+        </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="mt-6">
-            {currentStep === 1 ? renderStep1() : renderStep2()}
+        <form onSubmit={handleSubmit} className="mt-6">
+          {currentStep === 1 ? renderStep1() : renderStep2()}
 
-            <div className="flex justify-between mt-8">
-             
-              <Button
-                type="submit"
-                className="bg-blue-600 text-white hover:bg-blue-700"
-              >
-                {currentStep === 1 ? 'Next' : 'Create Organization'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-   
+          <div className="flex justify-between mt-8">
+            <Button
+              type="submit"
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {currentStep === 1 ? 'Next' : 'Create Organization'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
 

@@ -396,11 +396,11 @@ export default function ConnectPage() {
                   </div>
 
                   <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
+                    <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="overview">Overview</TabsTrigger>
                       <TabsTrigger value="transactions">Transactions</TabsTrigger>
                       <TabsTrigger value="payouts">Payouts</TabsTrigger>
-                      <TabsTrigger value="settings">Settings</TabsTrigger>
+                     
                     </TabsList>
 
                     <TabsContent value="overview" className="space-y-4">
@@ -670,85 +670,7 @@ export default function ConnectPage() {
                       </Card>
                     </TabsContent>
 
-                    <TabsContent value="settings">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Account Settings</CardTitle>
-                          <CardDescription>Manage your payment processing settings</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="rounded-lg border p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-1">
-                                <p className="text-sm font-medium">Business Information</p>
-                                <p className="text-sm text-muted-foreground">
-                                  Update your business details and tax information
-                                </p>
-                              </div>
-                              <Button variant="outline" size="sm">
-                                Update
-                              </Button>
-                            </div>
-                          </div>
-
-                          <div className="rounded-lg border p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-1">
-                                <p className="text-sm font-medium">Payment Methods</p>
-                                <p className="text-sm text-muted-foreground">
-                                  Configure which payment methods you accept
-                                </p>
-                              </div>
-                              <Button variant="outline" size="sm">
-                                Configure
-                              </Button>
-                            </div>
-                          </div>
-
-                          <div className="rounded-lg border p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-1">
-                                <p className="text-sm font-medium">Branding</p>
-                                <p className="text-sm text-muted-foreground">
-                                  Customize the appearance of checkout and receipts
-                                </p>
-                              </div>
-                              <Button variant="outline" size="sm">
-                                Customize
-                              </Button>
-                            </div>
-                          </div>
-
-                          <div className="rounded-lg border p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-1">
-                                <p className="text-sm font-medium">Team Access</p>
-                                <p className="text-sm text-muted-foreground">
-                                  Manage team members who can access your Stripe account
-                                </p>
-                              </div>
-                              <Button variant="outline" size="sm">
-                                Manage Team
-                              </Button>
-                            </div>
-                          </div>
-
-                          <div className="rounded-lg border p-4 border-destructive/20">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-1">
-                                <p className="text-sm font-medium text-destructive">Disconnect Account</p>
-                                <p className="text-sm text-muted-foreground">
-                                  Remove the connection to your Stripe account
-                                </p>
-                              </div>
-                              <Button variant="destructive" size="sm">
-                                Disconnect
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
+                  
                   </Tabs>
                 </div>
               ) : (

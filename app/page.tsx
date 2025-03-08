@@ -173,7 +173,7 @@ export default function Page() {
                 Ready to transform your organization?
               </h2>
               <p className="text-xl 2xl:text-2xl mb-8 2xl:mb-12 text-blue-100">
-                Join thousands of teams already using OrgFlow to improve their productivity.
+                Join thousands of teams already using KWF_SAAS to improve their productivity.
               </p>
               <Pricing />
             </div>
@@ -221,7 +221,7 @@ export default function Page() {
             ))}
           </div>
           <div className="mt-12 pt-8 border-t text-center text-sm 2xl:text-base text-slate-600">
-            <p>&copy; {new Date().getFullYear()} OrgFlow. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} KWF_SAAS. All rights reserved.</p>
           </div>
         </div>
       </footer>
