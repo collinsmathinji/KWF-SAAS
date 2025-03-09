@@ -7,6 +7,7 @@ import { Overview } from "./overview"
 import { RecentActivity } from "./recent-activity"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import OrganizationsPage from "./organizations"
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { 
@@ -25,7 +26,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview")
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const isMobile = useIsMobile()
-  
+  const router=useRouter()
   useEffect(() => {
     if (isMobile) {
       setSidebarOpen(false)
@@ -193,7 +194,9 @@ export default function DashboardPage() {
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="hidden md:flex">
+              <Button variant="outline" size="sm" className="hidden md:flex" onClick={()=>{
+                router.push('/')
+              }}>
                 <Home className="mr-2 h-4 w-4" />
                 Back to Home
               </Button>
