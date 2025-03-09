@@ -117,11 +117,11 @@ export default function DashboardPage() {
                       onClick={() => setActiveTab(item.id)}
                       className={`nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all ${
                         activeTab === item.id 
-                          ? 'active text-primary-foreground' 
+                          ? 'active text-blue-400' 
                           : 'text-slate-600 hover:text-slate-900'
                       } ${!sidebarOpen && 'md:justify-center'}`}
                     >
-                      <item.icon className={`h-5 w-5 ${activeTab === item.id ? 'text-primary-foreground' : 'text-slate-500'}`} />
+                      <item.icon className={`h-5 w-5 ${activeTab === item.id ? 'text-blue-400' : 'text-slate-500'}`} />
                       <span className={`${!sidebarOpen && 'md:hidden'}`}>{item.label}</span>
                       {item.id === "organization" && (
                         <Badge className={`ml-auto bg-primary/10 text-primary hover:bg-primary/20 ${!sidebarOpen && 'md:hidden'}`}>
