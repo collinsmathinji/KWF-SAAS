@@ -28,65 +28,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${robotoMono.variable}`}>
       <body>
-        <div className="flex min-h-screen flex-col">
-          <main className="flex-1">
-            <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-900">
-              <div className="container px-4 md:px-6">
-                <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">KWF_SAAS</h1>
-                  <p className="max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                    Your go-to solution for business management
-                  </p>
-                </div>
-              </div>
-            </section>
-            
-            <section className="w-full py-12 md:py-24 lg:py-32">
-              <div className="container px-4 md:px-6">
-                <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                  <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">KWF-SAAS</h2>
-                  <p className="max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                    Your Ultimate Contact Management Solution
-                  </p>
-                </div>
-                
-                <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:gap-12 mt-12">
-                  <div className="flex flex-col items-start space-y-4">
-                    <div className="p-2 bg-blue-100 rounded-full dark:bg-blue-900">
-                      <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <h3 className="text-xl font-bold">Customizable Contact Fields</h3>
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Tailor your contact management to your organizations specific needs
-                    </p>
-                  </div>
-                  
-                  <div className="flex flex-col items-start space-y-4">
-                    <div className="p-2 bg-blue-100 rounded-full dark:bg-blue-900">
-                      <Building className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <h3 className="text-xl font-bold">Multi-Organization Support</h3>
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Perfect for businesses of all types and sizes
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-            
-            <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-900">
-              <div className="container px-4 md:px-6">
-                <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                  <p className="text-gray-500 dark:text-gray-400">
-                    Trusted by hundreds of organizations worldwide
-                  </p>
-                </div>
-              </div>
-            </section>
+       
+          
             
             {children}
-          </main>
-        </div>
+         
       </body>
     </html>
   );

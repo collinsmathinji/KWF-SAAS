@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, HelpCircle, X } from "lucide-react"
+import { Check, HelpCircle, X } from 'lucide-react'
 import { useState, useMemo } from "react"
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
@@ -189,6 +189,7 @@ export function Pricing() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [clientSecret, setClientSecret] = useState<string>("")
+  const [customerEmail, setCustomerEmail] = useState<string>("")
   const router = useRouter()
   const { toast } = useToast()
 
@@ -248,6 +249,11 @@ export function Pricing() {
 
       const data = await response.json()
       setClientSecret(data.clientSecret)
+      
+      // Store customer email if available
+      if (data.customerEmail) {
+        setCustomerEmail(data.customerEmail)
+      }
     } catch (error) {
       console.error("Error:", error)
       toast({
@@ -256,6 +262,47 @@ export function Pricing() {
         variant: "destructive",
       })
       setIsPaymentModalOpen(false)
+    }
+  }
+  
+  const handlePaymentSuccess = async (paymentIntent: any) => {
+    try {
+      // Get subscription details from the payment intent
+      const response = await fetch("/api/get-subscription-from-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          paymentIntentId: paymentIntent.id,
+        }),
+      })
+      
+      if (!response.ok) {
+        throw new Error("Failed to retrieve subscription details")
+      }
+      
+      const data = await response.json()
+      
+      // Close the payment modal
+      setIsPaymentModalOpen(false)
+      
+      // Redirect to admin signup with subscription information
+      router.push(
+        `/signUp?subscription_id=${data.subscriptionId}&customer_id=${data.customerId}&email=${data.email || customerEmail}`
+      )
+      
+      toast({
+        title: "Payment Successful",
+        description: "Your subscription has been activated. Please complete your account setup.",
+      })
+    } catch (error) {
+      console.error("Error processing payment success:", error)
+      toast({
+        title: "Error",
+        description: "Payment was successful, but we couldn't process your subscription. Please contact support.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -346,7 +393,7 @@ export function Pricing() {
       </div>
 
       <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
-        <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Complete Your Subscription</DialogTitle>
             <DialogDescription>
@@ -377,10 +424,7 @@ export function Pricing() {
               }}
             >
               <StripePaymentForm
-                onSuccess={() => {
-                  setIsPaymentModalOpen(false)
-                  router.push("/signup")
-                }}
+                onSuccess={handlePaymentSuccess}
                 amount={selectedPlan.basePrice * 100}
               />
             </Elements>
@@ -465,4 +509,3 @@ function BooleanFeature({
     </div>
   )
 }
-
