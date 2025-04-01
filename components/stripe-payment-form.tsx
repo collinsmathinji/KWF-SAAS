@@ -1,18 +1,16 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 
 interface StripePaymentFormProps {
-  onSuccess: (paymentIntent: any) => void
+  onSuccess: () => void
   amount: number
 }
 
-export function StripePaymentForm({ onSuccess, amount }: StripePaymentFormProps) {
+export function StripePaymentForm({ onSuccess }: StripePaymentFormProps) {
   const stripe = useStripe()
   const elements = useElements()
   const [message, setMessage] = useState<string | null>(null)
@@ -22,11 +20,6 @@ export function StripePaymentForm({ onSuccess, amount }: StripePaymentFormProps)
     e.preventDefault()
 
     if (!stripe || !elements) {
-      toast({
-        title: "Payment processing unavailable",
-        description: "Please wait while we initialize the payment system.",
-        variant: "destructive",
-      })
       return
     }
 
@@ -34,10 +27,11 @@ export function StripePaymentForm({ onSuccess, amount }: StripePaymentFormProps)
     setMessage(null)
 
     try {
-      // Use confirmPayment to handle the payment
-      const { error, paymentIntent } = await stripe.confirmPayment({
+      const { error } = await stripe.confirmPayment({
         elements,
-        redirect: 'if_required',
+        confirmParams: {
+          return_url: `${window.location.origin}/signUp`,
+        },
       })
 
       if (error) {
@@ -45,10 +39,7 @@ export function StripePaymentForm({ onSuccess, amount }: StripePaymentFormProps)
         return
       }
 
-      if (paymentIntent && paymentIntent.status === 'succeeded') {
-        // Pass the payment intent to the onSuccess callback
-        onSuccess(paymentIntent)
-      }
+      onSuccess()
     } catch (error) {
       console.log("Error confirming payment:", error)
       setMessage("An unexpected error occurred.")
@@ -82,3 +73,4 @@ export function StripePaymentForm({ onSuccess, amount }: StripePaymentFormProps)
     </form>
   )
 }
+
