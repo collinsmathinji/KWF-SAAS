@@ -14,6 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToast } from "@/components/ui/use-toast"
 import { StripePaymentForm } from "@/components/stripe-payment-form"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useForm } from "react-hook-form"
 
 // Type definitions
 interface PlanFeatures {
@@ -25,6 +28,7 @@ interface PlanFeatures {
 interface Plan {
   id: PlanId
   name: string
+  stripePriceId: string
   description: string
   basePrice: number | "Contact Us"
   maxContacts: number | "Custom"
@@ -39,6 +43,7 @@ interface ApiPlan {
   planName: string
   description: string
   billingCycle: string
+  stripePriceId: string
   currency: string
   price: number
   maxMembers: number
@@ -83,6 +88,10 @@ export function Pricing() {
   const router = useRouter()
   const { toast } = useToast()
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [customerEmail, setCustomerEmail] = useState("")
+  const [customerName, setCustomerName] = useState("")
+
   const handlePlansFetch = async () => {
     setLoading(true)
     try {
@@ -98,6 +107,7 @@ export function Pricing() {
           options: {
             select: [
               "planName",
+              "stripePriceId",
               "description",
               "billingCycle",
               "currency",
@@ -114,11 +124,11 @@ export function Pricing() {
 
       const data = await response.json()
 
-      if (data.status === 'SUCCESS' && data.data?.data && Array.isArray(data.data.data)) {
-        
+      if (data.status === "SUCCESS" && data.data?.data && Array.isArray(data.data.data)) {
         const transformedPlans = data.data.data.map((apiPlan: ApiPlan) => ({
           id: apiPlan._id as PlanId,
           name: apiPlan.planName,
+          stripePriceId: apiPlan.stripePriceId,
           description: apiPlan.description,
           basePrice: apiPlan.price,
           maxContacts: apiPlan.maxMembers,
@@ -156,9 +166,7 @@ export function Pricing() {
 
   useEffect(() => {
     handlePlansFetch()
-  }, []) // Empty dependency array means this runs once on mount
-
-  // Filter and sort plans based on selected contacts and member portal requirements
+  }, [])
   const filteredPlans = useMemo(() => {
     const contactsNum = Number.parseInt(selectedContacts)
     const membersNum = Number.parseInt(memberOptions)
@@ -199,7 +207,6 @@ export function Pricing() {
   const recommendedPlan = useMemo(() => {
     if (filteredPlans.length === 0) return null
 
-    // Find the first plan that has at least 20% more capacity than requested
     const contactsNum = Number.parseInt(selectedContacts)
     const membersNum = Number.parseInt(memberOptions)
 
@@ -214,19 +221,25 @@ export function Pricing() {
       }
     }
 
-    // If no plan meets the 20% criteria, return the first filtered plan
     return filteredPlans[0]
   }, [filteredPlans, selectedContacts, memberOptions])
 
   // Handle plan selection
-  const handlePlanSelection = async (plan: Plan) => {
+  const handlePlanSelection = (plan: Plan) => {
     if (plan.basePrice === "Contact Us") {
-      // Redirect to contact page or open contact form
-      router.push("/contact")
+      router.push("/contact-sales")
       return
     }
 
     setSelectedPlan(plan)
+    setClientSecret("")
+    setIsPaymentModalOpen(true)
+  }
+
+  const handleCustomerSubmit = async (customerData: { name: string; email: string }) => {
+    if (!selectedPlan) return
+
+    setIsSubmitting(true)
 
     try {
       const response = await fetch("/api/create-subscription", {
@@ -235,30 +248,38 @@ export function Pricing() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount: typeof plan.basePrice === "number" ? plan.basePrice * 100 : 0,
-          planId: plan.id,
+          priceId: selectedPlan.stripePriceId,
+          customerName: customerData.name,
+          customerEmail: customerData.email,
         }),
       })
+
+      if (!response.ok) {
+        throw new Error(await response.text())
+      }
 
       const data = await response.json()
 
       if (data.clientSecret) {
         setClientSecret(data.clientSecret)
-        setIsPaymentModalOpen(true)
       } else {
         toast({
           title: "Error",
           description: "Could not initialize payment. Please try again.",
           variant: "destructive",
         })
+        setIsPaymentModalOpen(false)
       }
     } catch (error) {
-      console.error("Error creating payment intent:", error)
+      console.error("Error creating subscription:", error)
       toast({
         title: "Error",
-        description: "Could not initialize payment. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to initialize payment. Please try again.",
         variant: "destructive",
       })
+      setIsPaymentModalOpen(false)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -378,33 +399,39 @@ export function Pricing() {
               )}
             </DialogDescription>
           </DialogHeader>
-          {clientSecret && selectedPlan && typeof selectedPlan.basePrice === "number" && (
-            <Elements
-              stripe={stripePromise}
-              options={{
-                clientSecret,
-                appearance: {
-                  theme: "stripe",
-                  variables: {
-                    colorPrimary: "#2563eb",
-                    colorBackground: "#ffffff",
-                    colorText: "#1e3a8a",
-                    colorDanger: "#df1b41",
-                    fontFamily: "system-ui, sans-serif",
-                    spacingUnit: "4px",
-                    borderRadius: "8px",
+
+          {!clientSecret ? (
+            <CustomerForm onSubmit={handleCustomerSubmit} isLoading={isSubmitting} />
+          ) : (
+            selectedPlan &&
+            typeof selectedPlan.basePrice === "number" && (
+              <Elements
+                stripe={stripePromise}
+                options={{
+                  clientSecret,
+                  appearance: {
+                    theme: "stripe",
+                    variables: {
+                      colorPrimary: "#2563eb",
+                      colorBackground: "#ffffff",
+                      colorText: "#1e3a8a",
+                      colorDanger: "#df1b41",
+                      fontFamily: "system-ui, sans-serif",
+                      spacingUnit: "4px",
+                      borderRadius: "8px",
+                    },
                   },
-                },
-              }}
-            >
-              <StripePaymentForm
-                onSuccess={() => {
-                  setIsPaymentModalOpen(false)
-                  router.push("/signup")
                 }}
-                amount={selectedPlan.basePrice * 100}
-              />
-            </Elements>
+              >
+                <StripePaymentForm
+                  onSuccess={() => {
+                    setIsPaymentModalOpen(false)
+                    router.push("/signup")
+                  }}
+                  amount={selectedPlan.basePrice * 100}
+                />
+              </Elements>
+            )
           )}
         </DialogContent>
       </Dialog>
@@ -482,6 +509,55 @@ function BooleanFeature({
         {label} {suffix && `${suffix}`}
       </span>
     </div>
+  )
+}
+
+interface CustomerFormProps {
+  onSubmit: (data: { name: string; email: string }) => void
+  isLoading: boolean
+}
+
+function CustomerForm({ onSubmit, isLoading }: CustomerFormProps) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<{ name: string; email: string }>()
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <Label htmlFor="name">Name</Label>
+        <Input
+          type="text"
+          id="name"
+          placeholder="John Doe"
+          {...register("name", { required: "Name is required" })}
+          disabled={isLoading}
+        />
+        {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+      </div>
+      <div>
+        <Label htmlFor="email">Email</Label>
+        <Input
+          type="email"
+          id="email"
+          placeholder="john.doe@example.com"
+          {...register("email", {
+            required: "Email is required",
+            pattern: {
+              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+              message: "Invalid email address",
+            },
+          })}
+          disabled={isLoading}
+        />
+        {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+      </div>
+      <Button type="submit" disabled={isLoading} className="w-full">
+        {isLoading ? "Submitting..." : "Continue to Payment"}
+      </Button>
+    </form>
   )
 }
 
