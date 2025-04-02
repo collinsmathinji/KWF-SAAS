@@ -1,7 +1,7 @@
 "use client"
 
 import { Check, HelpCircle, X } from "lucide-react"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
 import { useRouter } from "next/navigation"
@@ -34,131 +34,20 @@ interface Plan {
   features: PlanFeatures
 }
 
-type PlanId = "starter" | "basic" | "pro" | "business" | "enterprise" | "scale" | "ultra" | "custom"
+interface ApiPlan {
+  _id: string
+  planName: string
+  description: string
+  billingCycle: string
+  currency: string
+  price: number
+  maxMembers: number
+  maxGroups: number
+  maxStaff: number
+  maxEventStaff: number
+}
 
-// Constants
-const PLANS: Plan[] = [
-  {
-    id: "starter",
-    name: "Starter",
-    description: "For small organizations starting their journey",
-    basePrice: 19.99,
-    maxContacts: 50,
-    maxGroups: 2,
-    maxStaff: 1,
-    maxEventStaff: 3,
-    features: {
-      memberPortal: false,
-      stripePayments: true,
-      prioritySupport: false,
-    },
-  },
-  {
-    id: "basic",
-    name: "Basic",
-    description: "Perfect for growing organizations",
-    basePrice: 39.99,
-    maxContacts: 200,
-    maxGroups: 5,
-    maxStaff: 3,
-    maxEventStaff: 10,
-    features: {
-      memberPortal: false,
-      stripePayments: true,
-      prioritySupport: false,
-    },
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    description: "Ideal for established organizations",
-    basePrice: 79.99,
-    maxContacts: 1000,
-    maxGroups: 10,
-    maxStaff: 10,
-    maxEventStaff: 20,
-    features: {
-      memberPortal: 100,
-      stripePayments: true,
-      prioritySupport: false,
-    },
-  },
-  {
-    id: "business",
-    name: "Business",
-    description: "For larger organizations",
-    basePrice: 149.99,
-    maxContacts: 5000,
-    maxGroups: 20,
-    maxStaff: 25,
-    maxEventStaff: 50,
-    features: {
-      memberPortal: 500,
-      stripePayments: true,
-      prioritySupport: true,
-    },
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    description: "Enterprise-grade features and support",
-    basePrice: 299.99,
-    maxContacts: 10000,
-    maxGroups: 40,
-    maxStaff: 50,
-    maxEventStaff: 100,
-    features: {
-      memberPortal: 1000,
-      stripePayments: true,
-      prioritySupport: true,
-    },
-  },
-  {
-    id: "scale",
-    name: "Scale",
-    description: "For rapidly growing organizations",
-    basePrice: 499.99,
-    maxContacts: 20000,
-    maxGroups: 80,
-    maxStaff: 100,
-    maxEventStaff: 200,
-    features: {
-      memberPortal: 2000,
-      stripePayments: true,
-      prioritySupport: true,
-    },
-  },
-  {
-    id: "ultra",
-    name: "Ultra",
-    description: "Maximum capabilities and support",
-    basePrice: 799.99,
-    maxContacts: 30000,
-    maxGroups: 150,
-    maxStaff: 200,
-    maxEventStaff: 500,
-    features: {
-      memberPortal: 3000,
-      stripePayments: true,
-      prioritySupport: true,
-    },
-  },
-  {
-    id: "custom",
-    name: "Custom",
-    description: "Tailored solutions for your organization",
-    basePrice: "Contact Us",
-    maxContacts: "Custom",
-    maxGroups: "Custom",
-    maxStaff: "Custom",
-    maxEventStaff: "Custom",
-    features: {
-      memberPortal: false,
-      stripePayments: true,
-      prioritySupport: true,
-    },
-  },
-]
+type PlanId = "starter" | "basic" | "pro" | "business" | "enterprise" | "scale" | "ultra" | "custom"
 
 const CONTACT_OPTIONS = [
   { value: "50", label: "Up to 50" },
@@ -189,45 +78,155 @@ export function Pricing() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [clientSecret, setClientSecret] = useState<string>("")
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
 
+  const handlePlansFetch = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch("http://localhost:5000/admin/subscriptionPlan/list", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: {
+            billingCycle: "Monthly",
+          },
+          options: {
+            select: [
+              "planName",
+              "description",
+              "billingCycle",
+              "currency",
+              "price",
+              "maxMembers",
+              "maxGroups",
+              "maxStaff",
+              "maxEventStaff",
+            ],
+          },
+          isCountOnly: false,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.status === 'SUCCESS' && data.data?.data && Array.isArray(data.data.data)) {
+        
+        const transformedPlans = data.data.data.map((apiPlan: ApiPlan) => ({
+          id: apiPlan._id as PlanId,
+          name: apiPlan.planName,
+          description: apiPlan.description,
+          basePrice: apiPlan.price,
+          maxContacts: apiPlan.maxMembers,
+          maxGroups: apiPlan.maxGroups,
+          maxStaff: apiPlan.maxStaff,
+          maxEventStaff: apiPlan.maxEventStaff,
+          features: {
+            memberPortal: apiPlan.maxMembers > 0 ? Math.min(apiPlan.maxMembers, 100) : false,
+            stripePayments: true,
+            prioritySupport: apiPlan.price > 50,
+          },
+        }))
+
+        setPlans(transformedPlans)
+        console.log("Fetched plans:", data.data.data)
+      } else {
+        console.error("Invalid data format:", data)
+        toast({
+          title: "Error loading plans",
+          description: "Could not load subscription plans. Please try again later.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching plans:", error)
+      toast({
+        title: "Error loading plans",
+        description: "Could not load subscription plans. Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    handlePlansFetch()
+  }, []) // Empty dependency array means this runs once on mount
+
   // Filter and sort plans based on selected contacts and member portal requirements
   const filteredPlans = useMemo(() => {
-    if (selectedContacts === "more" || memberOptions === "more") {
-      return [PLANS.find((plan) => plan.id === "custom")!]
-    }
-
     const contactsNum = Number.parseInt(selectedContacts)
     const membersNum = Number.parseInt(memberOptions)
 
-    return PLANS.filter((plan) => {
-      if (typeof plan.maxContacts === "string") return false
+    return plans
+      .filter((plan) => {
+        // Filter by contacts
+        if (typeof plan.maxContacts === "number" && plan.maxContacts < contactsNum) {
+          return false
+        }
 
-      const hasEnoughContacts = plan.maxContacts >= contactsNum
-      const hasEnoughPortalAccess =
-        membersNum === 0
-          ? true
-          : typeof plan.features.memberPortal === "number" && plan.features.memberPortal >= membersNum
+        // Filter by member portal
+        if (membersNum > 0 && plan.features.memberPortal === false) {
+          return false
+        }
 
-      return hasEnoughContacts && hasEnoughPortalAccess
-    }).slice(0, 4)
-  }, [selectedContacts, memberOptions])
+        if (typeof plan.features.memberPortal === "number" && plan.features.memberPortal < membersNum) {
+          return false
+        }
 
-  // Find recommended plan (first matching plan)
+        return true
+      })
+      .sort((a, b) => {
+        // Sort by price
+        if (typeof a.basePrice === "number" && typeof b.basePrice === "number") {
+          return a.basePrice - b.basePrice
+        }
+
+        // "Contact Us" plans go last
+        if (a.basePrice === "Contact Us") return 1
+        if (b.basePrice === "Contact Us") return -1
+
+        return 0
+      })
+  }, [plans, selectedContacts, memberOptions])
+
+  // Find the recommended plan
   const recommendedPlan = useMemo(() => {
-    if (selectedContacts === "more" || memberOptions === "more") return null
-    return filteredPlans[0] || null
-  }, [filteredPlans])
+    if (filteredPlans.length === 0) return null
 
+    // Find the first plan that has at least 20% more capacity than requested
+    const contactsNum = Number.parseInt(selectedContacts)
+    const membersNum = Number.parseInt(memberOptions)
+
+    for (const plan of filteredPlans) {
+      if (typeof plan.maxContacts === "number" && plan.maxContacts >= contactsNum * 1.2) {
+        if (
+          membersNum === 0 ||
+          (typeof plan.features.memberPortal === "number" && plan.features.memberPortal >= membersNum * 1.2)
+        ) {
+          return plan
+        }
+      }
+    }
+
+    // If no plan meets the 20% criteria, return the first filtered plan
+    return filteredPlans[0]
+  }, [filteredPlans, selectedContacts, memberOptions])
+
+  // Handle plan selection
   const handlePlanSelection = async (plan: Plan) => {
     if (plan.basePrice === "Contact Us") {
-      router.push("/contact-sales")
+      // Redirect to contact page or open contact form
+      router.push("/contact")
       return
     }
 
     setSelectedPlan(plan)
-    setIsPaymentModalOpen(true)
 
     try {
       const response = await fetch("/api/create-subscription", {
@@ -236,26 +235,30 @@ export function Pricing() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          amount: typeof plan.basePrice === "number" ? plan.basePrice * 100 : 0,
           planId: plan.id,
-          contacts: Number.parseInt(selectedContacts),
-          memberPortalUsers: Number.parseInt(memberOptions),
         }),
       })
 
-      if (!response.ok) {
-        throw new Error(await response.text())
-      }
-
       const data = await response.json()
-      setClientSecret(data.clientSecret)
+
+      if (data.clientSecret) {
+        setClientSecret(data.clientSecret)
+        setIsPaymentModalOpen(true)
+      } else {
+        toast({
+          title: "Error",
+          description: "Could not initialize payment. Please try again.",
+          variant: "destructive",
+        })
+      }
     } catch (error) {
-      console.error("Error:", error)
+      console.error("Error creating payment intent:", error)
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to initialize payment. Please try again.",
+        description: "Could not initialize payment. Please try again.",
         variant: "destructive",
       })
-      setIsPaymentModalOpen(false)
     }
   }
 
@@ -305,45 +308,63 @@ export function Pricing() {
         </div>
       </AnimatedSection>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {filteredPlans.map((plan, index) => (
-          <AnimatedSection key={plan.id} delay={index * 0.1}>
-            <Card
-              className={`relative flex h-full flex-col transition-all hover:shadow-lg ${
-                plan === recommendedPlan ? "border-primary" : ""
-              }`}
-            >
-              {plan === recommendedPlan && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-primary-foreground text-sm rounded-full">
-                  Recommended
-                </div>
-              )}
-              <CardHeader>
-                <CardTitle>{plan.name}</CardTitle>
-                <CardDescription>{plan.description}</CardDescription>
-                <div className="mt-4">
-                  <span className="text-3xl font-bold">
-                    {typeof plan.basePrice === "number" ? `$${plan.basePrice}` : plan.basePrice}
-                  </span>
-                  {typeof plan.basePrice === "number" && <span className="text-gray-500">/month</span>}
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1 space-y-4">
-                <PlanFeatures plan={plan} />
-              </CardContent>
-              <CardFooter>
-                <Button
-                  onClick={() => handlePlanSelection(plan)}
-                  className="w-full"
-                  variant={plan === recommendedPlan ? "default" : "outline"}
-                >
-                  {plan.basePrice === "Contact Us" ? "Contact Sales" : "Get Started"}
-                </Button>
-              </CardFooter>
-            </Card>
-          </AnimatedSection>
-        ))}
-      </div>
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      ) : filteredPlans.length === 0 ? (
+        <AnimatedSection>
+          <div className="text-center py-12">
+            <h3 className="text-xl font-medium">No plans match your criteria</h3>
+            <p className="text-muted-foreground mt-2">
+              Try adjusting your requirements or contact us for a custom plan
+            </p>
+            <Button className="mt-4" onClick={() => router.push("/contact")}>
+              Contact Sales
+            </Button>
+          </div>
+        </AnimatedSection>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredPlans.map((plan, index) => (
+            <AnimatedSection key={plan.id} delay={index * 0.1}>
+              <Card
+                className={`relative flex h-full flex-col transition-all hover:shadow-lg ${
+                  plan === recommendedPlan ? "border-primary" : ""
+                }`}
+              >
+                {plan === recommendedPlan && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-primary-foreground text-sm rounded-full">
+                    Recommended
+                  </div>
+                )}
+                <CardHeader>
+                  <CardTitle>{plan.name}</CardTitle>
+                  <CardDescription>{plan.description}</CardDescription>
+                  <div className="mt-4">
+                    <span className="text-3xl font-bold">
+                      {typeof plan.basePrice === "number" ? `$${plan.basePrice}` : plan.basePrice}
+                    </span>
+                    {typeof plan.basePrice === "number" && <span className="text-gray-500">/month</span>}
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-1 space-y-4">
+                  <PlanFeatures plan={plan} />
+                </CardContent>
+                <CardFooter>
+                  <Button
+                    onClick={() => handlePlanSelection(plan)}
+                    className="w-full"
+                    variant={plan === recommendedPlan ? "default" : "outline"}
+                  >
+                    {plan.basePrice === "Contact Us" ? "Contact Sales" : "Get Started"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </AnimatedSection>
+          ))}
+        </div>
+      )}
 
       <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
         <DialogContent className="max-w-md">
@@ -426,9 +447,9 @@ function FeatureItem({
   value: number | string
   tooltip?: string
 }) {
-  const content = (
+  return (
     <div className="flex items-center gap-2">
-      {tooltip && (
+      {tooltip ? (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>
@@ -437,14 +458,12 @@ function FeatureItem({
             <TooltipContent>{tooltip}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      )}
+      ) : null}
       <span>
         {label}: {value}
       </span>
     </div>
   )
-
-  return tooltip ? content : <div className="flex items-center gap-2">{content}</div>
 }
 
 function BooleanFeature({
