@@ -50,6 +50,7 @@ interface ApiPlan {
   maxGroups: number
   maxStaff: number
   maxEventStaff: number
+  isActive?: boolean
 }
 
 type PlanId = "starter" | "basic" | "pro" | "business" | "enterprise" | "scale" | "ultra" | "custom"
@@ -103,6 +104,8 @@ export function Pricing() {
         body: JSON.stringify({
           query: {
             billingCycle: "Monthly",
+            isActive:true,
+            isDeleted: false,
           },
           options: {
             select: [
@@ -129,6 +132,7 @@ export function Pricing() {
           id: apiPlan._id as PlanId,
           name: apiPlan.planName,
           stripePriceId: apiPlan.stripePriceId,
+          isActive: apiPlan.isActive??true,
           description: apiPlan.description,
           basePrice: apiPlan.price,
           maxContacts: apiPlan.maxMembers,
@@ -237,51 +241,64 @@ export function Pricing() {
   }
 
   const handleCustomerSubmit = async (customerData: { name: string; email: string }) => {
-    if (!selectedPlan) return
-
-    setIsSubmitting(true)
-
+    if (!selectedPlan) {
+      console.error("Error: No selected plan.");
+      return;
+    }
+  
+    console.log("Selected Plan:", selectedPlan);
+    console.log("Customer Data:", customerData);
+  
+    setIsSubmitting(true);
+  
     try {
-      const response = await fetch("/api/create-subscription", {
+      const requestBody = {
+        priceId: selectedPlan.stripePriceId,
+        customerName: customerData.name,
+        email: customerData.email, 
+        successUrl: "http://localhost:3000/success",
+        cancelUrl: "http://localhost:3000/cancel",
+      };
+  
+      console.log("Sending request with body:", requestBody);
+  
+      const response = await fetch("http://localhost:5000/checkout/create-checkout-session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          priceId: selectedPlan.stripePriceId,
-          customerName: customerData.name,
-          customerEmail: customerData.email,
-        }),
-      })
-
+        body: JSON.stringify(requestBody),
+      });
+  
       if (!response.ok) {
-        throw new Error(await response.text())
+        const errorMessage = await response.text();
+        throw new Error(errorMessage || "Failed to create checkout session");
       }
-
-      const data = await response.json()
-
-      if (data.clientSecret) {
-        setClientSecret(data.clientSecret)
+  
+      const data = await response.json();
+  
+      if (data.sessionUrl) {
+        console.log("Redirecting to Stripe Checkout:", data.sessionUrl);
+        window.location.href = data.sessionUrl; // ✅ Redirect user to Stripe Checkout
       } else {
         toast({
           title: "Error",
-          description: "Could not initialize payment. Please try again.",
+          description: "Could not redirect to payment. Please try again.",
           variant: "destructive",
-        })
-        setIsPaymentModalOpen(false)
+        });
       }
     } catch (error) {
-      console.error("Error creating subscription:", error)
+      console.error("Error creating checkout session:", error);
+  
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to initialize payment. Please try again.",
         variant: "destructive",
-      })
-      setIsPaymentModalOpen(false)
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <section className="container py-24 space-y-8">

@@ -1,84 +1,109 @@
-import React from 'react';
-import Link from 'next/link';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+"use client"
 
-const LoginPage = () => {
-    return (
-        <div className="min-h-screen  lg:w-1/2 flex bg-gray-50">
-          
-            <div className="w-full  flex items-center justify-center p-8">
-                <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
-                    <div className="text-center mb-8">
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
-                        <p className="text-gray-600">Enter your credentials to access your account</p>
-                    </div>
+import type React from "react"
 
-                    <form className="space-y-6">
-                        <div className="relative">
-                            <label className="text-sm font-medium text-gray-700 block mb-2">
-                                Email address
-                            </label>
-                            <div className="relative">
-                                <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                                <input
-                                    type="email"
-                                    className="pl-10 w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300"
-                                    placeholder="name@company.com"
-                                />
-                            </div>
-                        </div>
+import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { login } from "@/lib/auth"
 
-                        <div className="relative">
-                            <label className="text-sm font-medium text-gray-700 block mb-2">
-                                Password
-                            </label>
-                            <div className="relative">
-                                <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                                <input
-                                    type="password"
-                                    className="pl-10 w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300"
-                                    placeholder="Enter your password"
-                                />
-                            </div>
-                        </div>
+export default function LoginForm() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const from = searchParams.get("from") || "/dashboard"
 
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                />
-                                <label className="ml-2 block text-sm text-gray-700">
-                                    Remember me
-                                </label>
-                            </div>
-                            <Link href="/forgot-password">
-                                <span className="text-sm font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
-                                    Forgot password?
-                                </span>
-                            </Link>
-                        </div>
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  })
 
-                        <Link href="/admin-dashboard"
-                            className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300"
-                        >
-                            Sign in
-                            <ArrowRight className="ml-2 w-4 h-4" />
-                        </Link>
-                    </form>
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
-                    <p className="mt-6 text-center text-gray-600">
-                        Do not have an account?{' '}
-                        <Link href="/packages">
-                            <span className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
-                                Start your free trial
-                            </span>
-                        </Link>
-                    </p>
-                </div>
-            </div>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+
+    // Validate form
+    if (!formData.email || !formData.password) {
+      setError("Please fill in all fields")
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      // Call the login function
+      const response = await login({
+        username: formData.email,
+        password: formData.password,
+      })
+
+      console.log("Login successful:", response)
+
+      // Redirect to the original destination or dashboard
+      router.push(from)
+    } catch (err) {
+      console.error("Login error:", err)
+      setError(err instanceof Error ? err.message : "An error occurred during login")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-sm space-y-6">
+      <div className="space-y-2 text-center">
+        <h1 className="text-3xl font-bold">Log In</h1>
+        <p className="text-muted-foreground">Enter your credentials to access your account</p>
+      </div>
+
+      {error && <div className="p-3 text-sm text-white bg-red-500 rounded">{error}</div>}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="your@email.com"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
         </div>
-    );
-};
 
-export default LoginPage;
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Logging in..." : "Log In"}
+        </Button>
+      </form>
+
+      <div className="text-center text-sm">
+        Don't have an account?{" "}
+        <Link href="/signup" className="underline">
+          Sign up
+        </Link>
+      </div>
+    </div>
+  )
+}
