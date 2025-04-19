@@ -56,6 +56,7 @@ console.log('Request body:', body)
     const contentType = response.headers.get("content-type")
     if (contentType && contentType.includes("application/json")) {
       const data = await response.json()
+      console.log("Response data:", data)
       return NextResponse.json(data, { status: response.status })
     } else {
       // Handle non-JSON responses

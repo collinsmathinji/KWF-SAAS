@@ -47,10 +47,7 @@ export interface UpdateOrganizationData {
 // Create a new organization
 export async function createOrganization(data: CreateOrganizationData): Promise<OrganizationType> {
   try {
-    // Create FormData for handling file upload
     const formData = new FormData()
-    
-    // Add all fields to FormData
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         if (key === 'organizationLogo' && value instanceof File) {
@@ -64,7 +61,6 @@ export async function createOrganization(data: CreateOrganizationData): Promise<
     const response = await fetch("/api/organizations", {
       method: "POST",
       body: formData,
-      // Don't set Content-Type header when using FormData
     })
 
     const responseData = await response.json()
@@ -129,45 +125,57 @@ export async function getOrganizationById(id: string): Promise<OrganizationType>
 
 // Update an organization
 export async function updateOrganization(data: UpdateOrganizationData): Promise<OrganizationType> {
-  try {
-    const { id, ...updateData } = data
-    
-    // Create FormData for handling file upload
-    const formData = new FormData()
-    
-    // Add all fields to FormData
-    Object.entries(updateData).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (key === 'organizationLogo' && value instanceof File) {
-          formData.append(key, value)
-        } else {
-          formData.append(key, String(value))
+    try {
+      const { id, ...updateData } = data
+      let logoUrl = null
+
+      if (updateData.organizationLogo instanceof File) {
+        const imageFormData = new FormData()
+        imageFormData.append("file", updateData.organizationLogo)
+  
+        const uploadResponse = await fetch("http://localhost:5000/admin/uploads/single", {
+          method: "POST",
+          body: imageFormData,
+        })
+  
+        if (!uploadResponse.ok) {
+          throw new Error("Failed to upload organization logo")
         }
+        const uploadData = await uploadResponse.json()
+        logoUrl = uploadData.url
+        delete updateData.organizationLogo
       }
-    })
-
-    const response = await fetch(`/api/organization/update/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({formData }),
-    })
-
-
-    const responseData = await response.json()
-    
-    if (!response.ok) {
-      throw new Error(responseData.message || "Failed to update organization")
+      const organizationFormData = new FormData()
+      Object.entries(updateData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          organizationFormData.append(key, String(value))
+        }
+      })
+      if (logoUrl) {
+        organizationFormData.append("organizationLogo", logoUrl)
+      }
+  
+      // Send the organization data to your API
+      const response = await fetch(`/api/organization/update/${id}`, {
+        method: "PUT",
+        body: organizationFormData,
+      })
+  
+      const responseData = await response.json()
+  
+      if (!response.ok) {
+        throw new Error(responseData.message || "Failed to update organization")
+      }
+  
+      console.log("Organization updated:", responseData)
+      return responseData
+    } catch (error) {
+      console.error("Error updating organization:", error)
+      throw error
     }
-
-    console.log("Organization updated:", responseData)
-    return responseData
-  } catch (error) {
-    console.error("Error updating organization:", error)
-    throw error
   }
-}
+  
+  
 
 // Delete an organization
 export async function deleteOrganization(id: string): Promise<{ success: boolean }> {

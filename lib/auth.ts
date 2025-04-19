@@ -1,7 +1,5 @@
 "use client"
-
 import { storeAuthToken } from "./token"
-
 export interface SignupData {
   name: string
   password: string
@@ -47,10 +45,8 @@ export async function signup({ name, password,token }: SignupData): Promise<Auth
   }
 }
 
-// Client-side version of login
 export async function login({ username, password }: LoginData): Promise<AuthResponse> {
   try {
-    // Client-side fetch can use relative URLs
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: {
@@ -60,14 +56,13 @@ export async function login({ username, password }: LoginData): Promise<AuthResp
     })
 
     const data = await response.json()
-
+  
     if (!response.ok) {
       throw new Error(data.message || "Login failed")
     }
 
-    // Call the server action to store the token
-    if (data.token) {
-      await storeAuthToken(data.token)
+    if (data.data.token) {
+      await storeAuthToken(data.data.token)
     }
 
     return data

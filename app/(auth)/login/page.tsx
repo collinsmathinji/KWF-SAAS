@@ -73,7 +73,7 @@ export default function LoginForm() {
           <Input
             id="email"
             name="email"
-            type="email"
+            type="string"
             placeholder="your@email.com"
             value={formData.email}
             onChange={handleChange}
