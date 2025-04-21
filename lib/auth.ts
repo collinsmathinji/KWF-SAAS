@@ -62,6 +62,8 @@ export async function login({ username, password }: LoginData): Promise<AuthResp
    console.log('Login response:', data)
    console.log('isOnboarded:', data.data.isOnboarded)
    localStorage.setItem("isOnBoarded", data.data.isOnboarded)
+   localStorage.setItem("organizationId", data.data.organizationId)
+   localStorage.setItem("userId", data.data.id)
     if (!response.ok) {
       throw new Error(data.message || "Login failed")
     }

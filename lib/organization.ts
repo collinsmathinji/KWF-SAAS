@@ -1,22 +1,18 @@
 "use client"
 
-// Define types
 export interface OrganizationType {
   id: string
-  connectAccountId: string
-  customerId: string
+  stripeAccountId: string
+ stripeCustomerId: string
   name: string
-  organizationLogo: File | null
-  logoPreview: string
-  organizationEmail: string
-  organizationPhone: string
+  logoUrl: File | null
+  email: string
+  phone: string
   address: string
   city: string
   zipCode: string
   state: string
   country: string
-  email: string
-  phone: string
 }
 
 export interface CreateOrganizationData {
@@ -41,10 +37,26 @@ export interface UpdateOrganizationData {
   zipCode?: string
   state?: string
   country?: string
-  organizationLogo?: File
+  logoUrl?: string
 }
 
-// Create a new organization
+export async function uploadOrganizationLogo(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("File", file);
+
+  const response = await fetch("http://localhost:5000/admin/uploads/single", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to upload organization logo");
+  }
+
+  const data = await response.json();
+  return data.fileUrl;
+}
+
 export async function createOrganization(data: CreateOrganizationData): Promise<OrganizationType> {
   try {
     const formData = new FormData()
@@ -123,58 +135,42 @@ export async function getOrganizationById(id: string): Promise<OrganizationType>
   }
 }
 
-// Update an organization
-export async function updateOrganization(data: UpdateOrganizationData): Promise<OrganizationType> {
-    try {
-      const { id, ...updateData } = data
-      let logoUrl = null
-
-      if (updateData.organizationLogo instanceof File) {
-        const imageFormData = new FormData()
-        imageFormData.append("file", updateData.organizationLogo)
+export async function updateOnBoarding(dataToSubmit: OrganizationType): Promise<OrganizationType> {
+  const organizationId = localStorage.getItem("organizationId");
+  const userId = localStorage.getItem("userId");
   
-        const uploadResponse = await fetch("http://localhost:5000/admin/uploads/single", {
-          method: "POST",
-          body: imageFormData,
-        })
+  if (!organizationId) throw new Error("Organization ID not found");
   
-        if (!uploadResponse.ok) {
-          throw new Error("Failed to upload organization logo")
-        }
-        const uploadData = await uploadResponse.json()
-        logoUrl = uploadData.url
-        delete updateData.organizationLogo
-      }
-      const organizationFormData = new FormData()
-      Object.entries(updateData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          organizationFormData.append(key, String(value))
-        }
-      })
-      if (logoUrl) {
-        organizationFormData.append("organizationLogo", logoUrl)
-      }
-  
-      // Send the organization data to your API
-      const response = await fetch(`/api/organization/update/${id}`, {
-        method: "PUT",
-        body: organizationFormData,
-      })
-  
-      const responseData = await response.json()
-  
-      if (!response.ok) {
-        throw new Error(responseData.message || "Failed to update organization")
-      }
-  
-      console.log("Organization updated:", responseData)
-      return responseData
-    } catch (error) {
-      console.error("Error updating organization:", error)
-      throw error
+  const response = await fetch(`/api/organization/update/${organizationId}`, {
+    method: "PUT",
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(dataToSubmit),
+  });
+  if (response.status === 200) {
+    const editedData = await fetch(`/api/user/update/${userId}`, {
+      method: "PUT",
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        isOnboarded: true,
+      }),
+    });
+    
+    if (!editedData.ok) {
+      throw new Error("Failed to update user");
     }
   }
   
+  if (!response.ok) {
+    throw new Error("Failed to update organization");
+  }
+  
+  return response.json();
+}
+
   
 
 // Delete an organization
