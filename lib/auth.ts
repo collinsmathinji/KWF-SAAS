@@ -1,5 +1,5 @@
 "use client"
-import { storeAuthToken } from "./token"
+import { checkUserType, storeAuthToken, storeUserType } from "./token"
 export interface SignupData {
   name: string
   password: string
@@ -30,14 +30,17 @@ export async function signup({ name, password,token }: SignupData): Promise<Auth
     })
 
     const data = await response.json()
-   await  console.log("Signup response:", data)
     if (!response.ok) {
       throw new Error(data.message || "Signup failed")
     }
 
-  
-  
-
+    if (data.data.token) {
+      await storeAuthToken(data.data.token)
+    }
+    if(data.data.userType) {
+      console.log('User type:', data.data.userType)
+      await storeUserType(data.data.userType)
+    }
     return data
   } catch (error) {
     console.error("Error signing up:", error)
@@ -56,7 +59,9 @@ export async function login({ username, password }: LoginData): Promise<AuthResp
     })
 
     const data = await response.json()
-  
+   console.log('Login response:', data)
+   console.log('isOnboarded:', data.data.isOnboarded)
+   localStorage.setItem("isOnBoarded", data.data.isOnboarded)
     if (!response.ok) {
       throw new Error(data.message || "Login failed")
     }
@@ -64,10 +69,14 @@ export async function login({ username, password }: LoginData): Promise<AuthResp
     if (data.data.token) {
       await storeAuthToken(data.data.token)
     }
-
+    if(data.data.userType) {
+      console.log('User type:', data.data.userType)
+      await storeUserType(data.data.userType)
+    }
     return data
   } catch (error) {
     console.error("Error logging in:", error)
     throw error
   }
 }
+

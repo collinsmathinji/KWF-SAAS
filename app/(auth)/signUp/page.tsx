@@ -91,14 +91,13 @@ const AdminSignupPage = () => {
     setIsSubmitting(true)
 
     try {
-      // Pass the entire formData including the token to the signup function
       await signup({name:formData.email, password: formData.password, token: formData.token})
       toast({
         title: "Success",
         description: "Signup successful! Please check your email for verification.",
         variant: "default",
       })
-      router.push("/setup")
+      router.push("/login")
       console.log("Signup successful")
     } catch (err: any) {
       toast({

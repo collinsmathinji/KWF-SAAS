@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import DashboardPage from "../(admin)/admin-dashboard/page"
+import DashboardPage from "../dashboard/@admin/page"
 import OrganizationSetup from "../setup/setup"
 import { updateOrganization } from "@/lib/organization"
 

@@ -1,7 +1,5 @@
 "use client"
-
 import React from "react"
-
 import { useState } from "react"
 import { Bell, CreditCard, Calendar, Layers, LayoutDashboard, Menu,  Settings, Users, Landmark } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -10,12 +8,14 @@ import UserManagementPage from "./users"
 import SubscriptionsPage from "./subscription"
 import SettingsPage from "./settings/page"
 import OrganizationProfile from "./organization"
+import OrganizationManagement from "@/app/setup/page"
 import ConnectPage from "./connect/page"
 import EventPage from "./event/page"
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("overview")
   const [sidebarOpen, setSidebarOpen] = useState(false)
-
+  const isOnBorded=localStorage.getItem('isOnBoarded')
+  console.log("isloginonboded",isOnBorded)
   const menuItems = [
     {
       icon: <LayoutDashboard />,
@@ -64,7 +64,7 @@ export default function DashboardPage() {
       case "subscriptions":
         return <SubscriptionsPage />
         case "organization":
-          return <OrganizationProfile />
+          return <OrganizationProfile organizationId={""} />
       case "event":
         return  <EventPage />
       case 'settings':
@@ -83,7 +83,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-blue-50">
-      {/* Sidebar */}
+    { isOnBorded && <>
       <div
         className={`fixed inset-0 z-30 transition-transform transform lg:static lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:w-80 bg-white border-r shadow-md p-4 flex flex-col`}
       >
@@ -154,6 +154,10 @@ export default function DashboardPage() {
 
         <main className="bg-white rounded-lg shadow-sm p-6">{renderContent()}</main>
       </div>
+      </>}
+      {!isOnBorded  && <div className="flex items-center justify-center w-full h-screen bg-blue-50">
+        <OrganizationManagement />
+        </div>}
     </div>
   )
 }

@@ -41,82 +41,29 @@ export async function setAuthCookie(token: string) {
     path: "/",
   })
 }
-
+export async function storeUserType(userType: number) {
+  ;(await cookies()).set("user-type", userType.toString(), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 60 * 60 * 24 * 7, // 1 week
+  })
+}
+export async function checkUserType() {
+  const userType = (await cookies()).get("user-type")?.value
+  if (!userType) {
+    return { success: false, userType: null }
+  }
+if(userType=== '2') {
+  return { success: true, userType: 'admin' }
+} else if (userType === '1') {
+  return { success: true, userType: 'user' }
+}
+}
 export async function storeAuthToken(token: string) {
   await setAuthCookie(token)
   console.log("Token stored in cookie:", token)
   return { success: true }
 }
 
-export async function signup({ email, password }: SignupData): Promise<AuthResponse> {
-  try {
-    // Use absolute URL for server-side fetch
-    const baseUrl = getBaseUrl()
-    const response = await fetch(`${baseUrl}/api/auth/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    })
 
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.message || "Signup failed")
-    }
-
-    // Call the server action to store the token
-    if (data.token) {
-      await storeAuthToken(data.token)
-    }
-
-    return data
-  } catch (error) {
-    console.error("Error signing up:", error)
-    throw error
-  }
-}
-
-export async function login({ email, password }: LoginData): Promise<AuthResponse> {
-  try {
-    // Use absolute URL for server-side fetch
-    const baseUrl = getBaseUrl()
-    const response = await fetch(`${baseUrl}/api/proxy/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.message || "Login failed")
-    }
-
-    // Call the server action to store the token
-    if (data.token) {
-      await storeAuthToken(data.token)
-    }
-
-    return data
-  } catch (error) {
-    console.error("Error logging in:", error)
-    throw error
-  }
-}
-
-export async function logout() {
-  ;(await cookies()).delete("auth-token")
-  return { success: true }
-}
-
-export async function getAuthToken() {
-  return (await cookies()).get("auth-token")?.value
-}
-
-export async function isAuthenticated() {
-  return !!(await cookies()).get("auth-token")?.value
-}
