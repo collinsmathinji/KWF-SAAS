@@ -3,34 +3,25 @@ import { cookies } from "next/headers";
 
 const EXTERNAL_API_BASE = "http://localhost:5000/admin";
 
-// Define the handler functions with the correct parameter syntax for Next.js App Router
-// Using a more specific type that matches exactly what Next.js expects
-export async function GET(
-  request: NextRequest,
-  context: { params: { proxy: string[] } }
-) {
-  return handleRequest(request, context.params.proxy);
+// Use any type for the context parameter to bypass strict typing issues
+export async function GET(request: NextRequest, context: any) {
+  const pathSegments = context.params.proxy;
+  return handleRequest(request, pathSegments);
 }
 
-export async function POST(
-  request: NextRequest,
-  context: { params: { proxy: string[] } }
-) {
-  return handleRequest(request, context.params.proxy);
+export async function POST(request: NextRequest, context: any) {
+  const pathSegments = context.params.proxy;
+  return handleRequest(request, pathSegments);
 }
 
-export async function PUT(
-  request: NextRequest,
-  context: { params: { proxy: string[] } }
-) {
-  return handleRequest(request, context.params.proxy);
+export async function PUT(request: NextRequest, context: any) {
+  const pathSegments = context.params.proxy;
+  return handleRequest(request, pathSegments);
 }
 
-export async function DELETE(
-  request: NextRequest,
-  context: { params: { proxy: string[] } }
-) {
-  return handleRequest(request, context.params.proxy);
+export async function DELETE(request: NextRequest, context: any) {
+  const pathSegments = context.params.proxy;
+  return handleRequest(request, pathSegments);
 }
 
 async function handleRequest(request: NextRequest, pathSegments: string[]) {
@@ -93,6 +84,7 @@ async function handleRequest(request: NextRequest, pathSegments: string[]) {
     return NextResponse.json(
       {
         message: "Internal server error",
+        error: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
