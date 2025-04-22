@@ -3,20 +3,32 @@ import { cookies } from "next/headers"
 
 const EXTERNAL_API_BASE = "http://localhost:5000/admin"
 
-export async function GET(request: NextRequest, { params }: { params: { proxy: string[] } }) {
-  return handleRequest(request, params.proxy)
+export async function GET(
+  request: NextRequest,
+  context: { params: { proxy: string[] } }
+) {
+  return handleRequest(request, context.params.proxy)
 }
 
-export async function POST(request: NextRequest, { params }: { params: { proxy: string[] } }) {
-  return handleRequest(request, params.proxy)
+export async function POST(
+  request: NextRequest,
+  context: { params: { proxy: string[] } }
+) {
+  return handleRequest(request, context.params.proxy)
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { proxy: string[] } }) {
-  return handleRequest(request, params.proxy)
+export async function PUT(
+  request: NextRequest,
+  context: { params: { proxy: string[] } }
+) {
+  return handleRequest(request, context.params.proxy)
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { proxy: string[] } }) {
-  return handleRequest(request, params.proxy)
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { proxy: string[] } }
+) {
+  return handleRequest(request, context.params.proxy)
 }
 
 async function handleRequest(request: NextRequest, pathSegments: string[]) {
