@@ -1,15 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Check, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function CheckoutSuccessPage() {
-  const searchParams = useSearchParams()
-  const email = searchParams.get("email") || ""
   const [copied, setCopied] = useState(false)
 
   // Function to determine email provider based on email domain
@@ -31,14 +28,8 @@ export default function CheckoutSuccessPage() {
     return providers.find((provider) => domain === provider.domain || domain.endsWith(`.${provider.domain}`))
   }
 
-  const emailProvider = getEmailProvider(email)
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(email)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
+ 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
@@ -52,15 +43,7 @@ export default function CheckoutSuccessPage() {
         <CardContent className="space-y-4">
           <div className="rounded-lg bg-gray-100 p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Mail className="h-5 w-5 text-gray-500" />
-                <span className="font-medium">{email || "your email"}</span>
-              </div>
-              {email && (
-                <Button variant="ghost" size="sm" onClick={copyToClipboard}>
-                  {copied ? "Copied!" : "Copy"}
-                </Button>
-              )}
+              
             </div>
           </div>
 
@@ -74,13 +57,7 @@ export default function CheckoutSuccessPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-3">
-          {emailProvider ? (
-            <Button className="w-full" asChild>
-              <a href={emailProvider.url} target="_blank" rel="noopener noreferrer">
-                Open {emailProvider.name}
-              </a>
-            </Button>
-          ) : (
+
             <div className="space-y-3 w-full">
               <p className="text-sm text-center text-gray-500">Open your email provider:</p>
               <div className="grid grid-cols-2 gap-2">
@@ -106,7 +83,7 @@ export default function CheckoutSuccessPage() {
                 </Button>
               </div>
             </div>
-          )}
+
 
           <Button variant="link" asChild>
             <Link href="/">Return to homepage</Link>
