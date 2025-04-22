@@ -3,19 +3,35 @@ import { cookies } from "next/headers";
 
 const EXTERNAL_API_BASE = "http://localhost:5000/admin";
 
-// A single handler function for all HTTP methods
-export async function handler(
+// Define the handler functions with the correct parameter syntax for Next.js App Router
+// Using a more specific type that matches exactly what Next.js expects
+export async function GET(
   request: NextRequest,
   context: { params: { proxy: string[] } }
 ) {
   return handleRequest(request, context.params.proxy);
 }
 
-// Assign the handler to each HTTP method
-export const GET = handler;
-export const POST = handler;
-export const PUT = handler;
-export const DELETE = handler;
+export async function POST(
+  request: NextRequest,
+  context: { params: { proxy: string[] } }
+) {
+  return handleRequest(request, context.params.proxy);
+}
+
+export async function PUT(
+  request: NextRequest,
+  context: { params: { proxy: string[] } }
+) {
+  return handleRequest(request, context.params.proxy);
+}
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { proxy: string[] } }
+) {
+  return handleRequest(request, context.params.proxy);
+}
 
 async function handleRequest(request: NextRequest, pathSegments: string[]) {
   try {
@@ -77,7 +93,6 @@ async function handleRequest(request: NextRequest, pathSegments: string[]) {
     return NextResponse.json(
       {
         message: "Internal server error",
-        error: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
