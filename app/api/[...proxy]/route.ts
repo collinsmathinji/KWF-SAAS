@@ -3,31 +3,26 @@ import { cookies } from "next/headers"
 
 const EXTERNAL_API_BASE = "http://localhost:5000/admin"
 
-export async function GET(
-  request: NextRequest,
-  context: { params: { proxy: string[] } }
-) {
+// Define the correct params type for Next.js route handlers
+type RouteParams = {
+  params: {
+    proxy: string[]
+  }
+}
+
+export async function GET(request: NextRequest, context: RouteParams) {
   return handleRequest(request, context.params.proxy)
 }
 
-export async function POST(
-  request: NextRequest,
-  context: { params: { proxy: string[] } }
-) {
+export async function POST(request: NextRequest, context: RouteParams) {
   return handleRequest(request, context.params.proxy)
 }
 
-export async function PUT(
-  request: NextRequest,
-  context: { params: { proxy: string[] } }
-) {
+export async function PUT(request: NextRequest, context: RouteParams) {
   return handleRequest(request, context.params.proxy)
 }
 
-export async function DELETE(
-  request: NextRequest,
-  context: { params: { proxy: string[] } }
-) {
+export async function DELETE(request: NextRequest, context: RouteParams) {
   return handleRequest(request, context.params.proxy)
 }
 
@@ -35,35 +30,39 @@ async function handleRequest(request: NextRequest, pathSegments: string[]) {
   try {
     const cookieStore = cookies()
     const token = (await cookieStore).get("auth-token")?.value
-
+    
     // Join the path segments with a slash
     const apiPath = pathSegments.join("/")
-
+    
     console.log(`Processing request for path: ${apiPath}, token exists: ${!!token}`)
-
+    
     // Endpoints that don't require authentication
     const publicEndpoints = ["auth/register", "completeSignUp", "auth/login", "auth/completeSignUp"]
     if (!token && !publicEndpoints.some((endpoint) => apiPath.includes(endpoint))) {
       return NextResponse.json({ message: "Not authenticated" }, { status: 401 })
     }
+    
     const method = request.method
     console.log(`Proxying ${method} request to: ${EXTERNAL_API_BASE}/${apiPath}`)
+    
     let body = null
     if (method !== "GET" && method !== "HEAD") {
       body = await request.json().catch(() => null)
     }
-console.log('Request body:', body)
+    
+    console.log('Request body:', body)
     console.log('Request headers:', request.headers.get('Content-Type'))
     console.log('Request method:', request.method)
+    
     const response = await fetch(`${EXTERNAL_API_BASE}/${apiPath}`, {
       method: method,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: token ? `Bearer ${token}` : '',
       },
       body: body ? JSON.stringify(body) : undefined,
     })
-
+    
     // Check if response is JSON
     const contentType = response.headers.get("content-type")
     if (contentType && contentType.includes("application/json")) {
