@@ -13,8 +13,8 @@ import { toast } from "@/components/ui/use-toast"
 
 interface OrganizationType {
   id?: string
-  connectAccountId?: string
-  customerId?: string
+  stripeAccountId?: string
+  stripeCustomerId?: string
   logoUrl?: string | null
   name: string
   organizationLogo?: File | null
@@ -28,7 +28,18 @@ interface OrganizationType {
   state?: string
   country?: string
 }
+interface OrganizationTwoType {
 
+  name: string | null
+  logoUrl: string | null
+  email: string | null
+  phone: string | null
+  address: string | null
+  city: string | null
+  zipCode: string | null
+  state: string | null
+  country: string | null
+}
 interface OrganizationSetupProps {
   persistent?: boolean;
 }
@@ -100,8 +111,15 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
       }
       
       // Convert to regular object with all form fields
-      const dataToSubmit = {
-        ...formData,
+      const dataToSubmit: OrganizationTwoType = {
+        name: formData.name || null,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        address: formData.address || null,
+        city: formData.city || null,
+        zipCode: formData.zipCode || null,
+        state: formData.state || null,
+        country: formData.country || null,
         logoUrl: logoUrl
       };
       

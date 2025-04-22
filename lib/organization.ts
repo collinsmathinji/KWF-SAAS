@@ -1,18 +1,15 @@
 "use client"
 
 export interface OrganizationType {
-  id: string
-  stripeAccountId: string
- stripeCustomerId: string
-  name: string
-  logoUrl: File | null
-  email: string
-  phone: string
-  address: string
-  city: string
-  zipCode: string
-  state: string
-  country: string
+  name: string | null
+  logoUrl: string | null
+  email: string | null
+  phone: string | null
+  address: string | null
+  city: string | null
+  zipCode: string | null
+  state: string | null
+  country: string | null
 }
 
 export interface CreateOrganizationData {
