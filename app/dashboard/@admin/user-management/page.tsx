@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Users, UserPlus, Download, Plus, Settings2, ChevronDown, Search, Filter, MoreHorizontal } from "lucide-react"
 import {
@@ -22,7 +22,9 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
+import AddMemberForm from "../invite-member"
+import { deleteMemberById, getMembers } from "@/lib/members"
+import { fetchMemberType } from "@/lib/members"
 interface memberTypes extends Array<{
   id: number
   name: string
@@ -57,20 +59,82 @@ const columns = {
   }
 }
 
-// Default membership types to use when none are provided
-const defaultMembershipTypes =  JSON.parse(localStorage.getItem("currentMemberType")!)
-
-export default function UserManagementPage({membershipTypes = defaultMembershipTypes}:{membershipTypes?: memberTypes}) {
+export default function UserManagementPage() {
   const router = useRouter()
   const [view, setView] = useState("members")
   const [selectedColumns, setSelectedColumns] = useState<string[]>(["name", "email", "type", "status", "joinDate"])
   const [searchQuery, setSearchQuery] = useState("")
   const [showAddMemberTypeDialog, setShowAddMemberTypeDialog] = useState(false)
-
+  const [showAddMemberDialog, setShowAddMemberDialog] = useState(false)
+  const [membershipTypes, setMembershipTypes] = useState<any[]>([])
+  const [members, setMembers] = useState<any[]>([])
+  const deleteMember = async (memberId: string) => {
+    try {
+     await deleteMemberById(memberId)
+        setMembers((prevMembers) => prevMembers.filter((member) => member.id !== memberId))
+        console.log("Member deleted successfully")
+    } catch (error) {
+      console.error("Error deleting member:", error)
+    }
+  }
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch membership types
+        const response = await fetchMemberType({} as any)
+        console.log('Member types:', response)
+        
+        if (response && response.data && response.data.data) {
+          setMembershipTypes(response.data.data)
+        } else {
+          console.error('Unexpected response structure:', response)
+          setMembershipTypes([])
+        }
+        
+        // Fetch members
+        const membersResponse = await getMembers()
+        console.log('Members:', membersResponse)
+        
+        if (membersResponse && membersResponse.data && membersResponse.data.data) {
+          setMembers(membersResponse.data.data)
+          console.log('members3', membersResponse.data.data)
+        } else {
+          console.error('Unexpected response structure:', membersResponse)
+          setMembers([])
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        setMembershipTypes([])
+        setMembers([])
+      }
+    }
+    fetchData()
+  }, [])
+    
+  // Filter members based on search query
+  const filteredMembers = members.filter(member => {
+    if (!searchQuery) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      (member.name && member.name.toLowerCase().includes(query)) ||
+      (member.email && member.email.toLowerCase().includes(query))
+    )
+  })
+ 
+  console.log("Membership Types main:", membershipTypes)
+  console.log("Members:", members)
+  
   const toggleColumn = (columnId: string) => {
     setSelectedColumns((current) =>
       current.includes(columnId) ? current.filter((id) => id !== columnId) : [...current, columnId],
     )
+  }
+
+  // Helper function to get membership type name by ID
+  const getMembershipTypeName = (typeId: number | string) => {
+    console.log("Membership Type ID:", typeId)
+    const type = membershipTypes.find(t => String(t.id) === String(typeId))
+    return type ? type.name : 'Unknown'
   }
 
   return (
@@ -130,7 +194,7 @@ export default function UserManagementPage({membershipTypes = defaultMembershipT
             Export
           </Button>
           {view === "members" ? (
-            <Button>
+            <Button onClick={() => setShowAddMemberDialog(true)}>
               <UserPlus className="mr-2 h-4 w-4" />
               Add Member
             </Button>
@@ -234,11 +298,58 @@ export default function UserManagementPage({membershipTypes = defaultMembershipT
               </TableHeader>
               <TableBody>
                 {view === "members" ? (
-                  <TableRow>
-                    <TableCell colSpan={selectedColumns.length + 1} className="text-center py-4 text-muted-foreground">
-                      No members data available. Add members to see them listed here.
-                    </TableCell>
-                  </TableRow>
+                  filteredMembers.length > 0 ? (
+                    filteredMembers.map(member => (
+                      <TableRow key={member.id}>
+                        {selectedColumns.includes("name") && (
+                            <TableCell className="font-medium">{member.firstName} {member.lastName}</TableCell>
+                        )}
+                        
+                        {selectedColumns.includes("email") && (
+                          <TableCell>{member.email}</TableCell>
+                        )}
+                        {selectedColumns.includes("type") && (
+                          <TableCell>{getMembershipTypeName(member.membershipTypeId	)}</TableCell>
+                        )}
+                        {selectedColumns.includes("status") && (
+                          <TableCell>
+                            <Badge variant="outline" className={member.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>
+                              {member.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                          </TableCell>
+                        )}
+                        {selectedColumns.includes("joinDate") && (
+                          <TableCell>{member.createdAt? new Date(member.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
+                        )}
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>Edit</DropdownMenuItem>
+                              <DropdownMenuItem>View Details</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                              className="text-destructive"
+                              onClick={() => deleteMember(member.id)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={selectedColumns.length + 1} className="text-center py-4 text-muted-foreground">
+                        {searchQuery ? "No members match your search criteria." : "No members data available. Add members to see them listed here."}
+                      </TableCell>
+                    </TableRow>
+                  )
                 ) : (
                   groups.map((group) => (
                     <TableRow key={group.id}>
@@ -276,12 +387,23 @@ export default function UserManagementPage({membershipTypes = defaultMembershipT
                 )}
               </TableBody>
             </Table>
+            
+            {/* Dialog for Add Member Type */}
             <Dialog open={showAddMemberTypeDialog} onOpenChange={setShowAddMemberTypeDialog}>
-            <DialogContent >
-    <AddMemberTypeForm onClose={() => setShowAddMemberTypeDialog(false)} />
-  </DialogContent>
-</Dialog>
-
+              <DialogContent>
+                <AddMemberTypeForm onClose={() => setShowAddMemberTypeDialog(false)} />
+              </DialogContent>
+            </Dialog>
+            
+            {/* Dialog for Add Member */}
+            <Dialog open={showAddMemberDialog} onOpenChange={setShowAddMemberDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Member</DialogTitle>
+                </DialogHeader>
+                <AddMemberForm onClose={() => setShowAddMemberDialog(false)} memberTypes={membershipTypes} />
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>

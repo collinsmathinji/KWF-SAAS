@@ -114,6 +114,7 @@ export async function getOrganizations(): Promise<OrganizationType[]> {
 
 // Get organization by ID
 export async function getOrganizationById(id: string): Promise<OrganizationType> {
+ 
   console.log("Fetching organization with ID:", id)
   try {
     const response = await fetch(`/api/organization/${id}`, {
@@ -128,7 +129,6 @@ export async function getOrganizationById(id: string): Promise<OrganizationType>
     if (!response.ok) {
       throw new Error(data.message || "Failed to fetch organization")
     }
-
     localStorage.setItem('currentOrganization', JSON.stringify(data.data));
     localStorage.setItem('organizationId', id);
 
@@ -182,7 +182,24 @@ export async function updateOnBoarding(dataToSubmit: OrganizationType): Promise<
   localStorage.setItem("isOnBoarded", "true");
   return response.json();
 }
-
+export async function updateOrg(dataToSubmit: OrganizationType): Promise<OrganizationType> {
+  const organizationId = localStorage.getItem("organizationId");
+  
+  
+  const response = await fetch(`/api/organization/update/${organizationId}`, {
+    method: "PUT",
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(dataToSubmit),
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to update organization");
+  }
+  localStorage.setItem("currentOrganization", JSON.stringify(dataToSubmit));
+  return response.json();
+}
   
 
 // Delete an organization

@@ -15,8 +15,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
-import { uploadOrganizationLogo } from "@/lib/organization"
-
+import { getOrganizationById, uploadOrganizationLogo } from "@/lib/organization"
+import { updateOrg } from "@/lib/organization"
 // Modified schema to match the backend model
 const organizationFormSchema = z.object({
   name: z.string().min(2, "Organization name must be at least 2 characters"),
@@ -32,20 +32,48 @@ const organizationFormSchema = z.object({
   organizationLogo: z.instanceof(File).optional(),
 })
 
-type OrganizationFormValues = z.infer<typeof organizationFormSchema>
+interface OrganizationType {
+  id?: string
+  stripeAccountId?: string
+  stripeCustomerId?: string
+  logoUrl?: string | null
+  name: string
+  organizationLogo?: File | null
+  logoPreview?: string
+  email: string
+  phone?: string
+  address?: string
+  address2?: string
+  city?: string
+  zipCode?: string
+  state?: string
+  country?: string
+}
+interface OrganizationTwoType {
 
-export default function OrganizationProfile({ organisationDetails }) {
+  name: string | null
+  logoUrl: string | null
+  email: string | null
+  phone: string | null
+  address: string | null
+  city: string | null
+  zipCode: string | null
+  state: string | null
+  country: string | null
+}
+export default function OrganizationProfile({ organisationDetails }:any) {
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState("basic-info")
   const [loading, setLoading] = useState(false)
   const [organization, setOrganization] = useState(organisationDetails || null)
   const [lastUpdated, setLastUpdated] = useState("")
-  const [previewUrl, setPreviewUrl] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [logoUrl, setLogoUrl] = useState(organisationDetails?.logoUrl || null)
-  const fileInputRef = useRef(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Format dates for display
-  const formatDate = (dateString) => {
+  const formatDate = (dateString:string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -70,6 +98,7 @@ export default function OrganizationProfile({ organisationDetails }) {
       zipCode: organization?.zipCode || "",
       country: organization?.country || "",
       language: organization?.language || "en",
+      organizationLogo: undefined,
     },
   })
 
@@ -100,48 +129,62 @@ export default function OrganizationProfile({ organisationDetails }) {
     }
   }, [organisationDetails]);
 
-  // Handle logo file selection
-  const handleLogoChange = async (event) => {
-    const file = event.target.files?.[0]
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
     if (!file) return
 
-    // Set preview immediately for visual feedback
+    setSelectedFile(file)
     setPreviewUrl(URL.createObjectURL(file))
-    form.setValue("organizationLogo", file)
 
     try {
-      // Upload the logo to get a URL
       const uploadedUrl = await uploadOrganizationLogo(file)
+      console.log("Uploaded URL:", uploadedUrl)
       setLogoUrl(uploadedUrl)
-      toast({
-        title: "Success",
-        description: "Logo uploaded successfully",
-      })
-    } catch (error) {
-      console.error("Error uploading logo:", error)
+    } catch (err) {
+      console.error("Upload failed:", err)
       toast({
         title: "Error",
         description: "Failed to upload logo. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       })
     }
   }
 
-  async function onSubmit(data) {
+  // Implementation of updateOrganization function
+  async function updateOrganization(data:any) {
+    try {
+      
+      const dataToSubmit: OrganizationTwoType = {
+        name: data.name || null,
+        email: data.email || null,
+        phone: data.phone || null,
+        address: data.address || null,
+        city: data.city || null,
+        zipCode: data.zipCode || null,
+        state: data.state || null,
+        country: data.country || null,
+        logoUrl: logoUrl
+      };
+  
+      const response = await updateOrg(dataToSubmit)
+  
+      if (!response) {
+        throw new Error("Failed to update organization")
+      }
+ 
+    } catch (error) {
+      console.error("Error updating organization:", error)
+      throw error
+    }
+  }
+
+  // Combined onSubmit function that handles both basic info and address info submissions
+  const onSubmit = async (data: any) => {
     try {
       setLoading(true)
-      
-      // Prepare the update data
-      const updateData = {
-        id: organization?.id,
-        ...data,
-        logoUrl: logoUrl
-      }
+      await updateOrganization(data)
+      await getOrganizationById(organization?.id || "")
 
-      // Call the updateOrganization function
-      await updateOrganization(updateData)
-      
-      // Update the UI
       setIsEditing(false)
       toast({
         title: "Success",
@@ -160,43 +203,6 @@ export default function OrganizationProfile({ organisationDetails }) {
       })
     } finally {
       setLoading(false)
-    }
-  }
-
-  // Implementation of updateOrganization function
-  async function updateOrganization(data) {
-    try {
-      const { id, organizationLogo, ...updateData } = data
-      
-      const organizationFormData = new FormData()
-      Object.entries(updateData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          organizationFormData.append(key, String(value))
-        }
-      })
-  
-      const response = await fetch(`/api/organization/update/${id}`, {
-        method: "PUT",
-        body: organizationFormData,
-      })
-  
-      const responseData = await response.json()
-  
-      if (!response.ok) {
-        throw new Error(responseData.message || "Failed to update organization")
-      }
-  
-      // Update the local organization state
-      setOrganization(organization ? {
-        ...organization,
-        ...updateData,
-        updatedAt: new Date().toISOString(),
-      } : null)
-      
-      return responseData
-    } catch (error) {
-      console.error("Error updating organization:", error)
-      throw error
     }
   }
 
@@ -366,68 +372,69 @@ export default function OrganizationProfile({ organisationDetails }) {
                       )}
                     />
 
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-medium">Description</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} disabled={!isEditing} className="min-h-[100px] border-gray-300" />
-                        </FormControl>
-                        <FormDescription>Brief description of your organization</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-medium">Description</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} disabled={!isEditing} className="min-h-[100px] border-gray-300" />
+                          </FormControl>
+                          <FormDescription>Brief description of your organization</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="language"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-medium">Primary Language</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled={!isEditing} className="border-gray-300" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="language"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-medium">Primary Language</FormLabel>
+                          <FormControl>
+                            <Input {...field} disabled={!isEditing} className="border-gray-300" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  {/* Created/Updated Info */}
-                  {!isEditing && organization?.createdAt && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 text-sm text-gray-500 border-t border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        <span>Created: {formatDate(organization.createdAt)}</span>
-                      </div>
-                      {organization?.updatedAt && (
+                    {/* Created/Updated Info */}
+                    {!isEditing && organization?.createdAt && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 text-sm text-gray-500 border-t border-gray-200">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4" />
-                          <span>Updated: {formatDate(organization.updatedAt)}</span>
+                          <span>Created: {formatDate(organization.createdAt)}</span>
                         </div>
-                      )}
-                    </div>
-                  )}
+                        {organization?.updatedAt && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            <span>Updated: {formatDate(organization.updatedAt)}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                  {isEditing && (
-                    <div className="flex justify-between pt-4">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setActiveTab("address-info")}
-                        className="gap-2"
-                      >
-                        <Map className="h-4 w-4" />
-                        Next: Address Information
-                      </Button>
-                      <Button type="submit" className="gap-2" disabled={loading}>
-                        <Save className="h-4 w-4" />
-                        Save Changes
-                      </Button>
-                    </div>
-                  )}
+                    {isEditing && (
+                      <div className="flex justify-between pt-4 col-span-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setActiveTab("address-info")}
+                          className="gap-2"
+                        >
+                          <Map className="h-4 w-4" />
+                          Next: Address Information
+                        </Button>
+                        <Button type="submit" className="gap-2" disabled={loading}>
+                          <Save className="h-4 w-4" />
+                          Save Changes
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

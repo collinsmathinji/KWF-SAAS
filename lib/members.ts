@@ -4,15 +4,16 @@ export interface memberType {
     organizationId: number | null
   }
   export interface member {
+    OrganizationId: number | null
     name: string | null
     email: string | null
     mobileNo: number | null
     givePortalAccess: boolean | null
   }
- export async function getMemberss(): Promise<member[]> {
+ export async function getMembers(): Promise<member[]> {
    try {
-     const response = await fetch("/api/organizations", {
-       method: "GET",
+     const response = await fetch("/api/member/list", {
+       method: "POST",
        headers: {
          "Content-Type": "application/json",
        },
@@ -56,7 +57,7 @@ export async function createMember(data: member): Promise<member> {
   try {
  
 
-    const response = await fetch("/api /member/create", {
+    const response = await fetch("/api/member/create", {
       method: "POST",
       body: JSON.stringify(data),
     })
@@ -90,11 +91,33 @@ export async function fetchMemberType(data: memberType): Promise<memberType> {
       if (!response.ok) {
         throw new Error(responseData.message || "Failed to create memberType")
       }
-     localStorage.setItem('currentMemberType', JSON.stringify(responseData.data.data));
+      localStorage.setItem('currentMemberType', JSON.stringify(responseData.data.data));
       console.log("memberType created:", responseData)
       return responseData
     } catch (error) {
       console.error("Error creating memberType:", error)
+      throw error
+    }
+  }
+  export async function deleteMemberById(id: string): Promise<{ success: boolean }> {
+    try {
+      const response = await fetch(`/api/member/delete/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+  
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete Member")
+      }
+  
+      console.log("Member deleted:", id)
+      return { success: true }
+    } catch (error) {
+      console.error(`Error deleting Member with ID ${id}:`, error)
       throw error
     }
   }
