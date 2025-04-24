@@ -98,7 +98,7 @@ const ColorPicker = ({ color, onChange, label }: ColorPickerProps) => (
   </div>
 )
 
-export default function SettingsPage() {
+export default function SettingsPage({organisationDetails}: any) {
   const [activeTheme, setActiveTheme] = useState("Default")
   const [customColors, setCustomColors] = useState({
     primary: "#2563eb",

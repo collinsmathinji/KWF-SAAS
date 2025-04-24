@@ -45,7 +45,7 @@ interface Transaction {
   type: "payment" | "payout" | "refund"
 }
 
-export default function ConnectPage() {
+export default function ConnectPage({organisationDetails}: any) {
   const [loading, setLoading] = useState(true)
   const [balanceLoading, setBalanceLoading] = useState(false)
   const [transactionsLoading, setTransactionsLoading] = useState(false)

@@ -12,7 +12,7 @@ import {
 type ReportType = 'contacts' | 'organizations' | 'interactions' | 'growth';
 type FileFormat = 'csv' | 'pdf' | 'xlsx';
 
-const ReportsGenerator: React.FC = () => {
+const ReportsGenerator: React.FC = ({organisationDetails}: any) => {
     const [reportType, setReportType] = useState<ReportType>('contacts');
     const [fileFormat, setFileFormat] = useState<FileFormat>('csv');
     const [filters, setFilters] = useState({

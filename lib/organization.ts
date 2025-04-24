@@ -1,5 +1,7 @@
 "use client"
 
+import { json } from "stream/consumers"
+
 export interface OrganizationType {
   name: string | null
   logoUrl: string | null
@@ -51,6 +53,7 @@ export async function uploadOrganizationLogo(file: File): Promise<string> {
   }
 
   const data = await response.json();
+  console.log("Logo uploaded:", data);
   return data.fileUrl;
 }
 
@@ -111,25 +114,35 @@ export async function getOrganizations(): Promise<OrganizationType[]> {
 
 // Get organization by ID
 export async function getOrganizationById(id: string): Promise<OrganizationType> {
+  console.log("Fetching organization with ID:", id)
   try {
-    const response = await fetch(`/api/organizations/${id}`, {
+    const response = await fetch(`/api/organization/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
     })
-
+  
     const data = await response.json()
     
     if (!response.ok) {
       throw new Error(data.message || "Failed to fetch organization")
     }
 
+    localStorage.setItem('currentOrganization', JSON.stringify(data.data));
+    localStorage.setItem('organizationId', id);
+
     return data
   } catch (error) {
     console.error(`Error fetching organization with ID ${id}:`, error)
     throw error
   }
+}
+
+// Helper function to get stored organization data
+export function getStoredOrganization(): OrganizationType | null {
+  const stored = localStorage.getItem('currentOrganization');
+  return stored ? JSON.parse(stored) : null;
 }
 
 export async function updateOnBoarding(dataToSubmit: OrganizationType): Promise<OrganizationType> {
@@ -163,8 +176,10 @@ export async function updateOnBoarding(dataToSubmit: OrganizationType): Promise<
   
   if (!response.ok) {
     throw new Error("Failed to update organization");
-  }
   
+  }
+  localStorage.setItem("currentOrganization", JSON.stringify(dataToSubmit));
+  localStorage.setItem("isOnBoarded", "true");
   return response.json();
 }
 

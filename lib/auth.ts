@@ -1,5 +1,7 @@
 "use client"
 import { checkUserType, storeAuthToken, storeUserType } from "./token"
+import { getOrganizationById } from "./organization"
+import { fetchMemberType } from "./members"
 export interface SignupData {
   name: string
   password: string
@@ -67,18 +69,31 @@ export async function login({ username, password }: LoginData): Promise<AuthResp
     if (!response.ok) {
       throw new Error(data.message || "Login failed")
     }
-
+try{
     if (data.data.token) {
       await storeAuthToken(data.data.token)
     }
     if(data.data.userType) {
       console.log('User type:', data.data.userType)
       await storeUserType(data.data.userType)
+    }else{
+      console.log('User type not found in response')
     }
+    if(data.data.organizationId) {
+      console.log('Organization ID:', data.data.organizationId)
+      await  getOrganizationById(data.data.organizationId)
+      await fetchMemberType (data.data.organizationId)
+    }else{
+      console.log('Organization ID not found in response')
+    }
+}catch(error){
+  console.error("Error storing token or user type:", error) 
+}
     return data
   } catch (error) {
     console.error("Error logging in:", error)
     throw error
   }
 }
+
 

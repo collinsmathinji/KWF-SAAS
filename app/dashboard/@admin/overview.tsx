@@ -60,7 +60,7 @@ const MetricCard = ({ icon, title, value, change, description }: MetricCardProps
   </Card>
 )
 
-export default function Overview() {
+export default function Overview({organisationDetails}:any) {
 const [activeSection, setActiveSection] = useState("")
 
   return (

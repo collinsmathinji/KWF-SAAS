@@ -15,23 +15,19 @@ import {
   DropdownMenuSubContent,
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import AddMemberTypeForm from "../add-memberType"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-// Sample data
-const membershipTypes = [
-  { id: 1, name: "Basic", members: 234 },
-  { id: 2, name: "Premium", members: 156 },
-  { id: 3, name: "Enterprise", members: 89 },
-]
-
-const members = [
-  { id: 1, name: "John Doe", email: "john@example.com", type: "Basic", status: "Active", joinDate: "2024-01-15" },
-  { id: 2, name: "Jane Smith", email: "jane@example.com", type: "Premium", status: "Active", joinDate: "2024-01-20" },
-]
+interface memberTypes extends Array<{
+  id: number
+  name: string
+  members?: number
+}> {}
 
 const groups = [
   { id: 1, name: "Technology", members: 45, status: "Active", created: "2024-01-10" },
@@ -44,26 +40,32 @@ const userRoles = [
   { id: 3, name: "Member", users: 245 },
 ]
 
-export default function UserManagementPage() {
+// Define columns for both views
+const columns = {
+  members: {
+    name: "Name",
+    email: "Email",
+    type: "Membership Type",
+    status: "Status",
+    joinDate: "Join Date"
+  },
+  groups: {
+    name: "Group Name",
+    members: "Members",
+    status: "Status",
+    created: "Created Date"
+  }
+}
+
+// Default membership types to use when none are provided
+const defaultMembershipTypes =  JSON.parse(localStorage.getItem("currentMemberType")!)
+
+export default function UserManagementPage({membershipTypes = defaultMembershipTypes}:{membershipTypes?: memberTypes}) {
   const router = useRouter()
   const [view, setView] = useState("members")
   const [selectedColumns, setSelectedColumns] = useState<string[]>(["name", "email", "type", "status", "joinDate"])
-
-  const columns = {
-    members: {
-      name: "Name",
-      email: "Email",
-      type: "Membership Type",
-      status: "Status",
-      joinDate: "Join Date",
-    },
-    groups: {
-      name: "Name",
-      members: "Members",
-      status: "Status",
-      created: "Created Date",
-    },
-  }
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showAddMemberTypeDialog, setShowAddMemberTypeDialog] = useState(false)
 
   const toggleColumn = (columnId: string) => {
     setSelectedColumns((current) =>
@@ -89,19 +91,21 @@ export default function UserManagementPage() {
                 <span>Membership Types</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent className="w-56">
-                {membershipTypes.map((type) => (
+                {membershipTypes && membershipTypes.map((type) => (
                   <DropdownMenuItem
                     key={type.id}
                     onClick={() => router.push(`/dashboard/user-management/membership-types/${type.id}`)}
                   >
                     <span>{type.name}</span>
-                    <span className="ml-auto text-muted-foreground">{type.members}</span>
+                    {type.members && <span className="ml-auto text-muted-foreground">{type.members}</span>}
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
+                <Button onClick={() => setShowAddMemberTypeDialog(true)} className="w-full">
                   <Plus className="mr-2 h-4 w-4" />
                   <span>Add New Type</span>
+                </Button>
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
@@ -142,16 +146,18 @@ export default function UserManagementPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {view === "members" ? (
           <>
-            {membershipTypes.map((type) => (
+            {membershipTypes && membershipTypes.map((type) => (
               <Card key={type.id}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{type.name}</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-blue-400 rounded-md">
+                  <CardTitle className="text-sm font-medium ">{type.name}</CardTitle>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{type.members}</div>
-                  <p className="text-xs text-muted-foreground">Total members</p>
-                </CardContent>
+                {type.members && (
+                  <CardContent>
+                    <div className="text-2xl font-bold">{type.members}</div>
+                    <p className="text-xs text-muted-foreground">Total members</p>
+                  </CardContent>
+                )}
               </Card>
             ))}
           </>
@@ -182,15 +188,17 @@ export default function UserManagementPage() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-4">
-          <div className="flex-1">
-  <div className="relative max-w-sm">
-    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-    <Input
-      placeholder={`Search ${view}...`}
-      className="pl-9 max-w-sm"
-    />
-  </div>
-</div>
+            <div className="flex-1">
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder={`Search ${view}...`}
+                  className="pl-9 max-w-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
@@ -225,80 +233,58 @@ export default function UserManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {view === "members"
-                  ? members.map((member) => (
-                      <TableRow key={member.id}>
-                        {selectedColumns.includes("name") && (
-                          <TableCell className="font-medium">{member.name}</TableCell>
-                        )}
-                        {selectedColumns.includes("email") && <TableCell>{member.email}</TableCell>}
-                        {selectedColumns.includes("type") && <TableCell>{member.type}</TableCell>}
-                        {selectedColumns.includes("status") && (
-                          <TableCell>
-                            <Badge variant="outline" className="bg-green-50 text-green-700">
-                              {member.status}
-                            </Badge>
-                          </TableCell>
-                        )}
-                        {selectedColumns.includes("joinDate") && (
-                          <TableCell>{new Date(member.joinDate).toLocaleDateString()}</TableCell>
-                        )}
+                {view === "members" ? (
+                  <TableRow>
+                    <TableCell colSpan={selectedColumns.length + 1} className="text-center py-4 text-muted-foreground">
+                      No members data available. Add members to see them listed here.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  groups.map((group) => (
+                    <TableRow key={group.id}>
+                      {selectedColumns.includes("name") && (
+                        <TableCell className="font-medium">{group.name}</TableCell>
+                      )}
+                      {selectedColumns.includes("members") && <TableCell>{group.members}</TableCell>}
+                      {selectedColumns.includes("status") && (
                         <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>Edit</DropdownMenuItem>
-                              <DropdownMenuItem>View Details</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <Badge variant="outline" className="bg-green-50 text-green-700">
+                            {group.status}
+                          </Badge>
                         </TableCell>
-                      </TableRow>
-                    ))
-                  : groups.map((group) => (
-                      <TableRow key={group.id}>
-                        {selectedColumns.includes("name") && (
-                          <TableCell className="font-medium">{group.name}</TableCell>
-                        )}
-                        {selectedColumns.includes("members") && <TableCell>{group.members}</TableCell>}
-                        {selectedColumns.includes("status") && (
-                          <TableCell>
-                            <Badge variant="outline" className="bg-green-50 text-green-700">
-                              {group.status}
-                            </Badge>
-                          </TableCell>
-                        )}
-                        {selectedColumns.includes("created") && (
-                          <TableCell>{new Date(group.created).toLocaleDateString()}</TableCell>
-                        )}
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>Edit</DropdownMenuItem>
-                              <DropdownMenuItem>View Details</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                      )}
+                      {selectedColumns.includes("created") && (
+                        <TableCell>{new Date(group.created).toLocaleDateString()}</TableCell>
+                      )}
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>Edit</DropdownMenuItem>
+                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
+            <Dialog open={showAddMemberTypeDialog} onOpenChange={setShowAddMemberTypeDialog}>
+            <DialogContent >
+    <AddMemberTypeForm onClose={() => setShowAddMemberTypeDialog(false)} />
+  </DialogContent>
+</Dialog>
+
           </div>
         </CardContent>
       </Card>
     </div>
   )
 }
-

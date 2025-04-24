@@ -2,7 +2,7 @@ import { Download } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
-export default function SubscriptionReportsPage() {
+export default function SubscriptionReportsPage({organisationDetails}: any) {
     const monthlyTotal = 299.99
 
     return (

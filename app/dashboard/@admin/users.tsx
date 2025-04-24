@@ -45,7 +45,7 @@ const userRoles = [
   { id: 3, name: "Member", users: 245 },
 ]
 
-export default function UserManagementPage() {
+export default function UserManagementPage({organisationDetails}: any) {
   const router = useRouter()
   const [view, setView] = useState("members")
   const [selectedColumns, setSelectedColumns] = useState<string[]>(["name", "email", "type", "status", "joinDate"])

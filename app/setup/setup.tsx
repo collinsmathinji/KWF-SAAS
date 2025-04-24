@@ -124,6 +124,7 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
       };
       
       await updateOnBoarding(dataToSubmit);
+      window.location.reload();
       toast({
         title: "Success",
         description: "Organization created successfully!",

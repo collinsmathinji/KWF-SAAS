@@ -423,7 +423,7 @@ const StageBadge = ({ stage }: StageBadgeProps) => {
   return <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${variants[stage]}`}>{stage}</span>
 }
 
-export default function EventManagementPage() {
+export default function EventManagementPage({organisationDetails}: any) {
   const [events, setEvents] = useState<Event[]>(sampleEvents as Event[]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)

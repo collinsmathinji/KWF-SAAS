@@ -68,7 +68,7 @@ const availableAddons: Addon[] = [
   { id: "addon_6", name: "+10 Event Staff", price: 25.0, description: "Adds 10 event staff to your plan" },
 ]
 
-export default function SubscriptionManagement() {
+export default function SubscriptionManagement({organisationDetails}: any) {
   const [activeSubscription, setActiveSubscription] = useState<Subscription>(subscription)
   const [showAddonsDialog, setShowAddonsDialog] = useState(false)
   const [activeSection, setActiveSection] = useState("")

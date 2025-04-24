@@ -1,21 +1,22 @@
 "use client"
-import React from "react"
+import React, { useEffect } from "react"
 import { useState } from "react"
 import { Bell, CreditCard, Calendar, Layers, LayoutDashboard, Menu,  Settings, Users, Landmark } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Overview from "./overview"
-import UserManagementPage from "./users"
+import UserManagementPage from "./user-management/page"
 import SubscriptionsPage from "./subscription"
 import SettingsPage from "./settings/page"
 import OrganizationProfile from "./organization"
-import OrganizationManagement from "@/app/setup/page"
 import ConnectPage from "./connect/page"
 import EventPage from "./event/page"
+import { fetchMemberType } from "@/lib/members"
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("overview")
+  const [memberType, setMemberType] = useState<string[]>([])
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const isOnBorded=localStorage.getItem('isOnBoarded')
-  console.log("isloginonboded",isOnBorded)
+  const OrganizationDetails = localStorage.getItem('currentOrganization') ? JSON.parse(localStorage.getItem('currentOrganization')!) : null
   const menuItems = [
     {
       icon: <LayoutDashboard />,
@@ -54,23 +55,34 @@ export default function DashboardPage() {
       description: "Manage stripe account settings",
     },
   ]
-
+  useEffect(() => {
+    const handleFetch = async () => {
+      if (OrganizationDetails?.organizationId) {
+        console.log('Organization ID:', OrganizationDetails.organizationId)
+        const response = await fetchMemberType(OrganizationDetails.organizationId)
+        setMemberType(response as unknown as string[])
+      } else {
+        console.log('Organization ID not found in response')
+      }
+    }
+    handleFetch()
+  }, [OrganizationDetails])
   const renderContent = () => {
     switch (activeSection) {
       case "overview":
-        return <Overview />
+        return <Overview organisationDetails={OrganizationDetails}/>
       case "users":
-        return <UserManagementPage />
+        return <UserManagementPage organisationDetails={OrganizationDetails}/>
       case "subscriptions":
-        return <SubscriptionsPage />
+        return <SubscriptionsPage organisationDetails={OrganizationDetails} />
         case "organization":
-          return <OrganizationProfile organizationId={""} />
+          return <OrganizationProfile organisationDetails={OrganizationDetails} />
       case "event":
-        return  <EventPage />
+        return  <EventPage organisationDetails={OrganizationDetails}/>
       case 'settings':
-        return <SettingsPage />
+        return <SettingsPage organisationDetails={OrganizationDetails} />
       case 'stripe-settings':
-        return <ConnectPage />
+        return <ConnectPage   organisationDetails={OrganizationDetails}/>
       default:
 
         return (
@@ -87,7 +99,20 @@ export default function DashboardPage() {
       <div
         className={`fixed inset-0 z-30 transition-transform transform lg:static lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:w-80 bg-white border-r shadow-md p-4 flex flex-col`}
       >
-        <div className="text-2xl font-bold mb-8 text-center text-blue-600">KWF-SAAS</div>
+        <div className="flex items-center justify-center mb-8">
+          {OrganizationDetails?.logoUrl
+ && (
+            <img 
+              src={OrganizationDetails.logoUrl
+              } 
+              alt="Organization Logo" 
+              className="w-8 h-8 mr-2 object-contain rounded-full"
+            />
+          )}
+          <div className="text-2xl font-bold text-blue-600">
+            {OrganizationDetails?.name}
+          </div>
+        </div>
 
         <nav className="flex-grow">
           {menuItems.map((item) => (
@@ -155,9 +180,6 @@ export default function DashboardPage() {
         <main className="bg-white rounded-lg shadow-sm p-6">{renderContent()}</main>
       </div>
       </>}
-      {!isOnBorded  && <div className="flex items-center justify-center w-full h-screen bg-blue-50">
-        <OrganizationManagement />
-        </div>}
     </div>
   )
 }
