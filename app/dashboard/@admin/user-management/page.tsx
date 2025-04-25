@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import AddMemberTypeForm from "../add-memberType"
+import GroupTypeForm from "../group-type-form"; // Import GroupTypeForm
+import GroupForm from "../group-form"; // Import GroupForm
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -25,16 +27,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import AddMemberForm from "../invite-member"
 import { deleteMemberById, getMembers } from "@/lib/members"
 import { fetchMemberType } from "@/lib/members"
+import { getGroups, getGroupTypes } from "@/lib/group"
 interface memberTypes extends Array<{
   id: number
   name: string
   members?: number
 }> {}
 
-const groups = [
-  { id: 1, name: "Technology", members: 45, status: "Active", created: "2024-01-10" },
-  { id: 2, name: "Marketing", members: 32, status: "Active", created: "2024-01-12" },
-]
+
 
 const userRoles = [
   { id: 1, name: "Admin", users: 5 },
@@ -66,6 +66,10 @@ export default function UserManagementPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showAddMemberTypeDialog, setShowAddMemberTypeDialog] = useState(false)
   const [showAddMemberDialog, setShowAddMemberDialog] = useState(false)
+  const [showGroupTypeDialog, setShowGroupTypeDialog] = useState(false); 
+  const [groups, setGroups] = useState<any[]>([]); // State for Group Type
+  const[groupTypes, setGroupTypes]=useState<memberTypes>([]); // State for Group Types
+  const [showGroupDialog, setShowGroupDialog] = useState(false); // State for Group dialog
   const [membershipTypes, setMembershipTypes] = useState<any[]>([])
   const [members, setMembers] = useState<any[]>([])
   const deleteMember = async (memberId: string) => {
@@ -101,6 +105,24 @@ export default function UserManagementPage() {
         } else {
           console.error('Unexpected response structure:', membersResponse)
           setMembers([])
+        }
+        const groupsResponse = await getGroups()
+        if(groupsResponse && groupsResponse.data && groupsResponse.data.data) {
+          setGroups(groupsResponse.data.data)
+        }
+        console.log('Groups:', groupsResponse)
+        // Fetch group types
+        const groupTypes=await getGroupTypes()
+        if(groupTypes && groupTypes.data && groupTypes.data.data) {
+          setGroupTypes(groupTypes.data.data)
+        }
+        console.log('Group Types:', groupTypes)
+        if (groupTypes && groupTypes.data && groupTypes.data.data) {
+          setGroupTypes(groupTypes.data.data)
+        }
+        else {
+          console.error('Unexpected response structure:', groupTypes)
+          setGroupTypes([])
         }
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -173,6 +195,29 @@ export default function UserManagementPage() {
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <span>Group Types</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-56">
+                {groupTypes&& groupTypes.map((type) => (
+                  <DropdownMenuItem
+                    key={type.id}
+                    onClick={() => router.push(`/dashboard/user-management/membership-types/${type.id}`)}
+                  >
+                    <span>{type.name}</span>
+                    {type.members && <span className="ml-auto text-muted-foreground">{type.members}</span>}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                <Button onClick={() => setShowGroupTypeDialog(true)} className="w-full">
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span>Add New Type</span>
+                </Button>
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuItem onClick={() => setView("members")}>
               <Users className="mr-2 h-4 w-4" />
               <span>Members</span>
@@ -199,7 +244,7 @@ export default function UserManagementPage() {
               Add Member
             </Button>
           ) : (
-            <Button>
+            <Button onClick={() => setShowGroupDialog(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Group
             </Button>
@@ -402,6 +447,24 @@ export default function UserManagementPage() {
                   <DialogTitle>Add New Member</DialogTitle>
                 </DialogHeader>
                 <AddMemberForm onClose={() => setShowAddMemberDialog(false)} memberTypes={membershipTypes} />
+              </DialogContent>
+            </Dialog>
+
+            {/* Dialog for Group Type */}
+            <Dialog open={showGroupTypeDialog} onOpenChange={setShowGroupTypeDialog}>
+              <DialogContent>
+                
+                <GroupTypeForm />
+              </DialogContent>
+            </Dialog>
+
+            {/* Dialog for Group */}
+            <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create Group</DialogTitle>
+                </DialogHeader>
+                <GroupForm groupTypes={groupTypes}/>
               </DialogContent>
             </Dialog>
           </div>
