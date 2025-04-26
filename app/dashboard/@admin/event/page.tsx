@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { fetchEvents } from "@/lib/event";
+import EventForm from './event-form'
 import * as z from "zod"
 import { format } from "date-fns"
 import {
@@ -38,8 +40,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar as CalendarComponent } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+
 import { Progress } from "@/components/ui/progress"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -57,20 +58,6 @@ import {
 } from "@/components/ui/alert-dialog"
 
 // Form schemas
-const eventFormSchema = z.object({
-  title: z.string().min(2, "Title must be at least 2 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  date: z.date(),
-  time: z.string(),
-  location: z.string().min(2, "Location must be at least 2 characters"),
-  venueId: z.string().optional(),
-  capacity: z.string().min(1, "Capacity is required"),
-  type: z.string(),
-  coverImage: z.string().min(1, "Cover image is required"),
-  ticketPrice: z.string().optional(),
-  ticketingEnabled: z.boolean().default(false),
-  registrationDeadline: z.date().optional(),
-})
 
 const invitationFormSchema = z.object({
   subject: z.string().min(2, "Subject must be at least 2 characters"),
@@ -438,22 +425,15 @@ export default function EventManagementPage({organisationDetails}: any) {
 console.log(selectedVenue)
   const ITEMS_PER_PAGE = 5
 
-  const form = useForm<EventFormValues>({
-    resolver: zodResolver(eventFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      date: new Date(),
-      time: "09:00",
-      location: "",
-      capacity: "",
-      type: "Conference",
-      coverImage: "/api/placeholder/800/400",
-      ticketPrice: "0",
-      ticketingEnabled: false,
-    },
-  })
-
+  async function loadEvents() {
+    try {
+      const events = await fetchEvents();
+      console.log("Fetched events:", events);
+    } catch (error) {
+      console.error("Failed to fetch events:", error);
+    }
+  }
+ 
   const invitationForm = useForm<InvitationFormValues>({
     resolver: zodResolver(invitationFormSchema),
     defaultValues: {
@@ -478,52 +458,6 @@ console.log(selectedVenue)
   // Calculate pagination
   const totalPages = Math.ceil(filteredEvents.length / ITEMS_PER_PAGE)
   const paginatedEvents = filteredEvents.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-
-  // Handler for creating a new event
-  function onSubmit(data: EventFormValues) {
-    // Get venue details if selected
-    let locationText = data.location
-    const venueId = data.venueId
-
-    if (venueId) {
-      const venue = sampleVenues.find((v) => v.id === venueId)
-      if (venue) {
-        locationText = venue.name + " - " + venue.address
-      }
-    }
-
-    // Create new event with proper typing
-    const newEvent: Event = {
-      id: events.length + 1,
-      title: data.title,
-      description: data.description,
-      date: format(data.date, "yyyy-MM-dd"),
-      time: data.time,
-      location: locationText,
-      venueId: venueId, // Now optional
-      capacity: Number.parseInt(data.capacity),
-      type: data.type,
-      registeredAttendees: 0,
-      status: "Upcoming",
-      coverImage: data.coverImage,
-      ticketPrice: data.ticketPrice || "0",
-      ticketsSold: 0,
-      ticketingEnabled: data.ticketingEnabled,
-      attendees: [],
-      tasks: [
-        { id: `t-${Date.now()}-1`, title: "Define event goals", status: "pending" },
-        { id: `t-${Date.now()}-2`, title: "Create marketing materials", status: "pending" },
-        { id: `t-${Date.now()}-3`, title: "Set up registration", status: "pending" },
-      ],
-      registrationDeadline: data.registrationDeadline ? format(data.registrationDeadline, "yyyy-MM-dd") : null,
-    }
-
-    setEvents([...events, newEvent])
-    setIsCreateDialogOpen(false)
-    form.reset()
-  }
-
-  // Handler for sending invitations
   function onSubmitInvitation(data: InvitationFormValues) {
     if (!selectedEvent || !isEvent(selectedEvent)) return
 
@@ -749,8 +683,7 @@ console.log(selectedVenue)
                         <p className="text-lg font-bold">
                           {selectedEvent.attendees.length > 0
                             ? Math.round(
-                                (selectedEvent.attendees.filter((a) => a.checkedIn).length /
-                                  selectedEvent.attendees.length) *
+                                (selectedEvent.attendees.filter((a) => a.checkedIn).length / selectedEvent.attendees.length) *
                                   100,
                               )
                             : 0}
@@ -1143,209 +1076,14 @@ console.log(selectedVenue)
 
       {/* Create Event Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create New Event</DialogTitle>
-            <DialogDescription>Fill in the details below to create a new event</DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Annual Conference 2024" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter event description..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date</FormLabel>
-                      <FormControl>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !field.value && "text-muted-foreground",
-                              )}
-                            >
-                              <CalendarDays className="mr-2 h-4 w-4" />
-                              {field.value ? format(field.value, "PPP") : "Select date"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <CalendarComponent
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="time"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Time</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="venueId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Venue</FormLabel>
-                    <Select onValueChange={handleVenueSelect} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a venue" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {sampleVenues.map((venue) => (
-                          <SelectItem key={venue.id} value={venue.id}>
-                            {venue.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select event type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Conference">Conference</SelectItem>
-                        <SelectItem value="Workshop">Workshop</SelectItem>
-                        <SelectItem value="Seminar">Seminar</SelectItem>
-                        <SelectItem value="Networking">Networking</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="ticketingEnabled"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Enable Ticketing</FormLabel>
-                      <FormDescription>Allow attendees to purchase tickets for this event</FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-              {form.watch("ticketingEnabled") && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="ticketPrice"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ticket Price ($)</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" step="0.01" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="registrationDeadline"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Registration Deadline</FormLabel>
-                        <FormControl>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !field.value && "text-muted-foreground",
-                                )}
-                              >
-                                <CalendarDays className="mr-2 h-4 w-4" />
-                                {field.value ? format(field.value, "PPP") : "Select deadline"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <CalendarComponent
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
-              <DialogFooter>
-                <Button type="submit">Create Event</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+  <DialogContent className="max-w-2xl">
+    <DialogHeader>
+      <DialogTitle>Create New Event</DialogTitle>
+      <DialogDescription>Fill in the details below to create a new event</DialogDescription>
+    </DialogHeader>
+     <EventForm/>
+  </DialogContent>
+</Dialog>
 
       {/* Send Invitations Dialog */}
       <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
