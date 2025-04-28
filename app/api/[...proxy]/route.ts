@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 const EXTERNAL_API_BASE = "http://localhost:5000/admin";
 
@@ -26,8 +27,11 @@ export async function DELETE(request: NextRequest, context: any) {
 
 async function handleRequest(request: NextRequest, pathSegments: string[]) {
   try {
-    const cookieStore = cookies();
-    const token = (await cookieStore).get("auth-token")?.value;
+    // Get session from NextAuth
+    const session = await getServerSession(authOptions);
+    
+    // Get token from session
+    const token = session?.accessToken;
     
     // Join the path segments with a slash
     const apiPath = pathSegments.join("/");

@@ -1,15 +1,13 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-// Define which paths are protected (require authentication)
+// Define protected and public routes
 const protectedPaths = [
   "/dashboard",
   "/profile",
   "/settings",
-  // Add other protected routes here
-]
+];
 
-// Define which paths are public (accessible without authentication)
 const publicPaths = [
   "/",
   "/login",
@@ -17,44 +15,56 @@ const publicPaths = [
   "/about",
   "/api/proxy/auth/register",
   "/api/proxy/auth/login",
-  // Add other public routes here
-]
+];
+
+// Helper to normalize paths (remove trailing slash except root)
+function normalizePath(path: string) {
+  return path !== "/" ? path.replace(/\/$/, "") : path;
+}
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  if (pathname.startsWith("/api/") && !pathname.includes("/auth/")) {
-    return NextResponse.next()
+  const { pathname } = request.nextUrl;
+  const normalizedPathname = normalizePath(pathname);
+  
+  // Debug - check if middleware is running
+  console.log(`Middleware running for path: ${pathname}`);
+  
+  // Check authentication
+  const token = request.cookies.get("auth-token")?.value;
+  console.log(`Auth token exists: ${!!token}`);
+  
+  // Check for protected path
+  const isProtectedPath = protectedPaths.some(path => {
+    const normalizedProtectedPath = normalizePath(path);
+    return normalizedPathname === normalizedProtectedPath || 
+           normalizedPathname.startsWith(`${normalizedProtectedPath}/`);
+  });
+  console.log(`Is protected path: ${isProtectedPath}`);
+  
+  // Protected route check - unauthenticated access
+  if (isProtectedPath && !token) {
+    console.log("Redirecting to login");
+    return NextResponse.redirect(new URL("/login", request.url));
   }
-  const token = request.cookies.get("auth-token")?.value
-
-  const isAuthenticated = !!token
-  const isProtectedPath = protectedPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))
-
-  const isPublicPath = publicPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))
-
-  if (isProtectedPath && !isAuthenticated) {
-    const url = new URL("/login", request.url)
-    url.searchParams.set("from", pathname)
-    return NextResponse.redirect(url)
+  
+  // Redirect authenticated users from login/signup
+  if (token && (normalizedPathname === "/login" || normalizedPathname === "/signup")) {
+    console.log("Redirecting to dashboard");
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
-
-  if (isAuthenticated && (pathname === "/login" || pathname === "/signup")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
-  }
-
-  return NextResponse.next()
+  
+  return NextResponse.next();
 }
 
+// Simplified matcher configuration
 export const config = {
-  // Specify which paths the middleware should run on
   matcher: [
-    /*
-     * Match all request paths except:
-     * 1. /api/proxy/auth/* (authentication API routes)
-     * 2. /_next (Next.js internals)
-     * 3. /fonts, /images (static files)
-     * 4. /favicon.ico, /robots.txt (static files)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|images/|fonts/).*)",
+    // Include specific paths we want to protect
+    "/dashboard/:path*",
+    "/profile/:path*", 
+    "/settings/:path*",
+    // Auth pages for redirect when authenticated
+    "/login",
+    "/signup"
   ],
-}
+};

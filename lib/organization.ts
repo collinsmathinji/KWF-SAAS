@@ -144,44 +144,91 @@ export function getStoredOrganization(): OrganizationType | null {
   const stored = localStorage.getItem('currentOrganization');
   return stored ? JSON.parse(stored) : null;
 }
-
-export async function updateOnBoarding(dataToSubmit: OrganizationType): Promise<OrganizationType> {
+// Separate function for initiating Stripe onboarding
+const initiateStripeOnboarding = async () => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch('/api/organization/stripe/createAccount', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+      // No request body needed - the server identifies the organization from the auth token
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to initiate Stripe onboarding');
+    }
+    
+    return data.data; // Contains stripeAccountId and onboardingUrl
+  } catch (error) {
+    console.error('Error initiating Stripe onboarding:', error);
+    throw error;
+  }
+};
+export async function updateOnBoarding(dataToSubmit: OrganizationType): Promise<any> {
   const organizationId = localStorage.getItem("organizationId");
   const userId = localStorage.getItem("userId");
   
   if (!organizationId) throw new Error("Organization ID not found");
   
-  const response = await fetch(`/api/organization/update/${organizationId}`, {
-    method: "PUT",
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(dataToSubmit),
-  });
-  if (response.status === 200) {
-    const editedData = await fetch(`/api/user/update/${userId}`, {
+  try {
+    // Step 1: Update organization data
+    const response = await fetch(`/api/organization/update/${organizationId}`, {
       method: "PUT",
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        isOnboarded: true,
-      }),
+      body: JSON.stringify(dataToSubmit),
     });
     
-    if (!editedData.ok) {
-      throw new Error("Failed to update user");
+    if (!response.ok) {
+      throw new Error("Failed to update organization");
     }
+    
+    // Step 2: Update user onboarding status if organization update was successful
+    if (response.status === 200 && userId) {
+      const editedData = await fetch(`/api/user/update/${userId}`, {
+        method: "PUT",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isOnboarded: true,
+        }),
+      });
+      
+      if (!editedData.ok) {
+        throw new Error("Failed to update user");
+      }
+    }
+    
+    // Step 3: Initiate Stripe onboarding
+    const stripeData = await initiateStripeOnboarding();
+    
+    // Store organization data in localStorage
+    localStorage.setItem("currentOrganization", JSON.stringify(dataToSubmit));
+    localStorage.setItem("isOnBoarded", "true");
+    
+    // Return both the organization response and the Stripe data
+    // This format matches what your frontend expects
+    return {
+      organization: await response.json(),
+      data: {
+        stripeAccountId: stripeData.stripeAccountId,
+        onboardingUrl: stripeData.onboardingUrl
+      }
+    };
+  } catch (error) {
+    console.error("Error in updateOnBoarding:", error);
+    throw error;
   }
-  
-  if (!response.ok) {
-    throw new Error("Failed to update organization");
-  
-  }
-  localStorage.setItem("currentOrganization", JSON.stringify(dataToSubmit));
-  localStorage.setItem("isOnBoarded", "true");
-  return response.json();
 }
+
+
 export async function updateOrg(dataToSubmit: OrganizationType): Promise<OrganizationType> {
   const organizationId = localStorage.getItem("organizationId");
   

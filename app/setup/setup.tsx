@@ -1,11 +1,12 @@
 "use client"
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Image as ImageIcon, ArrowLeft, ArrowRight } from 'lucide-react'
+import { Image as ImageIcon, ArrowLeft, ArrowRight, AlertCircle, ExternalLink } from 'lucide-react'
 import { updateOnBoarding } from "@/lib/organization"
 import { uploadOrganizationLogo } from "@/lib/organization"
 import { useRouter } from 'next/navigation'
@@ -29,7 +30,6 @@ interface OrganizationType {
   country?: string
 }
 interface OrganizationTwoType {
-
   name: string | null
   logoUrl: string | null
   email: string | null
@@ -60,6 +60,10 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
   const [open, setOpen] = useState(true)
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [stripeConsent, setStripeConsent] = useState(false)
+  const [stripeOnboardingUrl, setStripeOnboardingUrl] = useState<string | null>(null)
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null)
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [formData, setFormData] = useState<Partial<OrganizationType>>({
     logoPreview: '',
@@ -70,6 +74,18 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const router = useRouter()
+
+  // Effect to open Stripe onboarding URL in a new tab when available
+  useEffect(() => {
+    if (stripeOnboardingUrl) {
+      // A small delay to ensure the success dialog is visible before opening a new tab
+      const timer = setTimeout(() => {
+        window.open(stripeOnboardingUrl, '_blank');
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [stripeOnboardingUrl]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -103,6 +119,16 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!stripeConsent) {
+      toast({
+        title: "Consent Required",
+        description: "You must agree to create a Stripe account to proceed.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
@@ -123,14 +149,34 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
         logoUrl: logoUrl
       };
       
-      await updateOnBoarding(dataToSubmit);
-      window.location.reload();
-      toast({
-        title: "Success",
-        description: "Organization created successfully!",
-        variant: "default"
-      });
-      router.push("/dashboard");
+      // Submit the organization data and get back the response
+      const response = await updateOnBoarding(dataToSubmit);
+      console.log("Organization and Stripe setup response:", response);
+      
+      // Check if we have a successful response with Stripe data
+      if (response && response.data) {
+        // Store the Stripe account ID and onboarding URL
+        setStripeAccountId(response.data.stripeAccountId || null);
+        setStripeOnboardingUrl(response.data.onboardingUrl || null);
+        
+        // Store Stripe account ID in localStorage if available
+        if (response.data.stripeAccountId) {
+          const orgData = JSON.parse(localStorage.getItem("currentOrganization") || "{}");
+          orgData.stripeAccountId = response.data.stripeAccountId;
+          localStorage.setItem("currentOrganization", JSON.stringify(orgData));
+        }
+        
+        // Show success dialog regardless of whether we have a Stripe URL
+        setShowSuccessDialog(true);
+      } else {
+        // Successful organization creation but without Stripe data
+        toast({
+          title: "Organization Created",
+          description: "Your organization was created successfully, but Stripe account setup couldn't be initialized.",
+          variant: "default"
+        });
+        router.push("/dashboard");
+      }
     } catch (error) {
       console.error("Failed to submit:", error);
       toast({
@@ -149,12 +195,26 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
       return
     }
     
+    // Allow closing if we're showing the success dialog
+    if (showSuccessDialog) {
+      setOpen(isOpen);
+      if (!isOpen) {
+        router.push('/dashboard');
+      }
+      return;
+    }
+    
     // Otherwise, proceed with normal close behavior
     setOpen(isOpen)
     if (!isOpen) {
       router.push('/login')
     }
   }
+
+  const handleContinueToDashboard = () => {
+    setOpen(false);
+    router.push('/dashboard');
+  };
 
   const nextStep = () => {
     if (!formData.name || !formData.email) {
@@ -252,12 +312,12 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
           </div>
         </div>
         <Button
-                type="button"
-                className="bg-blue-600 text-white hover:bg-blue-700 ml-auto flex items-center gap-2"
-                onClick={nextStep}
-              >
-                Next <ArrowRight className="h-4 w-4" />
-              </Button>
+          type="button"
+          className="bg-blue-600 text-white hover:bg-blue-700 ml-auto flex items-center gap-2"
+          onClick={nextStep}
+        >
+          Next <ArrowRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   )
@@ -282,7 +342,6 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
           />
         </div>
       
-        
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="city">City</Label>
@@ -342,6 +401,83 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
           </div>
         </div>
       </div>
+
+      {/* Stripe Consent Checkbox */}
+      <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+        <div className="flex items-start space-x-3">
+          <div className="flex items-center h-5 mt-1">
+            <Checkbox 
+              id="stripe-consent" 
+              checked={stripeConsent}
+              onCheckedChange={(checked) => setStripeConsent(checked === true)}
+            />
+          </div>
+          <div className="flex flex-col">
+            <Label 
+              htmlFor="stripe-consent" 
+              className="font-medium text-gray-900"
+            >
+              Create Stripe Account
+            </Label>
+            <p className="text-sm text-gray-600 mt-1">
+              I agree to create a Stripe account for my organization which will be used for payment processing. By checking this box, I understand that I will be redirected to Stripe's website to complete the account setup after organization creation.
+            </p>
+          </div>
+        </div>
+        {!stripeConsent && (
+          <div className="mt-2 flex items-center text-amber-600 text-sm">
+            <AlertCircle className="h-4 w-4 mr-1" />
+            <span>You must agree to create a Stripe account to proceed</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderSuccessStep = () => (
+    <div className="space-y-6 text-center">
+      <div className="pb-6">
+        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+          <svg className="h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-semibold text-gray-900 mt-4">Organization Created Successfully!</h2>
+        <p className="text-gray-500 mt-2">
+          A new tab has been opened to complete your Stripe account setup. Please complete the Stripe onboarding process to enable payments for your organization.
+        </p>
+      </div>
+
+      <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 text-sm text-gray-700">
+        <div className="flex items-center">
+          <AlertCircle className="h-5 w-5 text-blue-600 mr-2" />
+          <span className="font-medium">Important:</span>
+        </div>
+        <p className="mt-1 ml-7">
+          If the Stripe setup tab didn't open automatically, please click the button below to open it.
+        </p>
+      </div>
+
+      <div className="flex flex-col space-y-3">
+        {stripeOnboardingUrl && (
+          <Button
+            type="button"
+            className="w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center gap-2"
+            onClick={() => window.open(stripeOnboardingUrl, '_blank')}
+          >
+            Open Stripe Setup <ExternalLink className="h-4 w-4" />
+          </Button>
+        )}
+        
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={handleContinueToDashboard}
+        >
+          Continue to Dashboard
+        </Button>
+      </div>
     </div>
   )
 
@@ -350,46 +486,50 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
       <DialogContent className="sm:max-w-[600px] bg-white rounded-lg p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold text-blue-700 text-center">
-            {currentStep === 1 ? 'Create Organization' : 'Organization Details'}
+            {showSuccessDialog ? 'Success' : currentStep === 1 ? 'Create Organization' : 'Organization Details'}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="mt-6">
-          {currentStep === 1 ? renderStep1() : renderStep2()}
+        {showSuccessDialog ? (
+          renderSuccessStep()
+        ) : (
+          <form onSubmit={handleSubmit} className="mt-6">
+            {currentStep === 1 ? renderStep1() : renderStep2()}
 
-          <div className="flex justify-between mt-8">
-            {currentStep === 2 && (
-              <Button
-                type="button"
-                variant="outline"
-                className="flex items-center gap-2"
-                onClick={prevStep}
-              >
-                <ArrowLeft className="h-4 w-4" /> Back
-              </Button>
-            )}
+            <div className="flex justify-between mt-8">
+              {currentStep === 2 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  onClick={prevStep}
+                >
+                  <ArrowLeft className="h-4 w-4" /> Back
+                </Button>
+              )}
+              
+              {currentStep === 2 && (
+                <Button
+                  type="submit"
+                  className={`bg-blue-600 text-white hover:bg-blue-700 ${!stripeConsent ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  disabled={isSubmitting || !stripeConsent}
+                >
+                  {isSubmitting ? "Creating..." : "Create Organization"}
+                </Button>
+              )}
+            </div>
             
-         
-              <Button
-                type="submit"
-                className="bg-blue-600 text-white hover:bg-blue-700"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Creating..." : "Create Organization"}
-              </Button>
-         
-          </div>
-          
-          <div className="mt-4 text-center text-sm text-gray-500">
-            <span className="inline-flex items-center">
-              Step {currentStep} of 2
-              <span className="ml-2 flex gap-1">
-                <span className={`h-2 w-2 rounded-full ${currentStep === 1 ? 'bg-blue-600' : 'bg-gray-300'}`}></span>
-                <span className={`h-2 w-2 rounded-full ${currentStep === 2 ? 'bg-blue-600' : 'bg-gray-300'}`}></span>
+            <div className="mt-4 text-center text-sm text-gray-500">
+              <span className="inline-flex items-center">
+                Step {currentStep} of 2
+                <span className="ml-2 flex gap-1">
+                  <span className={`h-2 w-2 rounded-full ${currentStep === 1 ? 'bg-blue-600' : 'bg-gray-300'}`}></span>
+                  <span className={`h-2 w-2 rounded-full ${currentStep === 2 ? 'bg-blue-600' : 'bg-gray-300'}`}></span>
+                </span>
               </span>
-            </span>
-          </div>
-        </form>
+            </div>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   )

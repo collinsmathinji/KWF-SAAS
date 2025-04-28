@@ -1,69 +1,88 @@
-"use client"
+// app/dashboard/layout.tsx
+"use client";
 
-import type React from "react"
+import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { EyeIcon, UserIcon } from "lucide-react";
+import OrganizationManagement from "@/app/setup/page";
 
-import { checkUserType } from "@/lib/token"
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { EyeIcon, UserIcon } from "lucide-react"
-import OrganizationManagement from "@/app/setup/page"
-
-export default function Layout({
+export default function DashboardLayout({
   user,
   admin,
 }: {
-  user: React.ReactNode
-  admin: React.ReactNode
+  user: React.ReactNode;
+  admin: React.ReactNode;
 }) {
-  const [viewAs, setViewAs] = useState<"admin" | "user" | null>(null)
-  const [actualUserType, setActualUserType] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isOnBoarded, setIsOnBoarded] = useState<boolean | null>(null)
+  const { data: session, status } = useSession();
+  
+  const [viewAs, setViewAs] = useState<"admin" | "user" | null>(null);
+  const [actualUserType, setActualUserType] = useState<string | null>(null);
+  const [isOnBoarded, setIsOnBoarded] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const result = await checkUserType()
-        setActualUserType(result?.userType ?? null)
-
-        const onboarded = localStorage.getItem("isOnBoarded")
-        setIsOnBoarded(onboarded === "true")
-
-        // Initialize viewAs to match actual user type
-        if (!viewAs) {
-          setViewAs(result?.userType === "admin" ? "admin" : "user")
-        }
-
-        setIsLoading(false)
-      } catch (error) {
-        console.error("Error checking user type:", error)
-        setIsLoading(false)
-      }
+    console.log("Current session status:", status);
+    console.log("Current session data:", session);
+    
+    if (status === "loading") {
+      setIsLoading(true);
+      return;
     }
 
-    checkUser()
-  }, [viewAs])
+    if (status === "authenticated" && session?.user) {
+      const userType = session.user.userType;
+      const onboardingStatus = session.user.isOnBoarded;
+      
+      console.log("User type from session:", userType);
+      console.log("Onboarding status from session:", onboardingStatus);
+      
+      // Set user type based on the value
+      let userTypeValue: "admin" | "user" | null = null;
+      if (userType === '2') {
+        userTypeValue = "admin";
+      } else if (userType === '1') {
+        userTypeValue = "user";
+      }
+      
+      setActualUserType(userTypeValue);
+      setIsOnBoarded(onboardingStatus);
+
+      // Initialize viewAs to match actual user type
+      if (userTypeValue) {
+        setViewAs(userTypeValue);
+      }
+
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
+    }
+  }, [session, status]);
 
   const toggleView = () => {
-    setViewAs(viewAs === "admin" ? "user" : "admin")
-  }
+    setViewAs(viewAs === "admin" ? "user" : "admin");
+  };
 
   if (isLoading) {
-    return <div>Loading...</div>
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
-  const isAdmin = actualUserType === "admin"
+  if (status === "unauthenticated") {
+    return <div className="flex items-center justify-center h-screen">Please sign in to access this page</div>;
+  }
+
+  const isAdmin = actualUserType === "admin";
 
   const showContent = () => {
-    if (!isAdmin) return user
+    if (!isAdmin) return user;
 
     // If admin and not onboarded, always show setup page
-    if (viewAs === "admin" && isOnBoarded === false) {
-      return <OrganizationManagement />
+    if (isAdmin && !isOnBoarded) {
+      return <OrganizationManagement />;
     }
 
-    return viewAs === "admin" ? admin : user
-  }
+    return viewAs === "admin" ? admin : user;
+  };
 
   return (
     <div className="relative">
@@ -89,5 +108,5 @@ export default function Layout({
       )}
       {showContent()}
     </div>
-  )
+  );
 }

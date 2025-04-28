@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import AddMemberTypeForm from "../add-memberType"
-import GroupTypeForm from "../group-type-form"; // Import GroupTypeForm
 import GroupForm from "../group-form"; // Import GroupForm
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -66,7 +65,6 @@ export default function UserManagementPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showAddMemberTypeDialog, setShowAddMemberTypeDialog] = useState(false)
   const [showAddMemberDialog, setShowAddMemberDialog] = useState(false)
-  const [showGroupTypeDialog, setShowGroupTypeDialog] = useState(false); 
   const [groups, setGroups] = useState<any[]>([]); // State for Group Type
   const[groupTypes, setGroupTypes]=useState<memberTypes>([]); // State for Group Types
   const [showGroupDialog, setShowGroupDialog] = useState(false); // State for Group dialog
@@ -210,12 +208,7 @@ export default function UserManagementPage() {
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                <Button onClick={() => setShowGroupTypeDialog(true)} className="w-full">
-                  <Plus className="mr-2 h-4 w-4" />
-                  <span>Add New Type</span>
-                </Button>
-                </DropdownMenuItem>
+               
               </DropdownMenuSubContent>
             </DropdownMenuSub>
             <DropdownMenuItem onClick={() => setView("members")}>
@@ -225,10 +218,6 @@ export default function UserManagementPage() {
             <DropdownMenuItem onClick={() => setView("groups")}>
               <Users className="mr-2 h-4 w-4" />
               <span>Groups</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/dashboard/user-management/roles")}>
-              <Settings2 className="mr-2 h-4 w-4" />
-              <span>User Roles</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -450,15 +439,7 @@ export default function UserManagementPage() {
               </DialogContent>
             </Dialog>
 
-            {/* Dialog for Group Type */}
-            <Dialog open={showGroupTypeDialog} onOpenChange={setShowGroupTypeDialog}>
-              <DialogContent>
-                
-                <GroupTypeForm />
-              </DialogContent>
-            </Dialog>
-
-            {/* Dialog for Group */}
+           
             <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
               <DialogContent>
                 <DialogHeader>

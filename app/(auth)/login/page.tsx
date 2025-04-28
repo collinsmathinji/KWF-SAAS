@@ -2,10 +2,10 @@
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { login } from "@/lib/auth"
 import { AlertCircle, CheckCircle } from "lucide-react"
 
 export default function LoginForm() {
@@ -38,16 +38,17 @@ export default function LoginForm() {
     
     try {
       setIsLoading(true)
-      
-      // Call the login function
-      const response = await login({
-        username: formData.email,
+      const result = await signIn("credentials", {
+        email: formData.email,
         password: formData.password,
+        redirect: false, 
       })
       
+      if (result?.error) {
+        setError(result.error)
+        return
+      }
       setShowToast(true)
-      
-      // Hide toast after 3 seconds and redirect
       setTimeout(() => {
         setShowToast(false)
         router.push(from)
