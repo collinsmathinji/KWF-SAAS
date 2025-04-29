@@ -23,7 +23,9 @@ export interface AuthResponse {
 }
 export async function signup({ name, password,token }: SignupData): Promise<AuthResponse> {
   try {
-    const response = await fetch("/api/auth/completeSignUp", {
+    // In your signup function
+console.log("Sending data:", JSON.stringify({ name, password, token }))
+    const response = await fetch("http://localhost:5000/admin/auth/completeSignUp", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -34,14 +36,6 @@ export async function signup({ name, password,token }: SignupData): Promise<Auth
     const data = await response.json()
     if (!response.ok) {
       throw new Error(data.message || "Signup failed")
-    }
-
-    if (data.data.token) {
-      await storeAuthToken(data.data.token)
-    }
-    if(data.data.userType) {
-      console.log('User type:', data.data.userType)
-      await storeUserType(data.data.userType)
     }
     return data
   } catch (error) {
@@ -61,11 +55,6 @@ export async function login({ username, password }: LoginData): Promise<AuthResp
     })
 
     const data = await response.json()
-   console.log('Login response:', data)
-   console.log('isOnboarded:', data.data.isOnboarded)
-   localStorage.setItem("isOnBoarded", data.data.isOnboarded)
-   localStorage.setItem("organizationId", data.data.organizationId)
-   localStorage.setItem("userId", data.data.id)
     if (!response.ok) {
       throw new Error(data.message || "Login failed")
     }

@@ -39,13 +39,17 @@ export async function createEvent(eventData: EventData): Promise<any> {
   }
 }
 
-export async function fetchEvents(): Promise<EventData[]> {
+// Updated fetchEvents function to accept organizationId
+export async function fetchEvents(organizationId?: string): Promise<EventData[]> {
   try {
     const response = await fetch("/api/event/list", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        organizationId: organizationId // Include organizationId in the request body
+      }),
     });
 
     if (!response.ok) {

@@ -18,11 +18,11 @@ export default function Page() {
             <span className="text-xl font-bold 2xl:text-2xl">KWF_SAAS</span>
           </div>
           <nav className="hidden md:flex gap-6 2xl:gap-12">
-            {["Features", "Pricing", "Testimonials", "Contact"].map((item) => (
+            {["Features", "Pricing", "Testimonials", "Events", "Contact"].map((item) => (
               <Link
                 key={item}
                 className="text-sm font-medium hover:text-blue-600 transition-colors 2xl:text-lg"
-                href={`#${item.toLowerCase()}`}
+                href={item === "Events" ? "/events" : `#${item.toLowerCase()}`}
               >
                 {item}
               </Link>
@@ -188,7 +188,7 @@ export default function Page() {
             {[
               {
                 title: "Product",
-                links: ["Features", "Pricing", "Security"],
+                links: ["Features", "Pricing", "Events", "Security"],
               },
               {
                 title: "Company",
@@ -209,7 +209,7 @@ export default function Page() {
                   {section.links.map((link, i) => (
                     <li key={i}>
                       <Link
-                        href="#"
+                        href={link === "Events" ? "/events" : "#"}
                         className="text-sm 2xl:text-base text-slate-600 hover:text-blue-600 transition-colors"
                       >
                         {link}
@@ -228,4 +228,3 @@ export default function Page() {
     </div>
   )
 }
-

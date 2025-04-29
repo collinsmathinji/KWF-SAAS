@@ -92,6 +92,7 @@ const AdminSignupPage = () => {
 
     try {
       await signup({name:formData.email, password: formData.password, token: formData.token})
+      
       toast({
         title: "Success",
         description: "Signup successful! Please check your email for verification.",

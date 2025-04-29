@@ -1,95 +1,97 @@
+// app/api/[...proxy]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
-const EXTERNAL_API_BASE = "http://localhost:5000/admin";
-
-// Use any type for the context parameter to bypass strict typing issues
-export async function GET(request: NextRequest, context: any) {
-  const pathSegments = context.params.proxy;
+// Fix for the "Route used params.proxy" error
+export async function GET(request: NextRequest, { params }: { params: { proxy: string[] } }) {
+  const pathSegments = params.proxy;
   return handleRequest(request, pathSegments);
 }
 
-export async function POST(request: NextRequest, context: any) {
-  const pathSegments = context.params.proxy;
+export async function POST(request: NextRequest, { params }: { params: { proxy: string[] } }) {
+  const pathSegments = params.proxy;
   return handleRequest(request, pathSegments);
 }
 
-export async function PUT(request: NextRequest, context: any) {
-  const pathSegments = context.params.proxy;
+export async function PUT(request: NextRequest, { params }: { params: { proxy: string[] } }) {
+  const pathSegments = params.proxy;
   return handleRequest(request, pathSegments);
 }
 
-export async function DELETE(request: NextRequest, context: any) {
-  const pathSegments = context.params.proxy;
+export async function DELETE(request: NextRequest, { params }: { params: { proxy: string[] } }) {
+  const pathSegments = params.proxy;
   return handleRequest(request, pathSegments);
 }
 
+// Common handler for all HTTP methods
 async function handleRequest(request: NextRequest, pathSegments: string[]) {
   try {
-    // Get session from NextAuth
+    // Get the current session
     const session = await getServerSession(authOptions);
     
-    // Get token from session
-    const token = session?.accessToken;
-    
-    // Join the path segments with a slash
-    const apiPath = pathSegments.join("/");
-    
-    console.log(`Processing request for path: ${apiPath}, token exists: ${!!token}`);
-    
-    // Endpoints that don't require authentication
-    const publicEndpoints = ["auth/register", "completeSignUp", "auth/login", "auth/completeSignUp"];
-    if (!token && !publicEndpoints.some((endpoint) => apiPath.includes(endpoint))) {
-      return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
-    }
-    
+    // Extract the request method
     const method = request.method;
-    console.log(`Proxying ${method} request to: ${EXTERNAL_API_BASE}/${apiPath}`);
     
+    // Combine path segments to form the API path
+    const path = pathSegments.join('/');
+    console.log(`Processing request for path: ${path}, token exists: ${!!session?.accessToken}`);
+    
+    // Get the request body if it exists
     let body = null;
-    if (method !== "GET" && method !== "HEAD") {
-      body = await request.json().catch(() => null);
+    if (method !== 'GET' && method !== 'HEAD') {
+      const contentType = request.headers.get('content-type');
+      if (contentType?.includes('application/json')) {
+        body = await request.json().catch(() => null);
+      } else if (contentType?.includes('multipart/form-data')) {
+        // Handle form data if needed
+        body = await request.formData().catch(() => null);
+      } else {
+        body = await request.text().catch(() => null);
+      }
     }
     
-    console.log('Request body:', body);
-    console.log('Request headers:', request.headers.get('Content-Type'));
-    console.log('Request method:', request.method);
+    // Create headers for the backend request
+    const headers: HeadersInit = {
+      'Content-Type': request.headers.get('content-type') || 'application/json',
+    };
     
-    const response = await fetch(`${EXTERNAL_API_BASE}/${apiPath}`, {
+    // Add the authorization token if it exists
+    if (session?.accessToken) {
+      headers['Authorization'] = `Bearer ${session.accessToken}`;
+    }
+    
+    // Construct the URL for the backend API
+    const backendUrl = `http://localhost:5000/admin/${path}`;
+    console.log(`Proxying ${method} request to: ${backendUrl}`);
+    console.log(`Request body: ${JSON.stringify(body)}`);
+    console.log(`Request headers: ${headers['Content-Type']}`);
+    console.log(`Request method: ${method}`);
+    
+    // Make the request to the backend API
+    const response = await fetch(backendUrl, {
       method: method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token ? `Bearer ${token}` : '',
-      },
-      body: body ? JSON.stringify(body) : undefined,
+      headers: headers,
+      body: method !== 'GET' && method !== 'HEAD' && body ? 
+        (body instanceof FormData ? body : JSON.stringify(body)) : 
+        undefined,
     });
     
-    // Check if response is JSON
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      const data = await response.json();
-      console.log("Response data:", data);
-      return NextResponse.json(data, { status: response.status });
-    } else {
-      // Handle non-JSON responses
-      const text = await response.text();
-      console.error("Non-JSON response:", text.substring(0, 200) + "...");
-      return NextResponse.json(
-        {
-          message: "Invalid response from external API",
-          status: response.status,
-        },
-        { status: response.status }
-      );
-    }
-  } catch (error) {
-    console.error("API proxy error:", error);
-    return NextResponse.json(
-      {
-        message: "Internal server error",
-        error: error instanceof Error ? error.message : String(error),
+    // Get the response data
+    const data = await response.json().catch(() => null);
+    console.log(`Response data: ${JSON.stringify(data, null, 2)}`);
+    
+    // Return the response from the backend API
+    return NextResponse.json(data, {
+      status: response.status,
+      headers: {
+        'Content-Type': 'application/json',
       },
+    });
+  } catch (error) {
+    console.error('Error in proxy handler:', error);
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
       { status: 500 }
     );
   }

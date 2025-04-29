@@ -11,7 +11,7 @@ declare module "next-auth" {
       email: string;
       userType: string;
       organizationId: string;
-      isOnBoarded: boolean;
+      isOnboarded: boolean;
       name?: string | null;
       image?: string | null;
     };
@@ -24,7 +24,7 @@ declare module "next-auth" {
     username: string;
     userType: string;
     organizationId: string;
-    isOnBoarded: boolean;
+    isOnboarded: boolean;
     accessToken: string;
   }
 }
@@ -35,7 +35,7 @@ declare module "next-auth/jwt" {
     email: string;
     userType: string;
     organizationId: string;
-    isOnBoarded: boolean;
+    isOnboarded: boolean;
     accessToken: string;
   }
 }

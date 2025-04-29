@@ -272,6 +272,9 @@ export function Pricing() {
   
       if (!response.ok) {
         const errorMessage = await response.text();
+
+
+        
         throw new Error(errorMessage || "Failed to create checkout session");
       }
   

@@ -18,7 +18,7 @@ export default function DashboardLayout({
   
   const [viewAs, setViewAs] = useState<"admin" | "user" | null>(null);
   const [actualUserType, setActualUserType] = useState<string | null>(null);
-  const [isOnBoarded, setIsOnBoarded] = useState<boolean | null>(null);
+  const [isOnBoarded, setIsOnBoarded] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +32,8 @@ export default function DashboardLayout({
 
     if (status === "authenticated" && session?.user) {
       const userType = session.user.userType;
-      const onboardingStatus = session.user.isOnBoarded;
+      const board=localStorage.getItem('isOnboarded')
+      const onboardingStatus = board
       
       console.log("User type from session:", userType);
       console.log("Onboarding status from session:", onboardingStatus);
@@ -77,7 +78,7 @@ export default function DashboardLayout({
     if (!isAdmin) return user;
 
     // If admin and not onboarded, always show setup page
-    if (isAdmin && !isOnBoarded) {
+    if (isAdmin && isOnBoarded==='false') {
       return <OrganizationManagement />;
     }
 
@@ -86,7 +87,7 @@ export default function DashboardLayout({
 
   return (
     <div className="relative">
-      {isAdmin && isOnBoarded && (
+      {isAdmin && isOnBoarded==="true" && (
         <Button
           onClick={toggleView}
           variant="outline"

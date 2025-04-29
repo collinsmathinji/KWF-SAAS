@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AlertCircle, CheckCircle } from "lucide-react"
-
+import { useSession } from "next-auth/react"
 export default function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const from = searchParams.get("from") || "/dashboard"
-  
+   const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [showToast, setShowToast] = useState(false)
@@ -43,11 +43,21 @@ export default function LoginForm() {
         password: formData.password,
         redirect: false, 
       })
-      
+      if(result?.ok){
+        console.log("login isonboard",session)
+        localStorage.setItem("userId",session?.user.id)
+      localStorage.setItem('isOnboarded',session?.user.isOnboarded);
+      }
       if (result?.error) {
         setError(result.error)
         return
       }
+
+      // Fetch user data to get the isOnboarded status;
+ 
+        
+
+      
       setShowToast(true)
       setTimeout(() => {
         setShowToast(false)

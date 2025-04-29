@@ -3,10 +3,10 @@
 import React from "react"
 
 import { useState } from "react"
-import { Bell, CreditCard, Database, Layers, LayoutDashboard, LogOut, Menu, PieChart, Users } from "lucide-react"
+import { Bell, CreditCard, Database, Layers, LayoutDashboard, LogOut, Menu, PieChart, Users,Calendar } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Overview from "./overview"
-
+import EventsDisplay from "./eventsDisplay"
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("overview")
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -29,6 +29,11 @@ export default function DashboardPage() {
       label: "Subscriptions",
       section: "subscriptions",
       description: "Manage plans and billing",
+    },{
+      icon: <Calendar />,
+      label: "Events",
+      section: "event",
+      description: "Manage organization events",
     },
     {
       icon: <PieChart />,
@@ -54,6 +59,8 @@ export default function DashboardPage() {
     switch (activeSection) {
       case "overview":
         return <Overview />
+      case "event":
+        return <EventsDisplay/>
       default:
         return (
           <div className="text-center text-muted-foreground">

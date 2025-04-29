@@ -1,3 +1,4 @@
+// Organization Setup Component with improved session handling
 "use client"
 import { useState, useRef, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -7,10 +8,13 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Image as ImageIcon, ArrowLeft, ArrowRight, AlertCircle, ExternalLink } from 'lucide-react'
-import { updateOnBoarding } from "@/lib/organization"
 import { uploadOrganizationLogo } from "@/lib/organization"
 import { useRouter } from 'next/navigation'
 import { toast } from "@/components/ui/use-toast"
+import { useSession } from "next-auth/react"
+
+// Import the updated function
+import { updateOnBoarding } from "@/lib/organization"
 
 interface OrganizationType {
   id?: string
@@ -29,6 +33,7 @@ interface OrganizationType {
   state?: string
   country?: string
 }
+
 interface OrganizationTwoType {
   name: string | null
   logoUrl: string | null
@@ -40,6 +45,7 @@ interface OrganizationTwoType {
   state: string | null
   country: string | null
 }
+
 interface OrganizationSetupProps {
   persistent?: boolean;
 }
@@ -57,6 +63,9 @@ const countries = [
 ]
 
 const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
+  // Get the session
+  const { data: session, status } = useSession()
+  
   const [open, setOpen] = useState(true)
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -87,6 +96,13 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
     }
   }, [stripeOnboardingUrl]);
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -115,6 +131,7 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
       [name]: value,
       logoUrl: logoUrl
     }))
+    
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,7 +177,7 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
         setStripeOnboardingUrl(response.data.onboardingUrl || null);
         
         // Store Stripe account ID in localStorage if available
-        if (response.data.stripeAccountId) {
+        if (response.data.stripeAccountId && typeof window !== 'undefined') {
           const orgData = JSON.parse(localStorage.getItem("currentOrganization") || "{}");
           orgData.stripeAccountId = response.data.stripeAccountId;
           localStorage.setItem("currentOrganization", JSON.stringify(orgData));
@@ -192,7 +209,7 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
   const handleDialogChange = (isOpen: boolean) => {
     if (!isOpen && persistent) {
       // If persistent, don't allow closing
-      return
+      return;
     }
     
     // Allow closing if we're showing the success dialog
@@ -205,9 +222,9 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
     }
     
     // Otherwise, proceed with normal close behavior
-    setOpen(isOpen)
+    setOpen(isOpen);
     if (!isOpen) {
-      router.push('/login')
+      router.push('/login');
     }
   }
 
@@ -223,17 +240,19 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
         description: "Please fill in organization name and email before proceeding.",
         variant: "destructive"
       })
-      return
+      return;
     }
-    setCurrentStep(2)
+    setCurrentStep(2);
   }
 
   const prevStep = () => {
-    setCurrentStep(1)
+    setCurrentStep(1);
   }
 
+  // Rest of the component remains the same...
   const renderStep1 = () => (
     <div className="space-y-6">
+      {/* Step 1 content - same as original */}
       <div className="text-center pb-6">
         <h2 className="text-xl font-semibold text-gray-900">Basic Information</h2>
         <p className="text-gray-500">Let's start with your organization's basic details</p>
@@ -324,6 +343,7 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
 
   const renderStep2 = () => (
     <div className="space-y-6">
+      {/* Step 2 content - same as original */}
       <div className="text-center pb-6">
         <h2 className="text-xl font-semibold text-gray-900">Location Details</h2>
         <p className="text-gray-500">Where is your organization located?</p>
@@ -436,6 +456,7 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
 
   const renderSuccessStep = () => (
     <div className="space-y-6 text-center">
+      {/* Success step content - same as original */}
       <div className="pb-6">
         <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
           <svg className="h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -480,6 +501,11 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
       </div>
     </div>
   )
+
+  // Show loading state if session is loading
+  if (status === 'loading') {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>

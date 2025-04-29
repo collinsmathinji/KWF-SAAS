@@ -1,8 +1,22 @@
 "use client"
-import React, { useEffect } from "react"
-import { useState } from "react"
-import { Bell, CreditCard, Calendar, Layers, LayoutDashboard, Menu,  Settings, Users, Landmark } from "lucide-react"
+import React, { useEffect, useState } from "react"
+import { 
+  Bell, 
+  CreditCard, 
+  Calendar, 
+  Layers, 
+  LayoutDashboard, 
+  Menu, 
+  Settings, 
+  Users, 
+  Landmark, 
+  LogOut 
+} from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { signOut, useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+
+// Page components
 import Overview from "./overview"
 import UserManagementPage from "./user-management/page"
 import SubscriptionsPage from "./subscription"
@@ -10,14 +24,41 @@ import SettingsPage from "./settings/page"
 import OrganizationProfile from "./organization"
 import ConnectPage from "./connect/page"
 import EventPage from "./event/page"
+
+// API functions
 import { fetchMemberType } from "@/lib/members"
+import { getOrganizationById } from "@/lib/organization"
+
+// Types
+type UserType = "admin" | "user" | null;
+type MenuItemType = {
+  icon: React.ReactNode;
+  label: string;
+  section: string;
+  description: string;
+};
+
+interface OrganizationDetails {
+  organizationId?: string;
+  name?: string;
+  logoUrl?: string;
+  [key: string]: any;
+}
+
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("overview")
   const [memberType, setMemberType] = useState<string[]>([])
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const isOnBorded=localStorage.getItem('isOnBoarded')
-  const OrganizationDetails = localStorage.getItem('currentOrganization') ? JSON.parse(localStorage.getItem('currentOrganization')!) : null
-  const menuItems = [
+  const [isLoading, setIsLoading] = useState(true)
+  const [isOnBoarded, setIsOnBoarded] = useState<string | null>('')
+  const [actualUserType, setActualUserType] = useState<UserType>(null)
+  const [viewAs, setViewAs] = useState<UserType>(null)
+  const [organizationDetails, setOrganizationDetails] = useState<OrganizationDetails | null>(null)
+  
+  const router = useRouter()
+  const { data: session, status } = useSession()
+  
+  const menuItems: MenuItemType[] = [
     {
       icon: <LayoutDashboard />,
       label: "Dashboard",
@@ -49,68 +90,194 @@ export default function DashboardPage() {
       description: "Manage organization events",
     },
     {
-      icon: < Landmark />,
+      icon: <Landmark />,
       label: "Stripe Account Settings",
       section: "stripe-settings",
       description: "Manage stripe account settings",
     },
   ]
+  
+  useEffect(() => {
+    const loadUserData = async () => {
+      console.log("Current session status:", status);
+      console.log("Current session data:", session);
+      
+      if (status === "loading") {
+        setIsLoading(true);
+        return;
+      }
+
+      if (status === "authenticated" && session?.user) {
+        const userType = session.user.userType;
+        const onboardingStatus=localStorage.getItem('isOnboarded')
+        const orgId = session.user.organizationId;
+        const createdBy= session.user.id 
+        console.log("User type from session:", userType);
+        console.log("Onboarding status from session:", onboardingStatus);
+        console.log("Organization ID from session:", orgId);
+        
+        // Set user type based on the value
+        let userTypeValue: UserType = null;
+        if (userType === '2') {
+          userTypeValue = "admin";
+        } else if (userType === '1') {
+          userTypeValue = "user";
+        }
+        
+        setActualUserType(userTypeValue);
+        setIsOnBoarded(onboardingStatus);
+        setViewAs(userTypeValue);
+        
+        try {
+          // Fetch organization details
+          if (orgId) {
+            console.log('Organization ID from session:', orgId);
+            const response = await getOrganizationById(orgId);
+            console.log("org Details",response)
+            setOrganizationDetails(response.data || null);
+            setMemberType(response as unknown as string[]);
+          } else {
+            console.log('Organization ID not found');
+          }
+        } catch (error) {
+          console.error("Error fetching organization details:", error);
+        }
+        
+        setIsLoading(false);
+      } else if (status === "unauthenticated") {
+        // Redirect to login if not authenticated
+        router.push('/login');
+      } else {
+        setIsLoading(false);
+      }
+    };
+    
+    loadUserData();
+  }, [session, status, router]);
+  
+  // Fetch member type if organization details are available
   useEffect(() => {
     const handleFetch = async () => {
-      if (OrganizationDetails?.organizationId) {
-        console.log('Organization ID:', OrganizationDetails.organizationId)
-        const response = await fetchMemberType(OrganizationDetails.organizationId)
-        setMemberType(response as unknown as string[])
-      } else {
-        console.log('Organization ID not found in response')
+      try {
+        const orgId = organizationDetails?.organizationId || session?.user?.organizationId;
+        
+        if (orgId) {
+          console.log('Fetching member types for organization ID:', orgId);
+          const response = await fetchMemberType(orgId);
+          console.log("Member types response:", response);
+          setMemberType(response as unknown as string[]);
+        } else {
+          console.log('Organization ID not found for fetching member types');
+        }
+      } catch (error) {
+        console.error("Error fetching member types:", error);
       }
+    };
+    
+    if (!isLoading) {
+      handleFetch();
     }
-    handleFetch()
-  }, [OrganizationDetails])
+  }, [organizationDetails, session, isLoading]);
+
+  const handleLogout = async () => {
+    try {
+      // Clear any local storage that might have been set
+      localStorage.removeItem('isOnBoarded');
+      localStorage.removeItem('currentOrganization');
+      
+      await signOut({ 
+        callbackUrl: '/login',
+        redirect: true
+      });
+    } catch (error) {
+      console.error('Logout failed:', error);
+      router.push('/login');
+    }
+  };
+  
   const renderContent = () => {
+    const orgData = organizationDetails || (session?.user || {});
+    
     switch (activeSection) {
       case "overview":
-        return <Overview organisationDetails={OrganizationDetails}/>
+        return <Overview organisationDetails={orgData} />;
       case "users":
-        return <UserManagementPage organisationDetails={OrganizationDetails}/>
+        return <UserManagementPage organisationDetails={orgData} />;
       case "subscriptions":
-        return <SubscriptionsPage organisationDetails={OrganizationDetails} />
-        case "organization":
-          return <OrganizationProfile organisationDetails={OrganizationDetails} />
+        return <SubscriptionsPage organisationDetails={orgData} />;
+      case "organization":
+        return <OrganizationProfile organisationDetails={orgData} />;
       case "event":
-        return  <EventPage organisationDetails={OrganizationDetails}/>
-      case 'settings':
-        return <SettingsPage organisationDetails={OrganizationDetails} />
-      case 'stripe-settings':
-        return <ConnectPage   organisationDetails={OrganizationDetails}/>
+        return <EventPage organisationDetails={orgData} />;
+      case "settings":
+        return <SettingsPage organisationDetails={orgData} />;
+      case "stripe-settings":
+        return <ConnectPage organisationDetails={orgData} />;
       default:
-
         return (
           <div className="text-center text-muted-foreground">
             {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)} content goes here
           </div>
-        )
+        );
     }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-blue-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-blue-800 font-medium">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isOnBoarded==='false') {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-blue-50">
+        <div className="max-w-md p-8 bg-white rounded-lg shadow-md">
+          <h1 className="text-2xl font-bold text-blue-600 mb-4">Account Setup Incomplete</h1>
+          <p className="text-gray-600 mb-6">
+            Your account hasn't been fully onboarded yet. Please complete the onboarding process to access the dashboard.
+          </p>
+          <div className="flex justify-between">
+            <button 
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              onClick={() => router.push('/onboarding')}
+            >
+              Complete Onboarding
+            </button>
+            <button 
+              className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100"
+              onClick={handleLogout}
+            >
+              Log Out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="flex min-h-screen bg-blue-50">
-    { isOnBorded && <>
+      {/* Sidebar */}
       <div
-        className={`fixed inset-0 z-30 transition-transform transform lg:static lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:w-80 bg-white border-r shadow-md p-4 flex flex-col`}
+        className={`fixed inset-0 z-30 transition-transform transform lg:static lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:w-80 bg-white border-r shadow-md p-4 flex flex-col`}
       >
         <div className="flex items-center justify-center mb-8">
-          {OrganizationDetails?.logoUrl
- && (
+          {organizationDetails?.logoUrl && (
             <img 
-              src={OrganizationDetails.logoUrl
-              } 
+              src={organizationDetails.logoUrl} 
               alt="Organization Logo" 
               className="w-8 h-8 mr-2 object-contain rounded-full"
             />
           )}
           <div className="text-2xl font-bold text-blue-600">
-            {OrganizationDetails?.name}
+            {organizationDetails?.name || session?.user?.email?.split('@')[0] || "Dashboard"}
           </div>
         </div>
 
@@ -130,7 +297,7 @@ export default function DashboardPage() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  {React.cloneElement(item.icon, {
+                  {React.cloneElement(item.icon as React.ReactElement, {
                     className: `mr-3 w-5 h-5 ${
                       activeSection === item.section ? "text-blue-600" : "text-gray-400 group-hover:text-blue-600"
                     }`,
@@ -142,18 +309,25 @@ export default function DashboardPage() {
               <p className="text-xs text-gray-400 mt-1">{item.description}</p>
             </div>
           ))}
-          <div className="mt-4 border-t pt-4">
-          <button className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50"  onClick={() => {
+          <div className="mt-4 border-t pt-4 space-y-2">
+            <button 
+              className="w-full flex items-center p-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600"  
+              onClick={() => {
                 setActiveSection('settings')
                 setSidebarOpen(false)
-              
-              }}>
-            <Settings  className="mr-3" /> Settings
-          </button>
-        </div>
+              }}
+            >
+              <Settings className="mr-3 w-5 h-5" /> Settings
+            </button>
+            
+            <button 
+              className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50"
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-3 w-5 h-5" /> Log Out
+            </button>
+          </div>
         </nav>
-
-        
       </div>
 
       {/* Main Content */}
@@ -163,24 +337,30 @@ export default function DashboardPage() {
             <button className="lg:hidden text-blue-600" onClick={() => setSidebarOpen(!sidebarOpen)}>
               <Menu className="w-6 h-6" />
             </button>
-            <h1 className="text-3xl font-bold text-blue-800 capitalize">{activeSection.replace(/([A-Z])/g, " $1")}</h1>
+            <h1 className="text-3xl font-bold text-blue-800 capitalize">
+              {activeSection.replace(/([A-Z])/g, " $1").replace(/-/g, " ")}
+            </h1>
           </div>
           <div className="flex items-center">
             <Bell className="mr-4 text-blue-600" />
             <div className="flex items-center">
               <Avatar className="w-10 h-10 border-2 border-blue-200">
                 <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarFallback>
+                  {session?.user?.email ? session.user.email.charAt(0).toUpperCase() : "U"}
+                </AvatarFallback>
               </Avatar>
-              <span className="ml-2 text-blue-800">Admin User</span>
+              <span className="ml-2 text-blue-800">
+                {actualUserType === "admin" ? "Admin" : "User"}: {session?.user?.email || ""}
+              </span>
             </div>
           </div>
         </header>
 
-        <main className="bg-white rounded-lg shadow-sm p-6">{renderContent()}</main>
+        <main className="bg-white rounded-lg shadow-sm p-6">
+          {renderContent()}
+        </main>
       </div>
-      </>}
     </div>
-  )
+  );
 }
-
