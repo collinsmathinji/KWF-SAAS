@@ -148,113 +148,99 @@ const EventsDisplay: React.FC = () => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    if (!selectedEvent) return;
-    
-    try {
-      // For paid events, create Stripe checkout session
-      if (selectedEvent.isPaid && selectedEvent.stripePriceId) {
-        // Create primary guest (ticket purchaser)
-        const primaryGuest = {
-          name: `${formData.guestFirstName} ${formData.guestLastName}`,
-          email: formData.email
-        };
-        
-        // Format checkout data exactly as shown in the Postman screenshot
-        const checkoutData = {
-          priceId: selectedEvent.stripePriceId,
-          successUrl: formData.successUrl,
-          cancelUrl: formData.cancelUrl,
-          mode: formData.mode,
-          quantity: formData.quantity,
-          eventId: formData.eventId,
-          organizationId: parseInt(formData.organizationId) || 64, // Convert to number as shown in screenshot
-          guests: [primaryGuest, ...formData.guests]
-        };
-        
-        console.log("Sending checkout data:", checkoutData);
-        console.log("checkoutData",checkoutData)
-        const response = await fetch("http://localhost:5000/checkout/create-payment-checkout-session", {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(checkoutData),
-          });
-          
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to create checkout session');
-          }
+ // The issue is in the handleSubmit function
+// Here's the updated version that removes pre-registration and ensures event ID is properly passed
+
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  
+  if (!selectedEvent) return;
+  
+  try {
+    // For paid events, create Stripe checkout session
+    if (selectedEvent.isPaid && selectedEvent.stripePriceId) {
+      // Create primary guest (ticket purchaser)
+      const primaryGuest = {
+        name: `${formData.guestFirstName} ${formData.guestLastName}`,
+        email: formData.email
+      };
       
-          const data = await response.json();
-          
-          if (data.sessionUrl) {
-            // Optional: Register with pending status before redirecting to payment
-            await fetch('/api/events/pre-register', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                eventId: selectedEvent.id,
-                email: formData.email,
-                guestName: `${formData.guestFirstName} ${formData.guestLastName}`,
-                paymentStatus: 'pending',
-                quantity: formData.quantity,
-                guests: checkoutData.guests
-              }),
-            });
-            
-            // Redirect to Stripe checkout
-            
-          } else {
-            throw new Error('No session URL returned');
-          }
-          window.location.href = data.sessionUrl;
-      } else {
-        // For free events, register directly
-        const response = await fetch('/api/events/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            eventId: selectedEvent.id,
-            email: formData.email,
-            guestName: `${formData.guestFirstName} ${formData.guestLastName}`,
-            paymentStatus: 'registered' // Already registered for free events
-          }),
-        });
+      // Format checkout data with the correct event ID
+      const checkoutData = {
+        priceId: selectedEvent.stripePriceId,
+        successUrl: formData.successUrl,
+        cancelUrl: formData.cancelUrl,
+        mode: formData.mode,
+        quantity: formData.quantity,
+        eventId: selectedEvent.id, // Ensure we're using the correct event ID from selectedEvent
+        organizationId: parseInt(formData.organizationId) || 64,
+        guests: [primaryGuest, ...formData.guests]
+      };
+      
+      console.log("Sending checkout data:", checkoutData);
+      const response = await fetch("http://localhost:5000/checkout/create-payment-checkout-session", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(checkoutData),
+      });
         
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Registration failed');
-        }
-        
-        alert('Registration successful!');
-        setShowCheckout(false);
-        // Reset form after successful registration
-        setFormData({
-          email: '',
-          guestFirstName: '',
-          guestLastName: '',
-          eventId: '',
-          organizationId: organizationId || '',
-          quantity: 1,
-          mode: 'payment',
-          guests: [],
-          successUrl: '',
-          cancelUrl: ''
-        });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
       }
-    } catch (err: any) {
-      console.error('Registration error:', err);
-      alert(`Error: ${err.message}`);
+    
+      const data = await response.json();
+        
+      if (data.sessionUrl) {
+        // Remove pre-registration code - as requested
+        // Directly redirect to Stripe checkout
+        window.location.href = data.sessionUrl;
+      } else {
+        throw new Error('No session URL returned');
+      }
+    } else {
+      // For free events, register directly
+      const response = await fetch('/api/events/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId: selectedEvent.id,
+          email: formData.email,
+          guestName: `${formData.guestFirstName} ${formData.guestLastName}`,
+          paymentStatus: 'registered' // Already registered for free events
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Registration failed');
+      }
+      
+      alert('Registration successful!');
+      setShowCheckout(false);
+      // Reset form after successful registration
+      setFormData({
+        email: '',
+        guestFirstName: '',
+        guestLastName: '',
+        eventId: '',
+        organizationId: organizationId || '',
+        quantity: 1,
+        mode: 'payment',
+        guests: [],
+        successUrl: '',
+        cancelUrl: ''
+      });
     }
-  };
+  } catch (err: any) {
+    console.error('Registration error:', err);
+    alert(`Error: ${err.message}`);
+  }
+};
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
