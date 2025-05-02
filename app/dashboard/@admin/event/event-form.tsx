@@ -17,7 +17,7 @@ import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { v4 as uuidv4 } from 'uuid'; // Make sure to install this package: npm install uuid
+import { v4 as uuidv4 } from 'uuid';
 
 // Data for dropdowns
 const regions = [
@@ -73,15 +73,10 @@ const eventFormSchema = z.object({
 
 type EventFormValues = z.infer<typeof eventFormSchema>;
 
-const EventForm = () => {
-  // State for the date popover
-  const [datePopoverOpen, setDatePopoverOpen] = useState(false);
+const EventForm = ({ onSuccess, onClose }:any) => {
+  // Form submission state
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Handle popover open state change
-  const handlePopoverOpenChange = (open: boolean) => {
-    setDatePopoverOpen(open);
-  };
-
   // Get session data
   const { data: session, status } = useSession();
   
@@ -99,7 +94,7 @@ const EventForm = () => {
       name: "",
       startDate: new Date(),
       isPaid: false,
-      price: 0,
+      price: null,
       duration: 1,
       eventType: "",
       theme: "",
@@ -113,7 +108,6 @@ const EventForm = () => {
       description: "",
       organizationId: orgId,
       createdBy: createdBy,
-      
     },
   });
 
@@ -131,9 +125,23 @@ const EventForm = () => {
   // Watch for region changes to update subRegion options
   const selectedRegion = form.watch("region");
   const selectedSubRegion = form.watch("subRegion");
+  const isPaid = form.watch("isPaid");
+
+  // Reset subRegion when region changes
+  useEffect(() => {
+    form.setValue("subRegion", "");
+    form.setValue("nation", "");
+  }, [selectedRegion, form]);
+
+  // Reset nation when subRegion changes
+  useEffect(() => {
+    form.setValue("nation", "");
+  }, [selectedSubRegion, form]);
 
   async function onSubmit(data: EventFormValues) {
     try {
+      setIsSubmitting(true);
+      
       // Format the data according to API validation requirements
       const eventData = {
         ...data,
@@ -150,11 +158,23 @@ const EventForm = () => {
       const response = await createEvent(eventData);
       console.log("Event created successfully:", response);
       
-      // You might want to reset the form or show a success message
-      // form.reset();
+      // Call success callback if provided
+      if (onSuccess) {
+        onSuccess(response);
+      }
+      
+      // Close the modal if onClose is provided
+      if (onClose) {
+        onClose();
+      }
+      
+      // Reset the form
+      form.reset();
     } catch (error) {
       console.error("Failed to create event:", error);
       // Handle error - show error message to user
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -194,65 +214,43 @@ const EventForm = () => {
                     <FormItem className="flex flex-col">
                       <FormLabel>Start Date</FormLabel>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Popover 
-                          open={datePopoverOpen}
-                          onOpenChange={handlePopoverOpenChange}
-                        >
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDatePopoverOpen(!datePopoverOpen);
-                                }}
-                              >
-                                <CalendarDays className="mr-2 h-4 w-4" />
-                                {field.value ? format(field.value, "PPP") : "Select date"}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 z-50" align="start" onClick={(e) => e.stopPropagation()}>
-                            <CalendarComponent
-                              mode="single"
-                              selected={field.value}
-                              onSelect={(date) => {
-                                if (date) {
-                                  // Create a new date object with the current time
-                                  const selectedDate = new Date(date);
-                                  const currentTime = field.value || new Date();
-                                  selectedDate.setHours(currentTime.getHours());
-                                  selectedDate.setMinutes(currentTime.getMinutes());
-                                  selectedDate.setSeconds(0);
-                                  field.onChange(selectedDate);
-                                  // Close the popover after selection
-                                  setTimeout(() => setDatePopoverOpen(false), 100);
-                                }
-                              }}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
+                        {/* Date Input */}
+                        <div className="flex flex-col space-y-2">
+                          <Input
+                            type="date"
+                            value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                const dateValue = new Date(e.target.value);
+                                // Preserve the current time
+                                const currentTime = field.value || new Date();
+                                dateValue.setHours(currentTime.getHours());
+                                dateValue.setMinutes(currentTime.getMinutes());
+                                field.onChange(dateValue);
+                              }
+                            }}
+                            className="w-full"
+                          />
+                        </div>
                         
                         {/* Time input */}
                         <div>
                           <Input
                             type="time"
-                            value={field.value ? `${field.value.getHours().toString().padStart(2, '0')}:${field.value.getMinutes().toString().padStart(2, '0')}` : "00:00"}
+                            value={field.value ? 
+                              `${field.value.getHours().toString().padStart(2, '0')}:${field.value.getMinutes().toString().padStart(2, '0')}` 
+                              : "00:00"
+                            }
                             onChange={(e) => {
-                              e.stopPropagation(); // Prevent event bubbling
-                              const [hours, minutes] = e.target.value.split(':').map(Number);
-                              const newDate = new Date(field.value);
-                              newDate.setHours(hours);
-                              newDate.setMinutes(minutes);
-                              field.onChange(newDate);
+                              if (e.target.value) {
+                                const [hours, minutes] = e.target.value.split(':').map(Number);
+                                const newDate = new Date(field.value || new Date());
+                                newDate.setHours(hours);
+                                newDate.setMinutes(minutes);
+                                field.onChange(newDate);
+                              }
                             }}
-                            onClick={(e) => e.stopPropagation()} // Prevent event bubbling
+                            className="w-full"
                           />
                         </div>
                       </div>
@@ -267,7 +265,10 @@ const EventForm = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        <Checkbox 
+                          checked={field.value} 
+                          onCheckedChange={field.onChange} 
+                        />
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel>Is Paid Event</FormLabel>
@@ -276,7 +277,8 @@ const EventForm = () => {
                     </FormItem>
                   )}
                 />
-                {form.watch("isPaid") && (
+                
+                {isPaid && (
                   <FormField
                     control={form.control}
                     name="price"
@@ -288,6 +290,7 @@ const EventForm = () => {
                             type="number" 
                             min="0" 
                             step="0.01" 
+                            placeholder="0.00"
                             value={field.value === null ? "" : field.value} 
                             onChange={(e) => {
                               const value = e.target.value === "" ? null : parseFloat(e.target.value);
@@ -319,8 +322,12 @@ const EventForm = () => {
                         <Input
                           type="number"
                           min="1"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.valueAsNumber || 1)}
+                          placeholder="1"
+                          value={field.value}
+                          onChange={(e) => {
+                            const value = e.target.value === "" ? 1 : parseInt(e.target.value, 10);
+                            field.onChange(value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -407,7 +414,12 @@ const EventForm = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Region</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                        }} 
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a region" />
@@ -432,14 +444,18 @@ const EventForm = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Sub-Region</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""} disabled={!selectedRegion}>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value || ""} 
+                        disabled={!selectedRegion}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a sub-region" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {selectedRegion && subRegions[selectedRegion as keyof typeof subRegions]?.map((subRegion) => (
+                          {selectedRegion && subRegions[selectedRegion]?.map((subRegion) => (
                             <SelectItem key={subRegion} value={subRegion}>
                               {subRegion}
                             </SelectItem>
@@ -457,14 +473,18 @@ const EventForm = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Nation</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedSubRegion}>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value || ""} 
+                        disabled={!selectedSubRegion}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a country" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {selectedSubRegion && countries[selectedSubRegion as keyof typeof countries]?.map((country) => (
+                          {selectedSubRegion && countries[selectedSubRegion]?.map((country) => (
                             <SelectItem key={country} value={country}>
                               {country}
                             </SelectItem>
@@ -513,7 +533,13 @@ const EventForm = () => {
         </Tabs>
         
         <DialogFooter>
-          <Button type="submit" className="w-full md:w-auto">Create Event</Button>
+          <Button 
+            type="submit" 
+            className="w-full md:w-auto" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Creating..." : "Create Event"}
+          </Button>
         </DialogFooter>
       </form>
     </Form>

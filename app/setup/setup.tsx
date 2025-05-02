@@ -1,4 +1,3 @@
-// Organization Setup Component with improved session handling
 "use client"
 import { useState, useRef, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -64,7 +63,7 @@ const countries = [
 
 const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
   // Get the session
-  const { data: session, status } = useSession()
+  const { data: session, status, update: updateSession } = useSession()
   
   const [open, setOpen] = useState(true)
   const [currentStep, setCurrentStep] = useState(1)
@@ -73,6 +72,7 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
   const [stripeOnboardingUrl, setStripeOnboardingUrl] = useState<string | null>(null)
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null)
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+  const [stripeTabOpened, setStripeTabOpened] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [formData, setFormData] = useState<Partial<OrganizationType>>({
     logoPreview: '',
@@ -84,17 +84,36 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const router = useRouter()
 
-  // Effect to open Stripe onboarding URL in a new tab when available
+  // Modified effect to handle Stripe onboarding URL
   useEffect(() => {
-    if (stripeOnboardingUrl) {
-      // A small delay to ensure the success dialog is visible before opening a new tab
+    if (stripeOnboardingUrl && showSuccessDialog && !stripeTabOpened) {
+      // We'll use this variable to track if we've attempted to open the tab
+      const openStripeTab = () => {
+        try {
+          // Attempt to open the tab
+          const newWindow = window.open(stripeOnboardingUrl, '_blank');
+          
+          // Check if the window was blocked
+          if (newWindow === null || typeof newWindow === 'undefined') {
+            console.warn("Stripe window was blocked by the browser's popup blocker");
+            // We don't set stripeTabOpened to true here, so the manual button remains prominent
+          } else {
+            // Successfully opened the tab
+            setStripeTabOpened(true);
+          }
+        } catch (error) {
+          console.error("Error opening Stripe tab:", error);
+        }
+      };
+      
+      // Small delay to ensure the success dialog is visible first
       const timer = setTimeout(() => {
-        window.open(stripeOnboardingUrl, '_blank');
-      }, 500);
+        openStripeTab();
+      }, 1000);
       
       return () => clearTimeout(timer);
     }
-  }, [stripeOnboardingUrl]);
+  }, [stripeOnboardingUrl, showSuccessDialog, stripeTabOpened]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -102,6 +121,17 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
       router.push('/login');
     }
   }, [status, router]);
+
+  // Update session after successful onboarding to refresh isOnboarded status
+  const updateUserSession = async () => {
+    try {
+      // This will trigger a session refresh
+      await updateSession();
+      console.log("Session updated after onboarding");
+    } catch (error) {
+      console.error("Failed to update session:", error);
+    }
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -131,9 +161,39 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
       [name]: value,
       logoUrl: logoUrl
     }))
-    
   }
-
+  async function updateUser() {
+    const userId = localStorage.getItem("userId");
+    if (!userId) throw new Error("User ID not found");
+  
+    try {
+      const userResponse = await fetch(`/api/user/update-profile`, {
+        method: "PUT",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isOnboarded: true,
+        }),
+      });
+      
+      // Check if response is OK before parsing JSON
+      if (!userResponse.ok) {
+        const errorData = await userResponse.json();
+        console.log("userErrorResponse", errorData);
+        throw new Error("Failed to update user onboarded status");
+      }
+      
+      // Now parse the JSON response
+      const userData = await userResponse.json();
+      console.log("userResponse", userData);
+      localStorage.setItem("isOnboarded", "true");
+      return userData;
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
+  }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -169,22 +229,38 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
       // Submit the organization data and get back the response
       const response = await updateOnBoarding(dataToSubmit);
       console.log("Organization and Stripe setup response:", response);
+    if(response.data) {
+     const userRespsonse2=await updateUser()
+     console.log("users",userRespsonse2)
+    }
       
       // Check if we have a successful response with Stripe data
       if (response && response.data) {
         // Store the Stripe account ID and onboarding URL
-        setStripeAccountId(response.data.stripeAccountId || null);
-        setStripeOnboardingUrl(response.data.onboardingUrl || null);
+        const stripeAccount = response.data.stripeAccountId || null;
+        const stripeUrl = response.data.onboardingUrl || null;
+        
+        setStripeAccountId(stripeAccount);
+        setStripeOnboardingUrl(stripeUrl);
+        
+        console.log("Stripe URL received:", stripeUrl);
         
         // Store Stripe account ID in localStorage if available
-        if (response.data.stripeAccountId && typeof window !== 'undefined') {
+        if (stripeAccount && typeof window !== 'undefined') {
           const orgData = JSON.parse(localStorage.getItem("currentOrganization") || "{}");
-          orgData.stripeAccountId = response.data.stripeAccountId;
+          orgData.stripeAccountId = stripeAccount;
           localStorage.setItem("currentOrganization", JSON.stringify(orgData));
         }
         
         // Show success dialog regardless of whether we have a Stripe URL
         setShowSuccessDialog(true);
+        
+        // Toast notification for better feedback
+        toast({
+          title: "Organization Created",
+          description: "Your organization was created successfully. Please complete the Stripe onboarding process.",
+          variant: "default"
+        });
       } else {
         // Successful organization creation but without Stripe data
         toast({
@@ -192,6 +268,8 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
           description: "Your organization was created successfully, but Stripe account setup couldn't be initialized.",
           variant: "default"
         });
+        // Handle redirect here
+        router.refresh(); // Refresh the page to get updated session
         router.push("/dashboard");
       }
     } catch (error) {
@@ -216,6 +294,7 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
     if (showSuccessDialog) {
       setOpen(isOpen);
       if (!isOpen) {
+        router.refresh(); // Refresh the page to get updated session
         router.push('/dashboard');
       }
       return;
@@ -223,13 +302,36 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
     
     // Otherwise, proceed with normal close behavior
     setOpen(isOpen);
-    if (!isOpen) {
+    if (!isOpen && !showSuccessDialog) {
       router.push('/login');
     }
   }
 
+  // Explicitly handle opening the Stripe tab
+  const openStripeOnboarding = () => {
+    if (stripeOnboardingUrl) {
+      try {
+        window.open(stripeOnboardingUrl, '_blank', 'noopener,noreferrer');
+        setStripeTabOpened(true);
+        toast({
+          title: "Stripe Setup Opened",
+          description: "Please complete the Stripe onboarding in the new tab.",
+          variant: "default"
+        });
+      } catch (error) {
+        console.error("Error manually opening Stripe tab:", error);
+        toast({
+          title: "Error",
+          description: "Failed to open Stripe setup. Please try again or check your browser settings.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
   const handleContinueToDashboard = () => {
     setOpen(false);
+    router.refresh(); // Refresh the page to get updated session
     router.push('/dashboard');
   };
 
@@ -252,7 +354,6 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
   // Rest of the component remains the same...
   const renderStep1 = () => (
     <div className="space-y-6">
-      {/* Step 1 content - same as original */}
       <div className="text-center pb-6">
         <h2 className="text-xl font-semibold text-gray-900">Basic Information</h2>
         <p className="text-gray-500">Let's start with your organization's basic details</p>
@@ -343,7 +444,6 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
 
   const renderStep2 = () => (
     <div className="space-y-6">
-      {/* Step 2 content - same as original */}
       <div className="text-center pb-6">
         <h2 className="text-xl font-semibold text-gray-900">Location Details</h2>
         <p className="text-gray-500">Where is your organization located?</p>
@@ -456,7 +556,6 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
 
   const renderSuccessStep = () => (
     <div className="space-y-6 text-center">
-      {/* Success step content - same as original */}
       <div className="pb-6">
         <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
           <svg className="h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -465,7 +564,10 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
         </div>
         <h2 className="text-xl font-semibold text-gray-900 mt-4">Organization Created Successfully!</h2>
         <p className="text-gray-500 mt-2">
-          A new tab has been opened to complete your Stripe account setup. Please complete the Stripe onboarding process to enable payments for your organization.
+          {stripeTabOpened ? 
+            "A new tab has been opened to complete your Stripe account setup." : 
+            "Please click the button below to continue with your Stripe account setup."}
+          {" "}Complete the Stripe onboarding process to enable payments for your organization.
         </p>
       </div>
 
@@ -475,7 +577,9 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
           <span className="font-medium">Important:</span>
         </div>
         <p className="mt-1 ml-7">
-          If the Stripe setup tab didn't open automatically, please click the button below to open it.
+          {stripeTabOpened ? 
+            "If you accidentally closed the Stripe setup tab, you can reopen it using the button below." : 
+            "Your browser may have blocked the automatic popup. Please use the button below to open the Stripe setup."}
         </p>
       </div>
 
@@ -483,10 +587,10 @@ const OrganizationSetup = ({ persistent = false }: OrganizationSetupProps) => {
         {stripeOnboardingUrl && (
           <Button
             type="button"
-            className="w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center gap-2"
-            onClick={() => window.open(stripeOnboardingUrl, '_blank')}
+            className={`w-full ${!stripeTabOpened ? 'bg-blue-600 text-white hover:bg-blue-700 animate-pulse' : 'bg-blue-500 text-white hover:bg-blue-600'} flex items-center justify-center gap-2`}
+            onClick={openStripeOnboarding}
           >
-            Open Stripe Setup <ExternalLink className="h-4 w-4" />
+            {stripeTabOpened ? "Reopen" : "Open"} Stripe Setup <ExternalLink className="h-4 w-4" />
           </Button>
         )}
         

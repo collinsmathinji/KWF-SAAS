@@ -1,15 +1,31 @@
 "use client"
 
 import React from "react"
-
-import { useState } from "react"
-import { Bell, CreditCard, Database, Layers, LayoutDashboard, LogOut, Menu, PieChart, Users,Calendar } from "lucide-react"
+import { useState, useEffect } from "react"
+import { 
+  Bell, 
+  CreditCard, 
+  Database, 
+  Layers, 
+  LayoutDashboard, 
+  LogOut, 
+  Menu, 
+  PieChart, 
+  Users, 
+  Calendar,
+  FolderOpen 
+} from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Overview from "./overview"
 import EventsDisplay from "./eventsDisplay"
+import GroupsExplorer from "./groupExplorer"
+import { cn } from "@/lib/utils"
+
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("overview")
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(280)
+  const [isResizing, setIsResizing] = useState(false)
 
   const menuItems = [
     {
@@ -18,52 +34,63 @@ export default function DashboardPage() {
       section: "overview",
       description: "Platform overview and key metrics",
     },
+   
     {
-      icon: <Users />,
-      label: "User Management",
-      section: "users",
-      description: "Manage users and access",
+      icon: <FolderOpen />,
+      label: "Groups",
+      section: "groups",
+      description: "Explore and manage groups",
     },
+ 
     {
-      icon: <CreditCard />,
-      label: "Subscriptions",
-      section: "subscriptions",
-      description: "Manage plans and billing",
-    },{
       icon: <Calendar />,
       label: "Events",
       section: "event",
       description: "Manage organization events",
     },
-    {
-      icon: <PieChart />,
-      label: "Analytics",
-      section: "analytics",
-      description: "Detailed platform insights",
-    },
-    {
-      icon: <Layers />,
-      label: "Organization",
-      section: "organization",
-      description: "Manage organization settings",
-    },
-    {
-      icon: <Database />,
-      label: "Data Management",
-      section: "data",
-      description: "Import, export, and manage data",
-    },
+ 
   ]
+
+  // For Notion-like resize functionality
+  const startResizing = (e:any) => {
+    setIsResizing(true)
+  }
+
+  const stopResizing = () => {
+    setIsResizing(false)
+  }
+
+  const resize = (e:any) => {
+    if (isResizing) {
+      const newWidth = e.clientX
+      // Set min and max width constraints
+      if (newWidth > 180 && newWidth < 480) {
+        setSidebarWidth(newWidth)
+      }
+    }
+  }
+
+  useEffect(() => {
+    window.addEventListener('mousemove', resize)
+    window.addEventListener('mouseup', stopResizing)
+    
+    return () => {
+      window.removeEventListener('mousemove', resize)
+      window.removeEventListener('mouseup', stopResizing)
+    }
+  }, [isResizing])
 
   const renderContent = () => {
     switch (activeSection) {
       case "overview":
         return <Overview />
       case "event":
-        return <EventsDisplay/>
+        return <EventsDisplay />
+      case "groups":
+        return <GroupsExplorer />
       default:
         return (
-          <div className="text-center text-muted-foreground">
+          <div className="text-center text-muted-foreground p-12">
             {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)} content goes here
           </div>
         )
@@ -71,33 +98,42 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-blue-50">
+    <div 
+      className="flex min-h-screen bg-blue-50"
+      onMouseUp={stopResizing}
+      onMouseMove={resize}
+    >
       {/* Sidebar */}
       <div
-        className={`fixed inset-0 z-30 transition-transform transform lg:static lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:w-80 bg-white border-r shadow-md p-4 flex flex-col`}
+        style={{ width: sidebarOpen || window.innerWidth >= 1024 ? `${sidebarWidth}px` : '0px' }}
+        className={`fixed inset-0 z-30 transition-all duration-300 ease-in-out transform lg:static lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } bg-white border-r shadow-md flex flex-col`}
       >
-        <div className="text-2xl font-bold mb-8 text-center text-blue-600">KWF-SAAS</div>
+        <div className="text-2xl font-bold p-4 text-center text-blue-600 border-b">KWF-SAAS</div>
 
-        <nav className="flex-grow">
+        <nav className="flex-grow overflow-y-auto p-2">
           {menuItems.map((item) => (
             <div
               key={item.section}
               onClick={() => {
                 setActiveSection(item.section)
-                setSidebarOpen(false)
+                if (window.innerWidth < 1024) setSidebarOpen(false)
               }}
-              className={`group cursor-pointer p-3 rounded-lg ${
+              className={cn(
+                "group cursor-pointer p-3 mb-1 rounded-lg transition-all",
                 activeSection === item.section
                   ? "bg-blue-50 text-blue-600 border-blue-200"
-                  : "hover:bg-blue-50 text-gray-600 hover:text-blue-600"
-              }`}
+                  : "hover:bg-gray-100 text-gray-600 hover:text-blue-600"
+              )}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   {React.cloneElement(item.icon, {
-                    className: `mr-3 w-5 h-5 ${
+                    className: cn(
+                      "mr-3 w-5 h-5",
                       activeSection === item.section ? "text-blue-600" : "text-gray-400 group-hover:text-blue-600"
-                    }`,
+                    ),
                   })}
                   <span className="font-medium">{item.label}</span>
                 </div>
@@ -108,37 +144,51 @@ export default function DashboardPage() {
           ))}
         </nav>
 
-        <div className="mt-4 border-t pt-4">
+        <div className="p-4 border-t pt-4">
           <button className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50">
             <LogOut className="mr-3" /> Logout
           </button>
         </div>
+        
+        {/* Resizer handle - Notion style */}
+        <div 
+          className="absolute top-0 right-0 w-1 h-full cursor-ew-resize bg-transparent hover:bg-blue-200 transition-colors"
+          onMouseDown={startResizing}
+        />
       </div>
 
       {/* Main Content */}
-      <div className="flex-grow p-8 bg-blue-50">
-        <header className="flex justify-between items-center mb-8">
+      <div className="flex-grow flex flex-col min-w-0">
+        <header className="bg-white shadow-sm p-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
             <button className="lg:hidden text-blue-600" onClick={() => setSidebarOpen(!sidebarOpen)}>
               <Menu className="w-6 h-6" />
             </button>
-            <h1 className="text-3xl font-bold text-blue-800 capitalize">{activeSection.replace(/([A-Z])/g, " $1")}</h1>
+            <h1 className="text-xl font-bold text-blue-800 capitalize">
+              {activeSection.replace(/([A-Z])/g, " $1")}
+            </h1>
           </div>
           <div className="flex items-center">
-            <Bell className="mr-4 text-blue-600" />
+            <button className="relative mr-4 text-blue-600 hover:bg-blue-50 p-2 rounded-full">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+            </button>
             <div className="flex items-center">
-              <Avatar className="w-10 h-10 border-2 border-blue-200">
+              <Avatar className="w-8 h-8 border-2 border-blue-200">
                 <AvatarImage src="/placeholder.svg" />
                 <AvatarFallback>AD</AvatarFallback>
               </Avatar>
-              <span className="ml-2 text-blue-800">Admin User</span>
+              <span className="ml-2 text-blue-800 hidden md:inline">Admin User</span>
             </div>
           </div>
         </header>
 
-        <main className="bg-white rounded-lg shadow-sm p-6">{renderContent()}</main>
+        <main className="flex-grow p-4 bg-blue-50 overflow-auto">
+          <div className="bg-white rounded-lg shadow-sm h-full">
+            {renderContent()}
+          </div>
+        </main>
       </div>
     </div>
   )
 }
-

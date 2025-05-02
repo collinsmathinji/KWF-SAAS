@@ -18,14 +18,19 @@ export default function Page() {
             <span className="text-xl font-bold 2xl:text-2xl">KWF_SAAS</span>
           </div>
           <nav className="hidden md:flex gap-6 2xl:gap-12">
-            {["Features", "Pricing", "Testimonials", "Events", "Contact"].map((item) => (
-              <Link
-                key={item}
-                className="text-sm font-medium hover:text-blue-600 transition-colors 2xl:text-lg"
-                href={item === "Events" ? "/events" : `#${item.toLowerCase()}`}
-              >
-                {item}
-              </Link>
+            {["Features", "Pricing", "Testimonials", "Events","Donations", "Contact"].map((item) => (
+               <Link
+               href={
+                 item === "Events" 
+                   ? "/events" 
+                   : item === "Donations" 
+                     ? "/donations" 
+                     : "#"
+               }
+               className="text-sm 2xl:text-base text-slate-600 hover:text-blue-600 transition-colors"
+             >
+               {item}
+             </Link>
             ))}
           </nav>
           <div className="flex items-center gap-4 2xl:gap-6">
@@ -188,7 +193,7 @@ export default function Page() {
             {[
               {
                 title: "Product",
-                links: ["Features", "Pricing", "Events", "Security"],
+                links: ["Features", "Pricing", "Events","Donations", "Security"],
               },
               {
                 title: "Company",
@@ -209,7 +214,13 @@ export default function Page() {
                   {section.links.map((link, i) => (
                     <li key={i}>
                       <Link
-                        href={link === "Events" ? "/events" : "#"}
+                        href={
+                          link === "Events" 
+                            ? "/events" 
+                            : link === "Donations" 
+                              ? "/donations" 
+                              : "#"
+                        }
                         className="text-sm 2xl:text-base text-slate-600 hover:text-blue-600 transition-colors"
                       >
                         {link}

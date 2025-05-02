@@ -262,7 +262,7 @@ export function Pricing() {
   
       console.log("Sending request with body:", requestBody);
   
-      const response = await fetch("http://localhost:5000/checkout/create-checkout-session", {
+      const response = await fetch("http://localhost:5000/checkout/create-subscription-checkout-session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

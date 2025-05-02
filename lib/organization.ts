@@ -1,5 +1,4 @@
 "use client"
-
 import { json } from "stream/consumers"
 
 export interface OrganizationType {
@@ -42,16 +41,16 @@ export interface UpdateOrganizationData {
 export async function uploadOrganizationLogo(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("File", file);
-
+  
   const response = await fetch("http://localhost:5000/admin/uploads/single", {
     method: "POST",
     body: formData,
   });
-
+  
   if (!response.ok) {
     throw new Error("Failed to upload organization logo");
   }
-
+  
   const data = await response.json();
   console.log("Logo uploaded:", data);
   return data.fileUrl;
@@ -69,18 +68,18 @@ export async function createOrganization(data: CreateOrganizationData): Promise<
         }
       }
     })
-
+    
     const response = await fetch("/api/organizations", {
       method: "POST",
       body: formData,
     })
-
+    
     const responseData = await response.json()
     
     if (!response.ok) {
       throw new Error(responseData.message || "Failed to create organization")
     }
-
+    
     console.log("Organization created:", responseData)
     return responseData
   } catch (error) {
@@ -98,13 +97,13 @@ export async function getOrganizations(): Promise<OrganizationType[]> {
         "Content-Type": "application/json",
       },
     })
-
+    
     const data = await response.json()
     
     if (!response.ok) {
       throw new Error(data.message || "Failed to fetch organizations")
     }
-
+    
     return data
   } catch (error) {
     console.error("Error fetching organizations:", error)
@@ -114,7 +113,6 @@ export async function getOrganizations(): Promise<OrganizationType[]> {
 
 // Get organization by ID
 export async function getOrganizationById(id: string): Promise<OrganizationType> {
- 
   console.log("Fetching organization with ID:", id)
   try {
     const response = await fetch(`/api/organization/${id}`, {
@@ -123,7 +121,7 @@ export async function getOrganizationById(id: string): Promise<OrganizationType>
         "Content-Type": "application/json",
       },
     })
-  
+    
     const data = await response.json()
     
     if (!response.ok) {
@@ -131,7 +129,7 @@ export async function getOrganizationById(id: string): Promise<OrganizationType>
     }
     localStorage.setItem('currentOrganization', JSON.stringify(data.data));
     localStorage.setItem('organizationId', id);
-
+    
     return data
   } catch (error) {
     console.error(`Error fetching organization with ID ${id}:`, error)
@@ -144,7 +142,7 @@ export function getStoredOrganization(): OrganizationType | null {
   const stored = localStorage.getItem('currentOrganization');
   return stored ? JSON.parse(stored) : null;
 }
-// Separate function for initiating Stripe onboarding
+
 const initiateStripeOnboarding = async () => {
   try {
     const token = localStorage.getItem('authToken');
@@ -152,9 +150,7 @@ const initiateStripeOnboarding = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
       }
-      // No request body needed - the server identifies the organization from the auth token
     });
     
     const data = await response.json();
@@ -169,15 +165,17 @@ const initiateStripeOnboarding = async () => {
     throw error;
   }
 };
-export async function updateOnBoarding(dataToSubmit: OrganizationType): Promise<any> {
+
+export async function updateOnBoarding(dataToSubmit: OrganizationType){
   const organizationId = localStorage.getItem("organizationId");
-  const userId = localStorage.getItem("userId");
+
   
   if (!organizationId) throw new Error("Organization ID not found");
+
   
   try {
-    // Step 1: Update organization data
-    const response = await fetch(`/api/organization/update/${organizationId}`, {
+    // First, update the organization
+    const orgResponse = await fetch(`/api/organization/update/${organizationId}`, {
       method: "PUT",
       headers: {
         'Content-Type': 'application/json',
@@ -185,41 +183,26 @@ export async function updateOnBoarding(dataToSubmit: OrganizationType): Promise<
       body: JSON.stringify(dataToSubmit),
     });
     
-    if (!response.ok) {
+    if (!orgResponse.ok) {
       throw new Error("Failed to update organization");
     }
     
-    // Step 2: Update user onboarding status if organization update was successful
-    if (response.status === 200 && userId) {
-      const editedData = await fetch(`/api/user/update/${userId}`, {
-        method: "PUT",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          isOnboarded: true,
-        }),
-      });
-      
-      if (!editedData.ok) {
-        throw new Error("Failed to update user");
-      }
-    }
-    
-    // Step 3: Initiate Stripe onboarding
+    // Then, update the user's onboarded status
+
+   
     const stripeData = await initiateStripeOnboarding();
+    console.log("Stripe Data:", stripeData);
     
-    // Store organization data in localStorage
+    // Update local storage
     localStorage.setItem("currentOrganization", JSON.stringify(dataToSubmit));
-    localStorage.setItem("isOnBoarded", "true");
+   
     
-    // Return both the organization response and the Stripe data
-    // This format matches what your frontend expects
+    // Return combined data
     return {
-      organization: await response.json(),
       data: {
-        stripeAccountId: stripeData.stripeAccountId,
-        onboardingUrl: stripeData.onboardingUrl
+        ...dataToSubmit,
+        stripeAccountId: stripeData?.stripeAccountId,
+        onboardingUrl: stripeData?.onboardingUrl
       }
     };
   } catch (error) {
@@ -228,11 +211,9 @@ export async function updateOnBoarding(dataToSubmit: OrganizationType): Promise<
   }
 }
 
-
 export async function updateOrg(dataToSubmit: OrganizationType): Promise<OrganizationType> {
   const organizationId = localStorage.getItem("organizationId");
-  
-  
+       
   const response = await fetch(`/api/organization/update/${organizationId}`, {
     method: "PUT",
     headers: {
@@ -248,7 +229,6 @@ export async function updateOrg(dataToSubmit: OrganizationType): Promise<Organiz
   return response.json();
 }
   
-
 // Delete an organization
 export async function deleteOrganization(id: string): Promise<{ success: boolean }> {
   try {
@@ -258,13 +238,13 @@ export async function deleteOrganization(id: string): Promise<{ success: boolean
         "Content-Type": "application/json",
       },
     })
-
+    
     const data = await response.json()
     
     if (!response.ok) {
       throw new Error(data.message || "Failed to delete organization")
     }
-
+    
     console.log("Organization deleted:", id)
     return { success: true }
   } catch (error) {

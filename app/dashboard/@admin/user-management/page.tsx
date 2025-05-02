@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Users, UserPlus, Download, Plus, Settings2, ChevronDown, Search, Filter, MoreHorizontal } from "lucide-react"
+import { Users, UserPlus, Download, Plus, ChevronDown, Search, Filter, MoreHorizontal } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import AddMemberTypeForm from "../add-memberType"
-import GroupForm from "../group-form"; // Import GroupForm
+import GroupForm from "../group-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -26,20 +26,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import AddMemberForm from "../invite-member"
 import { deleteMemberById, getMembers } from "@/lib/members"
 import { fetchMemberType } from "@/lib/members"
-import { getGroups, getGroupTypes } from "@/lib/group"
-interface memberTypes extends Array<{
-  id: number
+import { getGroups } from "@/lib/group"
+
+interface MemberType {
+  id: number | string
   name: string
   members?: number
-}> {}
+}
 
+interface Member {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  membershipTypeId: number | string
+  isActive: boolean
+  createdAt: string
+}
 
-
-const userRoles = [
-  { id: 1, name: "Admin", users: 5 },
-  { id: 2, name: "Moderator", users: 12 },
-  { id: 3, name: "Member", users: 245 },
-]
+interface Group {
+  id: string
+  name: string
+  members?: number
+  status?: string
+  created?: string
+  logo?: string
+  description?: string
+  organizationId?: string
+  groupTypeId: string
+  groupType?: string
+  createdAt?: string
+  updatedAt?: string
+}
 
 // Define columns for both views
 const columns = {
@@ -51,40 +69,56 @@ const columns = {
     joinDate: "Join Date"
   },
   groups: {
+    "Group-Logo": "Group Logo",
     name: "Group Name",
     members: "Members",
-    status: "Status",
+    description: "Description",
+    groupType: "Group Type",
     created: "Created Date"
   }
 }
 
+// Map group types to user-friendly display names
+const groupTypeDisplayNames = {
+  'private': 'Private',
+  'public_open': 'Public Open',
+  'public_closed': 'Public Closed'
+};
+
 export default function UserManagementPage() {
   const router = useRouter()
-  const [view, setView] = useState("members")
+  const [view, setView] = useState<"members" | "groups">("members")
   const [selectedColumns, setSelectedColumns] = useState<string[]>(["name", "email", "type", "status", "joinDate"])
   const [searchQuery, setSearchQuery] = useState("")
   const [showAddMemberTypeDialog, setShowAddMemberTypeDialog] = useState(false)
   const [showAddMemberDialog, setShowAddMemberDialog] = useState(false)
-  const [groups, setGroups] = useState<any[]>([]); // State for Group Type
-  const[groupTypes, setGroupTypes]=useState<memberTypes>([]); // State for Group Types
-  const [showGroupDialog, setShowGroupDialog] = useState(false); // State for Group dialog
-  const [membershipTypes, setMembershipTypes] = useState<any[]>([])
-  const [members, setMembers] = useState<any[]>([])
+  const [showGroupDialog, setShowGroupDialog] = useState(false)
+  const [groups, setGroups] = useState<Group[]>([])
+  const [groupTypes, setGroupTypes] = useState<MemberType[]>([
+    { id: 'private', name: 'Private' },
+    { id: 'public_open', name: 'Public Open' },
+    { id: 'public_closed', name: 'Public Closed' }
+  ])
+  const [membershipTypes, setMembershipTypes] = useState<MemberType[]>([])
+  const [members, setMembers] = useState<Member[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  
   const deleteMember = async (memberId: string) => {
     try {
-     await deleteMemberById(memberId)
-        setMembers((prevMembers) => prevMembers.filter((member) => member.id !== memberId))
-        console.log("Member deleted successfully")
+      await deleteMemberById(memberId)
+      setMembers((prevMembers) => prevMembers.filter((member) => member.id !== memberId))
+      console.log("Member deleted successfully")
     } catch (error) {
       console.error("Error deleting member:", error)
     }
   }
+  
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true)
       try {
         // Fetch membership types
         const response = await fetchMemberType({} as any)
-        console.log('Member types:', response)
         
         if (response && response.data && response.data.data) {
           setMembershipTypes(response.data.data)
@@ -95,39 +129,48 @@ export default function UserManagementPage() {
         
         // Fetch members
         const membersResponse = await getMembers()
-        console.log('Members:', membersResponse)
         
         if (membersResponse && membersResponse.data && membersResponse.data.data) {
           setMembers(membersResponse.data.data)
-          console.log('members3', membersResponse.data.data)
         } else {
           console.error('Unexpected response structure:', membersResponse)
           setMembers([])
         }
-        const groupsResponse = await getGroups()
-        if(groupsResponse && groupsResponse.data && groupsResponse.data.data) {
-          setGroups(groupsResponse.data.data)
-        }
-        console.log('Groups:', groupsResponse)
-        // Fetch group types
-        const groupTypes=await getGroupTypes()
-        if(groupTypes && groupTypes.data && groupTypes.data.data) {
-          setGroupTypes(groupTypes.data.data)
-        }
-        console.log('Group Types:', groupTypes)
-        if (groupTypes && groupTypes.data && groupTypes.data.data) {
-          setGroupTypes(groupTypes.data.data)
-        }
-        else {
-          console.error('Unexpected response structure:', groupTypes)
-          setGroupTypes([])
+        
+        // Fetch groups
+        try {
+          const groupsResponse = await getGroups()
+          if (groupsResponse && groupsResponse.data && groupsResponse.data.data) {
+            const formattedGroups = groupsResponse.data.data.map((group: any) => ({
+              ...group,
+              // Ensure all required fields are present or provide defaults
+              members: group.members || 0,
+              created: group.createdAt || new Date().toISOString(),
+              status: 'Active', // Default status if not provided
+              // Ensure groupType is available for filtering and display
+              groupType: group.groupType || 'private'
+            }));
+     
+            console.log("Fetched groups:", formattedGroups);
+            setGroups(formattedGroups);
+          } else {
+            console.error('Unexpected groups response structure:', groupsResponse);
+            setGroups([]);
+          }
+        } catch (groupError) {
+          console.error('Error fetching group data:', groupError)
+          setGroups([])
         }
       } catch (error) {
         console.error('Error fetching data:', error)
         setMembershipTypes([])
         setMembers([])
+        setGroups([])
+      } finally {
+        setIsLoading(false)
       }
     }
+    
     fetchData()
   }, [])
     
@@ -136,13 +179,30 @@ export default function UserManagementPage() {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
-      (member.name && member.name.toLowerCase().includes(query)) ||
+      (member.firstName && member.firstName.toLowerCase().includes(query)) ||
+      (member.lastName && member.lastName.toLowerCase().includes(query)) ||
       (member.email && member.email.toLowerCase().includes(query))
     )
   })
- 
-  console.log("Membership Types main:", membershipTypes)
-  console.log("Members:", members)
+  
+  // Filter groups based on search query
+  const filteredGroups = groups.filter(group => {
+    if (!searchQuery) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      (group.name && group.name.toLowerCase().includes(query)) ||
+      (group.description && group.description.toLowerCase().includes(query))
+    )
+  })
+  
+  // Count groups by type
+  const groupCounts = groupTypes.map(type => {
+    const count = groups.filter(g => g.groupType === type.id).length;
+    return {
+      ...type,
+      members: count
+    };
+  });
   
   const toggleColumn = (columnId: string) => {
     setSelectedColumns((current) =>
@@ -152,10 +212,33 @@ export default function UserManagementPage() {
 
   // Helper function to get membership type name by ID
   const getMembershipTypeName = (typeId: number | string) => {
-    console.log("Membership Type ID:", typeId)
     const type = membershipTypes.find(t => String(t.id) === String(typeId))
     return type ? type.name : 'Unknown'
   }
+  
+  // Helper function to get group type display name
+  const getGroupTypeDisplayName = (typeId: string) => {
+    return groupTypeDisplayNames[typeId as keyof typeof groupTypeDisplayNames] || typeId;
+  }
+
+  // Format date for display
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "N/A";
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
+
+  // Update selected columns when view changes
+  useEffect(() => {
+    if (view === "members") {
+      setSelectedColumns(["name", "email", "type", "status", "joinDate"])
+    } else {
+      setSelectedColumns(["Group-Logo", "name", "members", "description", "groupType", "created"])
+    }
+  }, [view])
 
   return (
     <div className="space-y-6">
@@ -175,7 +258,7 @@ export default function UserManagementPage() {
                 <span>Membership Types</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent className="w-56">
-                {membershipTypes && membershipTypes.map((type) => (
+                {membershipTypes.map((type) => (
                   <DropdownMenuItem
                     key={type.id}
                     onClick={() => router.push(`/dashboard/user-management/membership-types/${type.id}`)}
@@ -185,11 +268,9 @@ export default function UserManagementPage() {
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                <Button onClick={() => setShowAddMemberTypeDialog(true)} className="w-full">
+                <DropdownMenuItem onClick={() => setShowAddMemberTypeDialog(true)}>
                   <Plus className="mr-2 h-4 w-4" />
                   <span>Add New Type</span>
-                </Button>
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
@@ -198,17 +279,15 @@ export default function UserManagementPage() {
                 <span>Group Types</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent className="w-56">
-                {groupTypes&& groupTypes.map((type) => (
+                {groupTypes.map((type) => (
                   <DropdownMenuItem
                     key={type.id}
-                    onClick={() => router.push(`/dashboard/user-management/membership-types/${type.id}`)}
+                    onClick={() => router.push(`/dashboard/user-management/group-types/${type.id}`)}
                   >
                     <span>{type.name}</span>
-                    {type.members && <span className="ml-auto text-muted-foreground">{type.members}</span>}
+                    {type.members !== undefined && <span className="ml-auto text-muted-foreground">{type.members}</span>}
                   </DropdownMenuItem>
                 ))}
-                <DropdownMenuSeparator />
-               
               </DropdownMenuSubContent>
             </DropdownMenuSub>
             <DropdownMenuItem onClick={() => setView("members")}>
@@ -243,37 +322,46 @@ export default function UserManagementPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {view === "members" ? (
-          <>
-            {membershipTypes && membershipTypes.map((type) => (
+          membershipTypes.length > 0 ? (
+            membershipTypes.map((type) => (
               <Card key={type.id}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-blue-400 rounded-md">
-                  <CardTitle className="text-sm font-medium ">{type.name}</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                {type.members && (
-                  <CardContent>
-                    <div className="text-2xl font-bold">{type.members}</div>
-                    <p className="text-xs text-muted-foreground">Total members</p>
-                  </CardContent>
-                )}
-              </Card>
-            ))}
-          </>
-        ) : (
-          <>
-            {userRoles.map((role) => (
-              <Card key={role.id}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{role.name}</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-blue-50 rounded-t-md">
+                  <CardTitle className="text-sm font-medium">{type.name}</CardTitle>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{role.users}</div>
-                  <p className="text-xs text-muted-foreground">Total users</p>
+                  <div className="text-2xl font-bold">
+                    {type.members || members.filter(m => String(m.membershipTypeId) === String(type.id)).length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Total members</p>
                 </CardContent>
               </Card>
-            ))}
-          </>
+            ))
+          ) : (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">No membership types</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">Add membership types to see stats</p>
+              </CardContent>
+            </Card>
+          )
+        ) : (
+          groupCounts.map((type) => (
+            <Card key={type.id}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-blue-50 rounded-t-md">
+                <CardTitle className="text-sm font-medium">{type.name}</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {type.members}
+                </div>
+                <p className="text-xs text-muted-foreground">Total groups</p>
+              </CardContent>
+            </Card>
+          ))
         )}
       </div>
 
@@ -305,7 +393,7 @@ export default function UserManagementPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {Object.entries(columns[view as keyof typeof columns]).map(([key, label]) => (
+                {Object.entries(columns[view]).map(([key, label]) => (
                   <DropdownMenuCheckboxItem
                     key={key}
                     checked={selectedColumns.includes(key)}
@@ -322,7 +410,7 @@ export default function UserManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {Object.entries(columns[view as keyof typeof columns])
+                  {Object.entries(columns[view])
                     .filter(([key]) => selectedColumns.includes(key))
                     .map(([key, label]) => (
                       <TableHead key={key}>{label}</TableHead>
@@ -331,19 +419,30 @@ export default function UserManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {view === "members" ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={selectedColumns.length + 1} className="text-center py-8">
+                      <div className="flex justify-center">
+                        <svg className="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : view === "members" ? (
                   filteredMembers.length > 0 ? (
                     filteredMembers.map(member => (
                       <TableRow key={member.id}>
                         {selectedColumns.includes("name") && (
-                            <TableCell className="font-medium">{member.firstName} {member.lastName}</TableCell>
+                          <TableCell className="font-medium">{member.firstName} {member.lastName}</TableCell>
                         )}
                         
                         {selectedColumns.includes("email") && (
                           <TableCell>{member.email}</TableCell>
                         )}
                         {selectedColumns.includes("type") && (
-                          <TableCell>{getMembershipTypeName(member.membershipTypeId	)}</TableCell>
+                          <TableCell>{getMembershipTypeName(member.membershipTypeId)}</TableCell>
                         )}
                         {selectedColumns.includes("status") && (
                           <TableCell>
@@ -353,7 +452,7 @@ export default function UserManagementPage() {
                           </TableCell>
                         )}
                         {selectedColumns.includes("joinDate") && (
-                          <TableCell>{member.createdAt? new Date(member.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
+                          <TableCell>{member.createdAt ? formatDate(member.createdAt) : 'N/A'}</TableCell>
                         )}
                         <TableCell>
                           <DropdownMenu>
@@ -367,11 +466,11 @@ export default function UserManagementPage() {
                               <DropdownMenuItem>View Details</DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
-                              className="text-destructive"
-                              onClick={() => deleteMember(member.id)}
-                            >
-                              Delete
-                            </DropdownMenuItem>
+                                className="text-destructive"
+                                onClick={() => deleteMember(member.id)}
+                              >
+                                Delete
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -385,72 +484,116 @@ export default function UserManagementPage() {
                     </TableRow>
                   )
                 ) : (
-                  groups.map((group) => (
-                    <TableRow key={group.id}>
-                      {selectedColumns.includes("name") && (
-                        <TableCell className="font-medium">{group.name}</TableCell>
-                      )}
-                      {selectedColumns.includes("members") && <TableCell>{group.members}</TableCell>}
-                      {selectedColumns.includes("status") && (
+                  filteredGroups.length > 0 ? (
+                    filteredGroups.map((group) => (
+                      <TableRow key={group.id}>
+                        {selectedColumns.includes("Group-Logo") && (
+                          <TableCell className="font-medium">
+                            {group.logo ? (
+                              <img
+                                src={group.logo}
+                                alt={group.name}
+                                className="h-8 w-8 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                <span className="text-xs font-medium text-gray-600">
+                                  {group.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                          </TableCell>
+                        )}
+
+                        {selectedColumns.includes("name") && (
+                          <TableCell className="font-medium">{group.name}</TableCell>
+                        )}
+                        {selectedColumns.includes("members") && (
+                          <TableCell>{group.members || 0}</TableCell>
+                        )}
+                        {selectedColumns.includes("description") && (
+                          <TableCell>
+                            {group.description ? 
+                              (group.description.length > 50 ? 
+                                `${group.description.substring(0, 50)}...` : 
+                                group.description) : 
+                              'No description'}
+                          </TableCell>
+                        )}
+                        {selectedColumns.includes("groupType") && (
+                          <TableCell>
+                            <Badge variant="outline" className={
+                              group.groupTypeId === 'private' ? "bg-blue-50 text-blue-700" : 
+                              group.groupTypeId === 'public_open' ? "bg-green-50 text-green-700" : 
+                              "bg-amber-50 text-amber-700"
+                            }>
+                              {getGroupTypeDisplayName(group.groupType)}
+                            </Badge>
+                          </TableCell>
+                        )}
+                        {selectedColumns.includes("created") && (
+                          <TableCell>{formatDate(group.createdAt || group.created)}</TableCell>
+                        )}
                         <TableCell>
-                          <Badge variant="outline" className="bg-green-50 text-green-700">
-                            {group.status}
-                          </Badge>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>Edit</DropdownMenuItem>
+                              <DropdownMenuItem>View Details</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
-                      )}
-                      {selectedColumns.includes("created") && (
-                        <TableCell>{new Date(group.created).toLocaleDateString()}</TableCell>
-                      )}
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={selectedColumns.length + 1} className="text-center py-4 text-muted-foreground">
+                        {searchQuery ? "No groups match your search criteria." : "No groups data available. Create groups to see them listed here."}
                       </TableCell>
                     </TableRow>
-                  ))
+                  )
                 )}
               </TableBody>
             </Table>
-            
-            {/* Dialog for Add Member Type */}
-            <Dialog open={showAddMemberTypeDialog} onOpenChange={setShowAddMemberTypeDialog}>
-              <DialogContent>
-                <AddMemberTypeForm onClose={() => setShowAddMemberTypeDialog(false)} />
-              </DialogContent>
-            </Dialog>
-            
-            {/* Dialog for Add Member */}
-            <Dialog open={showAddMemberDialog} onOpenChange={setShowAddMemberDialog}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Member</DialogTitle>
-                </DialogHeader>
-                <AddMemberForm onClose={() => setShowAddMemberDialog(false)} memberTypes={membershipTypes} />
-              </DialogContent>
-            </Dialog>
-
-           
-            <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create Group</DialogTitle>
-                </DialogHeader>
-                <GroupForm groupTypes={groupTypes}/>
-              </DialogContent>
-            </Dialog>
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog for Add Member Type */}
+      <Dialog open={showAddMemberTypeDialog} onOpenChange={setShowAddMemberTypeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Membership Type</DialogTitle>
+          </DialogHeader>
+          <AddMemberTypeForm onClose={() => setShowAddMemberTypeDialog(false)} />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog for Add Member */}
+      <Dialog open={showAddMemberDialog} onOpenChange={setShowAddMemberDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Member</DialogTitle>
+          </DialogHeader>
+          <AddMemberForm onClose={() => setShowAddMemberDialog(false)} memberTypes={membershipTypes} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for Create Group */}
+      <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Group</DialogTitle>
+          </DialogHeader>
+          <GroupForm onClose={() => setShowGroupDialog(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

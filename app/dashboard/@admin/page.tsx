@@ -9,13 +9,14 @@ import {
   Menu, 
   Settings, 
   Users, 
+  HeartPulse,
   Landmark, 
   LogOut 
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-
+import OrganizationCampaigns from "./campaign/campaignsOrg"
 // Page components
 import Overview from "./overview"
 import UserManagementPage from "./user-management/page"
@@ -72,10 +73,10 @@ export default function DashboardPage() {
       description: "Manage users and access",
     },
     {
-      icon: <CreditCard />,
-      label: "Subscriptions",
-      section: "subscriptions",
-      description: "Manage plans and billing",
+      icon: <HeartPulse />,
+      label: "Campaign",
+      section: "campaigns",
+      description: "donations and campaigns",
     },
     {
       icon: <Layers />,
@@ -203,8 +204,8 @@ export default function DashboardPage() {
         return <Overview organisationDetails={orgData} />;
       case "users":
         return <UserManagementPage organisationDetails={orgData} />;
-      case "subscriptions":
-        return <SubscriptionsPage organisationDetails={orgData} />;
+      case "campaigns":
+        return <OrganizationCampaigns />;
       case "organization":
         return <OrganizationProfile organisationDetails={orgData} />;
       case "event":

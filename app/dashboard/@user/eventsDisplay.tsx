@@ -19,7 +19,12 @@ interface Event {
   stripeProductId?: string;
   stripePriceId?: string;
   coverImage?: string;
-  organizationId: number;
+  organizationId: string;
+}
+
+interface Guest {
+  name: string;
+  email: string;
 }
 
 interface CheckoutFormData {
@@ -27,6 +32,12 @@ interface CheckoutFormData {
   guestFirstName: string;
   guestLastName: string;
   eventId: string;
+  organizationId: string;
+  quantity: number;
+  mode: string;
+  guests: Guest[];
+  successUrl: string;
+  cancelUrl: string;
 }
 
 const EventsDisplay: React.FC = () => {
@@ -42,6 +53,12 @@ const EventsDisplay: React.FC = () => {
     guestFirstName: '',
     guestLastName: '',
     eventId: '',
+    organizationId: '',
+    quantity: 1,
+    mode: 'payment',
+    guests: [],
+    successUrl: '',
+    cancelUrl: ''
   });
   
   const router = useRouter();
@@ -75,18 +92,59 @@ const EventsDisplay: React.FC = () => {
 
   const handleRegister = (event: Event) => {
     setSelectedEvent(event);
+    // Initialize form with default values
     setFormData({
       ...formData,
       eventId: event.id,
+      organizationId: event.organizationId || organizationId || '',
+      quantity: 1,
+      mode: 'payment',
+      successUrl: `http://localhost:3000/payment-success`,
+      cancelUrl: `http://localhost:3000/payment-cancelled`,
+      guests: []
     });
     setShowCheckout(true);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
+    });
+  };
+  
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const quantity = parseInt(e.target.value);
+    
+    // Update quantity and resize guests array
+    const newGuests = [...formData.guests];
+    
+    // If increasing quantity, add empty guest objects
+    if (quantity > newGuests.length) {
+      for (let i = newGuests.length; i < quantity - 1; i++) {
+        newGuests.push({ name: '', email: '' });
+      }
+    } 
+    // If decreasing quantity, remove extra guests
+    else if (quantity < newGuests.length + 1) {
+      newGuests.splice(quantity - 1);
+    }
+    
+    setFormData({
+      ...formData,
+      quantity,
+      guests: newGuests
+    });
+  };
+  
+  const handleGuestChange = (index: number, field: keyof Guest, value: string) => {
+    const updatedGuests = [...formData.guests];
+    updatedGuests[index] = { ...updatedGuests[index], [field]: value };
+    
+    setFormData({
+      ...formData,
+      guests: updatedGuests
     });
   };
 
@@ -98,23 +156,32 @@ const EventsDisplay: React.FC = () => {
     try {
       // For paid events, create Stripe checkout session
       if (selectedEvent.isPaid && selectedEvent.stripePriceId) {
-        const guestName = `${formData.guestFirstName} ${formData.guestLastName}`;
+        // Create primary guest (ticket purchaser)
+        const primaryGuest = {
+          name: `${formData.guestFirstName} ${formData.guestLastName}`,
+          email: formData.email
+        };
         
-        const response = await fetch("http://localhost:5000/checkout/create-checkout-session", {
+        // Format checkout data exactly as shown in the Postman screenshot
+        const checkoutData = {
+          priceId: selectedEvent.stripePriceId,
+          successUrl: formData.successUrl,
+          cancelUrl: formData.cancelUrl,
+          mode: formData.mode,
+          quantity: formData.quantity,
+          eventId: formData.eventId,
+          organizationId: parseInt(formData.organizationId) || 64, // Convert to number as shown in screenshot
+          guests: [primaryGuest, ...formData.guests]
+        };
+        
+        console.log("Sending checkout data:", checkoutData);
+        console.log("checkoutData",checkoutData)
+        const response = await fetch("http://localhost:5000/checkout/create-payment-checkout-session", {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              priceId: selectedEvent.stripePriceId,
-              email: formData.email,
-              customerName: guestName,
-              eventId: selectedEvent.id,
-              mode: 'payment', // Important: specify this is a one-time payment, not a subscription
-              quantity: 1,
-              successUrl: `${window.location.origin}/success?event=${selectedEvent.id}`,
-              cancelUrl: `${window.location.origin}/events`
-            }),
+            body: JSON.stringify(checkoutData),
           });
           
           if (!response.ok) {
@@ -134,16 +201,19 @@ const EventsDisplay: React.FC = () => {
               body: JSON.stringify({
                 eventId: selectedEvent.id,
                 email: formData.email,
-                guestName,
-                paymentStatus: 'pending'
+                guestName: `${formData.guestFirstName} ${formData.guestLastName}`,
+                paymentStatus: 'pending',
+                quantity: formData.quantity,
+                guests: checkoutData.guests
               }),
             });
             
             // Redirect to Stripe checkout
-            window.location.href = data.sessionUrl;
+            
           } else {
             throw new Error('No session URL returned');
           }
+          window.location.href = data.sessionUrl;
       } else {
         // For free events, register directly
         const response = await fetch('/api/events/register', {
@@ -172,6 +242,12 @@ const EventsDisplay: React.FC = () => {
           guestFirstName: '',
           guestLastName: '',
           eventId: '',
+          organizationId: organizationId || '',
+          quantity: 1,
+          mode: 'payment',
+          guests: [],
+          successUrl: '',
+          cancelUrl: ''
         });
       }
     } catch (err: any) {
@@ -217,7 +293,7 @@ const EventsDisplay: React.FC = () => {
       {/* Checkout Modal */}
       {showCheckout && selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full max-h-screen overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">
                 {selectedEvent.isPaid ? 'Payment & Registration' : 'Event Registration'}
@@ -240,47 +316,179 @@ const EventsDisplay: React.FC = () => {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              {/* Primary Guest Information */}
+              <div className="bg-gray-50 p-4 rounded-md mb-4">
+                <h3 className="font-medium text-gray-800 mb-2">Primary Guest Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      First Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="guestFirstName"
+                      value={formData.guestFirstName}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="guestLastName"
+                      value={formData.guestLastName}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name *
-                </label>
-                <input
-                  type="text"
-                  name="guestFirstName"
-                  value={formData.guestFirstName}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name *
-                </label>
-                <input
-                  type="text"
-                  name="guestLastName"
-                  value={formData.guestLastName}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              {selectedEvent.isPaid && (
+                <>
+                  {/* Payment Configuration */}
+                  <div className="bg-gray-50 p-4 rounded-md mb-4">
+                    <h3 className="font-medium text-gray-800 mb-2">Ticket Quantity & Mode</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Quantity *
+                        </label>
+                        <select
+                          name="quantity"
+                          value={formData.quantity}
+                          onChange={handleQuantityChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                            <option key={num} value={num}>{num}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Payment Mode *
+                        </label>
+                        <select
+                          name="mode"
+                          value={formData.mode}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="payment">One-time Payment</option>
+                          <option value="subscription">Subscription</option>
+                        </select>
+                      </div>
+                      
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Organization ID *
+                        </label>
+                        <input
+                          type="text"
+                          name="organizationId"
+                          value={formData.organizationId}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Success URL *
+                        </label>
+                        <input
+                          type="text"
+                          name="successUrl"
+                          value={formData.successUrl}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Cancel URL *
+                        </label>
+                        <input
+                          type="text"
+                          name="cancelUrl"
+                          value={formData.cancelUrl}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Additional Guests */}
+                  {formData.quantity > 1 && (
+                    <div className="bg-gray-50 p-4 rounded-md mb-4">
+                      <h3 className="font-medium text-gray-800 mb-2">Additional Guests</h3>
+                      {formData.guests.map((guest, index) => (
+                        <div key={index} className="border-t border-gray-200 pt-4 mt-4 first:border-t-0 first:pt-0 first:mt-0">
+                          <h4 className="font-medium text-gray-700 mb-2">Guest {index + 1}</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Full Name *
+                              </label>
+                              <input
+                                type="text"
+                                value={guest.name}
+                                onChange={(e) => handleGuestChange(index, 'name', e.target.value)}
+                                required
+                                placeholder="Full Name"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                            
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Email *
+                              </label>
+                              <input
+                                type="email"
+                                value={guest.email}
+                                onChange={(e) => handleGuestChange(index, 'email', e.target.value)}
+                                required
+                                placeholder="Email Address"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
               
               <button
                 type="submit"
