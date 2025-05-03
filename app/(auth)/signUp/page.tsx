@@ -1,6 +1,6 @@
 "use client"
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import { Mail, Lock, ArrowRight, CheckCircle } from "lucide-react"
 import { signup } from "@/lib/auth"
@@ -15,7 +15,7 @@ interface SignupForm {
   token?: string
 }
 
-const AdminSignupPage = () => {
+function SignUpContent() {
   const [formData, setFormData] = useState<SignupForm>({
     email: "",
     password: "",
@@ -244,4 +244,10 @@ const AdminSignupPage = () => {
   )
 }
 
-export default AdminSignupPage
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignUpContent />
+    </Suspense>
+  )
+}
