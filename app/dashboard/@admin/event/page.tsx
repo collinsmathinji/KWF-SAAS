@@ -67,7 +67,7 @@ const invitationFormSchema = z.object({
   includeTicketInfo: z.boolean().default(true),
 })
 
-type EventFormValues = z.infer<typeof eventFormSchema>
+// type EventFormValues = z.infer<typeof eventFormSchema>
 type InvitationFormValues = z.infer<typeof invitationFormSchema>
 
 // Type definitions for sample data
@@ -173,7 +173,7 @@ export default function EventManagementPage({ organisationDetails }: any) {
   // const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   // const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
-  // const [isVenueDialogOpen, setIsVenueDialogOpen] = useState(false);
+   const [isVenueDialogOpen, setIsVenueDialogOpen] = useState(false);
   // const [isSendThankYouOpen, setIsSendThankYouOpen] = useState(false);
   // const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
   const [searchTerm, setSearchTerm] = useState("");

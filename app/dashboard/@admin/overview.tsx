@@ -100,6 +100,12 @@ interface MetricCardProps {
   description?: string;
 }
 
+// Define ChartData interface for memberGrowth
+interface ChartData {
+  name: string;
+  total: number;
+}
+
 const MetricCard = ({ icon, title, value, change, description }: MetricCardProps) => (
   <Card>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -130,7 +136,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
   const [groups, setGroups] = useState<Group[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [donations, setDonations] = useState<Donation[]>([])
-  const [memberGrowth, setMemberGrowth] = useState([])
+  const [memberGrowth, setMemberGrowth] = useState<ChartData[]>([])
   
   // Calculate metrics for organization dashboard
   const [metrics, setMetrics] = useState({
@@ -152,7 +158,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
         const membersResponse = await getMembers()
         console.log('Members data:', membersResponse)
         // Handle different API response structures
-        let membersData = []
+        let membersData: Member[] = []
         if (membersResponse?.data?.data) {
           membersData = membersResponse.data.data
         } else if (Array.isArray(membersResponse?.data)) {
@@ -167,7 +173,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
         const groupsResponse = await getGroups()
         console.log('Groups data:', groupsResponse)
         // Handle different API response structures
-        let groupsData = []
+        let groupsData: Group[] = []
         if (groupsResponse?.data?.data) {
           groupsData = groupsResponse.data.data
         } else if (Array.isArray(groupsResponse?.data)) {
@@ -183,7 +189,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
           const eventsResponse = await fetchEvents()
           console.log('Events data:', eventsResponse)
           // Handle different API response structures
-          let eventsData = []
+          let eventsData: Event[] = []
           if (eventsResponse?.data?.data) {
             eventsData = eventsResponse.data.data
           } else if (Array.isArray(eventsResponse?.data)) {
@@ -203,7 +209,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
           console.error("Failed to fetch events:", error)
           // Fallback to sample events data if API fails
           const currentDate = new Date()
-          const sampleEvents = [
+          const sampleEvents: Event[] = [
             {
               id: 1,
               name: "Annual Conference",
@@ -239,7 +245,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
         
         // Calculate member growth (could be from a separate API in real implementation)
         // For now, using static data but structured for real data
-        const mockGrowthData = [
+        const mockGrowthData: ChartData[] = [
           { name: "Sep", total: membersData.length > 0 ? Math.floor(membersData.length * 0.6) : 3200 },
           { name: "Oct", total: membersData.length > 0 ? Math.floor(membersData.length * 0.7) : 3800 },
           { name: "Nov", total: membersData.length > 0 ? Math.floor(membersData.length * 0.8) : 4300 },
@@ -253,9 +259,12 @@ export default function Overview({ organisationDetails }: { organisationDetails:
         const growthPercentage = mockGrowthData.length >= 2 ? 
           ((mockGrowthData[mockGrowthData.length-1].total - mockGrowthData[mockGrowthData.length-2].total) / 
           mockGrowthData[mockGrowthData.length-2].total) * 100 : 4.6
+          
+        // Create current date instance for donations
+        const currentDate = new Date()
         
         // Simulate donations data (could come from an API)
-        const mockDonations = [
+        const mockDonations: Donation[] = [
           { id: 1, donor: membersData[0]?.firstName + " " + membersData[0]?.lastName || "John Doe", amount: 500, date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 5).toISOString(), type: "Monthly" },
           { id: 2, donor: membersData[1]?.firstName + " " + membersData[1]?.lastName || "Jane Smith", amount: 1000, date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 8).toISOString(), type: "One-time" },
           { id: 3, donor: membersData[2]?.firstName + " " + membersData[2]?.lastName || "Bob Wilson", amount: 250, date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 10).toISOString(), type: "Monthly" },

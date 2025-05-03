@@ -41,7 +41,7 @@ interface CheckoutFormData {
 }
 
 const EventsDisplay: React.FC = () => {
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<any>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showCheckout, setShowCheckout] = useState<boolean>(false);
@@ -73,8 +73,7 @@ const EventsDisplay: React.FC = () => {
   useEffect(() => {
     async function loadEvents() {
       try {
-        const response = await fetchEvents(organizationId || undefined);
-        console.log("Fetched events:", response.data);
+        const response:any = await fetchEvents(organizationId || undefined);
         setEvents(response.data?.data || []); // Ensure events is always an array
         setLoading(false);
       } catch (error) {
@@ -498,7 +497,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => (
+          {events.map((event:any) => (
             <div key={event.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
               {event.coverImage ? (
                 <div className="relative h-48">

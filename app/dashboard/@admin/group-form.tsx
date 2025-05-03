@@ -16,20 +16,21 @@ interface GroupFormProps {
 }
 
 interface FormData {
+  organizationId: string | undefined;
   name: string;
   logo?: string;
   logoPreview: string;
   description: string;
-  organizationId?: string;
   groupType: string;
 }
 
 const GroupForm = ({ onClose }: GroupFormProps) => {
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<any>({
     name: "",
     logoPreview: "",
     description: "",
-    groupType: ""
+    groupType: "",
+    
   });
   
   const { data: session, status } = useSession();
@@ -39,7 +40,7 @@ const GroupForm = ({ onClose }: GroupFormProps) => {
   // Set organization ID from session when it's available
   useEffect(() => {
     if (session?.user?.organizationId) {
-      setFormData(prev => ({
+      setFormData((prev:any )=> ({
         ...prev,
         organizationId: session.user.organizationId
       }));
@@ -64,7 +65,7 @@ const GroupForm = ({ onClose }: GroupFormProps) => {
       const uploadedUrl = await uploadOrganizationLogo(file);
       console.log("Uploaded URL:", uploadedUrl);
   
-      setFormData(prevData => ({
+      setFormData((prevData:any) => ({
         ...prevData,
         logo: uploadedUrl,
       }));
@@ -85,9 +86,9 @@ const GroupForm = ({ onClose }: GroupFormProps) => {
     try {
       // Ensure organizationId is available
       if (!formData.organizationId && session?.user?.organizationId) {
-        setFormData(prev => ({
+        setFormData((prev:any) => ({
           ...prev,
-          organizationId: session.user.organizationId
+          organizationId: session.user.organizationId || undefined
         }));
       }
       
@@ -101,8 +102,9 @@ const GroupForm = ({ onClose }: GroupFormProps) => {
         name: formData.name,
         logo: formData.logo,
         description: formData.description,
-        organizationId: formData.organizationId,
-        groupTypeId: formData.groupType
+        organizationId: Number(formData.organizationId) || 0,
+        groupTypeId: Number(formData.groupType) || 0,
+        addedBy: Number(session?.user?.id) || 0
       };
       
       console.log("Submitting group data:", groupData);

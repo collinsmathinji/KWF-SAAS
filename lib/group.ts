@@ -21,6 +21,7 @@ interface GroupResponse {
   isDeleted: boolean;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
+  addedBy:string;
 }
  export async function getGroupTypes(): Promise<GroupData[]> {
    try {

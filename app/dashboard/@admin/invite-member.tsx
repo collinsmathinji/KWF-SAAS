@@ -78,7 +78,7 @@ export default function AddMemberForm({
         lastName: formData.lastName,
         username: formData.username,
         email: formData.email,
-        phoneNumber: formData.phoneNumber,
+        phoneNumber:formData.phoneNumber,
         membershipTypeId: formData.membershipType,
         isPortalAccess: true
       })

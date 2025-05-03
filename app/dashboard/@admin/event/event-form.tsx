@@ -19,8 +19,24 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { v4 as uuidv4 } from 'uuid';
 
+// Define region type to ensure type safety
+type Region = "Africa" | "Asia" | "Europe" | "North America" | "South America" | "Oceania" | "Antarctica";
+
+// Define subregion type for Africa
+type AfricaSubRegion = "North Africa" | "West Africa" | "East Africa" | "Central Africa" | "Southern Africa";
+type AsiaSubRegion = "East Asia" | "Southeast Asia" | "South Asia" | "Central Asia" | "Western Asia";
+type EuropeSubRegion = "Northern Europe" | "Western Europe" | "Eastern Europe" | "Southern Europe";
+type NorthAmericaSubRegion = "Northern America" | "Central America" | "Caribbean";
+type SouthAmericaSubRegion = "Brazil and the Guianas" | "Andes Nations" | "Southern Cone";
+type OceaniaSubRegion = "Australia and New Zealand" | "Melanesia" | "Micronesia" | "Polynesia";
+type AntarcticaSubRegion = "Antarctic region";
+
+// Union type of all subregions
+type SubRegion = AfricaSubRegion | AsiaSubRegion | EuropeSubRegion | NorthAmericaSubRegion | 
+                SouthAmericaSubRegion | OceaniaSubRegion | AntarcticaSubRegion;
+
 // Data for dropdowns
-const regions = [
+const regions: Region[] = [
   "Africa",
   "Asia",
   "Europe",
@@ -30,23 +46,43 @@ const regions = [
   "Antarctica"
 ];
 
-const subRegions = {
-  Africa: ["North Africa", "West Africa", "East Africa", "Central Africa", "Southern Africa"],
-  Asia: ["East Asia", "Southeast Asia", "South Asia", "Central Asia", "Western Asia"],
-  Europe: ["Northern Europe", "Western Europe", "Eastern Europe", "Southern Europe"],
+const subRegions: Record<Region, string[]> = {
+  "Africa": ["North Africa", "West Africa", "East Africa", "Central Africa", "Southern Africa"],
+  "Asia": ["East Asia", "Southeast Asia", "South Asia", "Central Asia", "Western Asia"],
+  "Europe": ["Northern Europe", "Western Europe", "Eastern Europe", "Southern Europe"],
   "North America": ["Northern America", "Central America", "Caribbean"],
   "South America": ["Brazil and the Guianas", "Andes Nations", "Southern Cone"],
-  Oceania: ["Australia and New Zealand", "Melanesia", "Micronesia", "Polynesia"],
-  Antarctica: ["Antarctic region"]
+  "Oceania": ["Australia and New Zealand", "Melanesia", "Micronesia", "Polynesia"],
+  "Antarctica": ["Antarctic region"]
 };
 
-const countries = {
+const countries: Record<SubRegion, string[]> = {
   "North Africa": ["Algeria", "Egypt", "Libya", "Morocco", "Tunisia"],
   "West Africa": ["Benin", "Burkina Faso", "Côte d'Ivoire", "Ghana", "Guinea", "Liberia", "Mali", "Niger", "Nigeria", "Senegal"],
   "East Africa": ["Ethiopia", "Kenya", "Rwanda", "Somalia", "Tanzania", "Uganda"],
   "Central Africa": ["Cameroon", "Central African Republic", "Chad", "Democratic Republic of the Congo", "Republic of the Congo"],
   "Southern Africa": ["Angola", "Botswana", "Lesotho", "Malawi", "Mozambique", "Namibia", "South Africa", "Zambia", "Zimbabwe"],
-  // Add more countries for other regions as needed
+  // Add other subregion countries
+  "East Asia": ["China", "Japan", "Mongolia", "North Korea", "South Korea", "Taiwan"],
+  "Southeast Asia": ["Brunei", "Cambodia", "Indonesia", "Laos", "Malaysia", "Myanmar", "Philippines", "Singapore", "Thailand", "Vietnam"],
+  "South Asia": ["Bangladesh", "Bhutan", "India", "Maldives", "Nepal", "Pakistan", "Sri Lanka"],
+  "Central Asia": ["Kazakhstan", "Kyrgyzstan", "Tajikistan", "Turkmenistan", "Uzbekistan"],
+  "Western Asia": ["Armenia", "Azerbaijan", "Bahrain", "Cyprus", "Georgia", "Iraq", "Israel", "Jordan", "Kuwait", "Lebanon"],
+  "Northern Europe": ["Denmark", "Estonia", "Finland", "Iceland", "Ireland", "Latvia", "Lithuania", "Norway", "Sweden", "United Kingdom"],
+  "Western Europe": ["Austria", "Belgium", "France", "Germany", "Liechtenstein", "Luxembourg", "Monaco", "Netherlands", "Switzerland"],
+  "Eastern Europe": ["Belarus", "Bulgaria", "Czech Republic", "Hungary", "Moldova", "Poland", "Romania", "Russia", "Slovakia", "Ukraine"],
+  "Southern Europe": ["Albania", "Andorra", "Bosnia and Herzegovina", "Croatia", "Greece", "Italy", "Malta", "Montenegro", "North Macedonia", "Portugal"],
+  "Northern America": ["Canada", "United States"],
+  "Central America": ["Belize", "Costa Rica", "El Salvador", "Guatemala", "Honduras", "Nicaragua", "Panama"],
+  "Caribbean": ["Antigua and Barbuda", "Bahamas", "Barbados", "Cuba", "Dominica", "Dominican Republic", "Grenada", "Haiti", "Jamaica"],
+  "Brazil and the Guianas": ["Brazil", "Guyana", "Suriname", "French Guiana"],
+  "Andes Nations": ["Bolivia", "Colombia", "Ecuador", "Peru", "Venezuela"],
+  "Southern Cone": ["Argentina", "Chile", "Paraguay", "Uruguay"],
+  "Australia and New Zealand": ["Australia", "New Zealand"],
+  "Melanesia": ["Fiji", "Papua New Guinea", "Solomon Islands", "Vanuatu"],
+  "Micronesia": ["Kiribati", "Marshall Islands", "Micronesia", "Nauru", "Palau"],
+  "Polynesia": ["Samoa", "Tonga", "Tuvalu"],
+  "Antarctic region": ["Antarctic Treaty area"]
 };
 
 const eventFormSchema = z.object({
@@ -73,7 +109,12 @@ const eventFormSchema = z.object({
 
 type EventFormValues = z.infer<typeof eventFormSchema>;
 
-const EventForm = ({ onSuccess, onClose }:any) => {
+interface EventFormProps {
+  onSuccess?: (data: any) => void;
+  onClose?: () => void;
+}
+
+const EventForm = ({ onSuccess, onClose }: EventFormProps) => {
   // Form submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -123,8 +164,8 @@ const EventForm = ({ onSuccess, onClose }:any) => {
   }, [session, form]);
 
   // Watch for region changes to update subRegion options
-  const selectedRegion = form.watch("region");
-  const selectedSubRegion = form.watch("subRegion");
+  const selectedRegion = form.watch("region") as Region | "";
+  const selectedSubRegion = form.watch("subRegion") as SubRegion | "";
   const isPaid = form.watch("isPaid");
 
   // Reset subRegion when region changes
@@ -455,7 +496,7 @@ const EventForm = ({ onSuccess, onClose }:any) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {selectedRegion && subRegions[selectedRegion]?.map((subRegion) => (
+                          {selectedRegion && subRegions[selectedRegion as Region]?.map((subRegion) => (
                             <SelectItem key={subRegion} value={subRegion}>
                               {subRegion}
                             </SelectItem>
@@ -484,7 +525,7 @@ const EventForm = ({ onSuccess, onClose }:any) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {selectedSubRegion && countries[selectedSubRegion]?.map((country) => (
+                          {selectedSubRegion && countries[selectedSubRegion as SubRegion]?.map((country) => (
                             <SelectItem key={country} value={country}>
                               {country}
                             </SelectItem>

@@ -5,11 +5,15 @@ export interface memberType {
 }
 
 export interface member {
-  OrganizationId: number | null
-  name: string | null
+  OrganizationId: any |null
+  firstName:string,
+  lastName: string,
+  username: string,
   email: string | null
-  mobileNo: number | null
-  givePortalAccess: boolean | null
+  // mobileNo: number | null
+  phoneNumber: string,
+  membershipTypeId: string,
+  isPortalAccess: boolean | null
 }
 
 export async function getMembers(): Promise<member[]> {

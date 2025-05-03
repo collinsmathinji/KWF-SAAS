@@ -35,7 +35,7 @@ interface EventsResponse {
   paginator: Paginator;
 }
 
-export default function EventsPage({ eventsData }: { eventsData: EventsResponse }) {
+export default function EventsPage({ eventsData }: any) {
   // Extract events from the correct data structure
   const [events, setEvents] = useState<Event[]>(eventsData?.data || []);
   const [paginator, setPaginator] = useState<Paginator>(eventsData?.paginator || {
