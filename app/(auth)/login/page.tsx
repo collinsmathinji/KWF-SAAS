@@ -12,7 +12,7 @@ export default function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const from = searchParams.get("from") || "/dashboard"
-   const { data: session, status } = useSession();
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [showToast, setShowToast] = useState(false)
@@ -26,6 +26,20 @@ export default function LoginForm() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
   
+  // Add useEffect to handle browser-only code
+  useEffect(() => {
+    // This effect will only run in the browser
+    if (status === "authenticated" && session?.user) {
+      // Now we can safely use localStorage
+      if (session.user.id) {
+        localStorage.setItem("userId", session.user.id.toString());
+      }
+      if (session.user.isOnboarded !== undefined) {
+        localStorage.setItem('isOnboarded', session.user.isOnboarded.toString());
+      }
+    }
+  }, [session, status]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError("")
@@ -43,20 +57,14 @@ export default function LoginForm() {
         password: formData.password,
         redirect: false, 
       })
-      if(result?.ok){
-        console.log("login isonboard",session)
-        localStorage.setItem("userId",session?.user.id)
-      localStorage.setItem('isOnboarded',session?.user.isOnboarded);
-      }
+      
       if (result?.error) {
         setError(result.error)
         return
       }
 
-      // Fetch user data to get the isOnboarded status;
- 
-        
-
+      // No need to manually set localStorage here
+      // The useEffect above will handle it when session is available
       
       setShowToast(true)
       setTimeout(() => {

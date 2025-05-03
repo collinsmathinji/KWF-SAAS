@@ -128,7 +128,7 @@ const STATUS_COLORS: Record<string, { bg: string, text: string }> = {
 };
 
 // Dialog component for the form
-const FormDialog = ({ isOpen, onClose, children }) => {
+const FormDialog = ({ isOpen, onClose, children }:any) => {
   if (!isOpen) return null;
   
   return (
@@ -227,7 +227,7 @@ const OrganizationCampaigns: React.FC = () => {
   };
   
   // Handle form submission (mock)
-  const handleFormSubmit = (formData) => {
+  const handleFormSubmit = (formData:any) => {
     // In a real app, this would call an API to create the campaign
     console.log('Form submitted:', formData);
     closeFormDialog();

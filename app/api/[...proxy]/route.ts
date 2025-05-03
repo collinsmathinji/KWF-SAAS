@@ -1,26 +1,26 @@
 // app/api/[...proxy]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "@/actions/auth";
 
 // Fix for the "Route used params.proxy" error
-export async function GET(request: NextRequest, { params }: { params: { proxy: string[] } }) {
-  const pathSegments = params.proxy;
+export async function GET(request: NextRequest, { params }: { params: Promise<{ proxy: string[] }> }) {
+  const {proxy:pathSegments} = await params
   return handleRequest(request, pathSegments);
 }
 
-export async function POST(request: NextRequest, { params }: { params: { proxy: string[] } }) {
-  const pathSegments = params.proxy;
+export async function POST(request: NextRequest, { params }: { params: Promise<{ proxy: string[] }> })  {
+  const {proxy:pathSegments} = await params
   return handleRequest(request, pathSegments);
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { proxy: string[] } }) {
-  const pathSegments = params.proxy;
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ proxy: string[] }> })  {
+  const {proxy:pathSegments} = await params
   return handleRequest(request, pathSegments);
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { proxy: string[] } }) {
-  const pathSegments = params.proxy;
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ proxy: string[] }> })  {
+  const {proxy:pathSegments} = await params
   return handleRequest(request, pathSegments);
 }
 

@@ -185,8 +185,8 @@ export default function EventManagementPage({ organisationDetails }: any) {
 
   async function loadEvents() {
     try {
-      const response = await fetchEvents();
-      console.log("Fetched events:", response.data);
+      const response:any = await fetchEvents();
+      
       setEvents(response.data || []); // Ensure events is always an array
     } catch (error) {
       console.error("Failed to fetch events:", error);
