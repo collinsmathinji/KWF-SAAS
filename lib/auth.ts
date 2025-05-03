@@ -44,45 +44,45 @@ console.log("Sending data:", JSON.stringify({ name, password, token }))
   }
 }
 
-export async function login({ username, password }: LoginData): Promise<AuthResponse> {
-  try {
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({  username, password }),
-    })
+// export async function login({ username, password }: LoginData): Promise<AuthResponse> {
+//   try {
+//     const response = await fetch("/api/auth/login", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({  username, password }),
+//     })
 
-    const data = await response.json()
-    if (!response.ok) {
-      throw new Error(data.message || "Login failed")
-    }
-try{
-    if (data.data.token) {
-      await storeAuthToken(data.data.token)
-    }
-    if(data.data.userType) {
-      console.log('User type:', data.data.userType)
-      await storeUserType(data.data.userType)
-    }else{
-      console.log('User type not found in response')
-    }
-    if(data.data.organizationId) {
-      console.log('Organization ID:', data.data.organizationId)
-      await  getOrganizationById(data.data.organizationId)
-      await fetchMemberType (data.data.organizationId)
-    }else{
-      console.log('Organization ID not found in response')
-    }
-}catch(error){
-  console.error("Error storing token or user type:", error) 
-}
-    return data
-  } catch (error) {
-    console.error("Error logging in:", error)
-    throw error
-  }
-}
+//     const data = await response.json()
+//     if (!response.ok) {
+//       throw new Error(data.message || "Login failed")
+//     }
+// try{
+//     if (data.data.token) {
+//       await storeAuthToken(data.data.token)
+//     }
+//     if(data.data.userType) {
+//       console.log('User type:', data.data.userType)
+//       await storeUserType(data.data.userType)
+//     }else{
+//       console.log('User type not found in response')
+//     }
+//     if(data.data.organizationId) {
+//       console.log('Organization ID:', data.data.organizationId)
+//       await  getOrganizationById(data.data.organizationId)
+//       await fetchMemberType (data.data.organizationId)
+//     }else{
+//       console.log('Organization ID not found in response')
+//     }
+// }catch(error){
+//   console.error("Error storing token or user type:", error) 
+// }
+//     return data
+//   } catch (error) {
+//     console.error("Error logging in:", error)
+//     throw error
+//   }
+// }
 
 

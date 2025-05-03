@@ -48,13 +48,13 @@ interface OrganizationDetails {
 
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("overview")
-  const [memberType, setMemberType] = useState<string[]>([])
+  const [memberType, setMemberType] = useState<any>([])
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isOnBoarded, setIsOnBoarded] = useState<string | null>('')
   const [actualUserType, setActualUserType] = useState<UserType>(null)
   const [viewAs, setViewAs] = useState<UserType>(null)
-  const [organizationDetails, setOrganizationDetails] = useState<OrganizationDetails | null>(null)
+  const [organizationDetails, setOrganizationDetails] = useState<any>(null)
   
   const router = useRouter()
   const { data: session, status } = useSession()
@@ -133,7 +133,7 @@ export default function DashboardPage() {
           // Fetch organization details
           if (orgId) {
             console.log('Organization ID from session:', orgId);
-            const response = await getOrganizationById(orgId);
+            const response:any = await getOrganizationById(orgId);
             console.log("org Details",response)
             setOrganizationDetails(response.data || null);
             setMemberType(response as unknown as string[]);
@@ -164,7 +164,7 @@ export default function DashboardPage() {
         
         if (orgId) {
           console.log('Fetching member types for organization ID:', orgId);
-          const response = await fetchMemberType(orgId);
+          const response:any = await fetchMemberType();
           console.log("Member types response:", response);
           setMemberType(response as unknown as string[]);
         } else {
@@ -203,7 +203,7 @@ export default function DashboardPage() {
       case "overview":
         return <Overview organisationDetails={orgData} />;
       case "users":
-        return <UserManagementPage organisationDetails={orgData} />;
+        return <UserManagementPage />;
       case "campaigns":
         return <OrganizationCampaigns />;
       case "organization":

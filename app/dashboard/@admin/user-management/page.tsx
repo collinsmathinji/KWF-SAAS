@@ -29,15 +29,17 @@ import { fetchMemberType } from "@/lib/members"
 import { getGroups } from "@/lib/group"
 
 interface MemberType {
-  id: number | string
+  id: any
   name: string
-  members?: number
+  members?: any
+  description:string
 }
 
 interface Member {
   id: string
   firstName: string
   lastName: string
+  description:any,
   email: string
   membershipTypeId: number | string
   isActive: boolean
@@ -53,8 +55,8 @@ interface Group {
   logo?: string
   description?: string
   organizationId?: string
-  groupTypeId: string
-  groupType?: string
+  groupTypeId: string 
+  groupType?: string | null
   createdAt?: string
   updatedAt?: string
 }
@@ -79,7 +81,7 @@ const columns = {
 }
 
 // Map group types to user-friendly display names
-const groupTypeDisplayNames = {
+const groupTypeDisplayNames: Record<string, string> = {
   'private': 'Private',
   'public_open': 'Public Open',
   'public_closed': 'Public Closed'
@@ -95,9 +97,9 @@ export default function UserManagementPage() {
   const [showGroupDialog, setShowGroupDialog] = useState(false)
   const [groups, setGroups] = useState<Group[]>([])
   const [groupTypes, setGroupTypes] = useState<MemberType[]>([
-    { id: 'private', name: 'Private' },
-    { id: 'public_open', name: 'Public Open' },
-    { id: 'public_closed', name: 'Public Closed' }
+    { id: 'private', name: 'Private' ,description:'private'},
+    { id: 'public_open', name: 'Public Open',description:'private' },
+    { id: 'public_closed', name: 'Public Closed',description:'private' }
   ])
   const [membershipTypes, setMembershipTypes] = useState<MemberType[]>([])
   const [members, setMembers] = useState<Member[]>([])
@@ -118,7 +120,7 @@ export default function UserManagementPage() {
       setIsLoading(true)
       try {
         // Fetch membership types
-        const response = await fetchMemberType({} as any)
+        const response:any = await fetchMemberType()
         
         if (response && response.data && response.data.data) {
           setMembershipTypes(response.data.data)
@@ -128,7 +130,7 @@ export default function UserManagementPage() {
         }
         
         // Fetch members
-        const membersResponse = await getMembers()
+        const membersResponse:any = await getMembers()
         
         if (membersResponse && membersResponse.data && membersResponse.data.data) {
           setMembers(membersResponse.data.data)
@@ -139,7 +141,7 @@ export default function UserManagementPage() {
         
         // Fetch groups
         try {
-          const groupsResponse = await getGroups()
+          const groupsResponse:any = await getGroups()
           if (groupsResponse && groupsResponse.data && groupsResponse.data.data) {
             const formattedGroups = groupsResponse.data.data.map((group: any) => ({
               ...group,
@@ -217,8 +219,9 @@ export default function UserManagementPage() {
   }
   
   // Helper function to get group type display name
-  const getGroupTypeDisplayName = (typeId: string) => {
-    return groupTypeDisplayNames[typeId as keyof typeof groupTypeDisplayNames] || typeId;
+  const getGroupTypeDisplayName = (typeId: string | null | undefined) => {
+    if (!typeId) return "Unknown";
+    return groupTypeDisplayNames[typeId] || typeId;
   }
 
   // Format date for display

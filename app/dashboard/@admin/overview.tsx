@@ -132,11 +132,11 @@ const MetricCard = ({ icon, title, value, change, description }: MetricCardProps
 export default function Overview({ organisationDetails }: { organisationDetails: OrganizationDetails }) {
   const [activeSection, setActiveSection] = useState("")
   const [isLoading, setIsLoading] = useState(true)
-  const [members, setMembers] = useState<Member[]>([])
-  const [groups, setGroups] = useState<Group[]>([])
-  const [events, setEvents] = useState<Event[]>([])
-  const [donations, setDonations] = useState<Donation[]>([])
-  const [memberGrowth, setMemberGrowth] = useState<ChartData[]>([])
+  const [members, setMembers] = useState<any>([])
+  const [groups, setGroups] = useState<any>([])
+  const [events, setEvents] = useState<any>([])
+  const [donations, setDonations] = useState<any>([])
+  const [memberGrowth, setMemberGrowth] = useState<any>([])
   
   // Calculate metrics for organization dashboard
   const [metrics, setMetrics] = useState({
@@ -155,7 +155,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
       setIsLoading(true)
       try {
         // Fetch members data
-        const membersResponse = await getMembers()
+        const membersResponse:any = await getMembers()
         console.log('Members data:', membersResponse)
         // Handle different API response structures
         let membersData: Member[] = []
@@ -170,7 +170,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
         setMembers(membersData)
         
         // Fetch groups data
-        const groupsResponse = await getGroups()
+        const groupsResponse:any = await getGroups()
         console.log('Groups data:', groupsResponse)
         // Handle different API response structures
         let groupsData: Group[] = []
@@ -186,7 +186,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
         
         // Fetch events data
         try {
-          const eventsResponse = await fetchEvents()
+          const eventsResponse:any = await fetchEvents()
           console.log('Events data:', eventsResponse)
           // Handle different API response structures
           let eventsData: Event[] = []
@@ -512,7 +512,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {events.map((event) => (
+                        {events.map((event:any) => (
                           <TableRow key={event.id}>
                             <TableCell className="font-medium">{event.name}</TableCell>
                             <TableCell>{new Date(event.startDate).toLocaleDateString()}</TableCell>
@@ -555,7 +555,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {donations.map((donation) => (
+                        {donations.map((donation:any) => (
                           <TableRow key={donation.id}>
                             <TableCell className="font-medium">{donation.donor}</TableCell>
                             <TableCell>${donation.amount.toLocaleString()}</TableCell>
@@ -600,7 +600,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {members.slice(0, 5).map((member) => (
+                        {members.slice(0, 5).map((member:any) => (
                           <TableRow key={member.id}>
                             <TableCell className="font-medium">{member.firstName} {member.lastName}</TableCell>
                             <TableCell>{member.email}</TableCell>
