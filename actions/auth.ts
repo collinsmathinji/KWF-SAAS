@@ -62,7 +62,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           // Make sure the API endpoint is correct based on your environment
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://d7d0-102-219-210-201.ngrok-free.app ';
           
           const res = await fetch(`${apiUrl}/admin/auth/login`, {
             method: "POST",
