@@ -17,8 +17,33 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 
+// Define interfaces for type safety
+interface Category {
+  value: string;
+  label: string;
+}
+
+interface SortOption {
+  value: string;
+  label: string;
+}
+
+interface Campaign {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  goalAmount: number;
+  currentAmount: number;
+  startDate: string;
+  endDate: string;
+  imageUrl: string;
+  organization: string;
+  location: string;
+}
+
 // Campaign categories - same as in creation form for consistency
-const CAMPAIGN_CATEGORIES = [
+const CAMPAIGN_CATEGORIES: Category[] = [
   { value: 'charity', label: 'Charity' },
   { value: 'education', label: 'Education' },
   { value: 'medical', label: 'Medical' },
@@ -30,7 +55,7 @@ const CAMPAIGN_CATEGORIES = [
 ];
 
 // Sort options
-const SORT_OPTIONS = [
+const SORT_OPTIONS: SortOption[] = [
   { value: 'newest', label: 'Newest First' },
   { value: 'endingSoon', label: 'Ending Soon' },
   { value: 'mostFunded', label: 'Most Funded' },
@@ -38,7 +63,7 @@ const SORT_OPTIONS = [
 ];
 
 // Mock campaign data - in a real app, this would come from an API
-const MOCK_CAMPAIGNS = [
+const MOCK_CAMPAIGNS: Campaign[] = [
   {
     id: '1',
     name: 'Save Local Wildlife Reserve',
@@ -121,12 +146,12 @@ const MOCK_CAMPAIGNS = [
 
 const CampaignExplorer = () => {
   // Filter and search state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [sortBy, setSortBy] = useState('newest');
-  const [showFilters, setShowFilters] = useState(false);
-  const [campaigns, setCampaigns] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<string>('newest');
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Filter toggle for mobile view
   const toggleFilters = () => {
@@ -134,7 +159,7 @@ const CampaignExplorer = () => {
   };
 
   // Handle category selection
-  const handleCategoryChange = (category) => {
+  const handleCategoryChange = (category: string) => {
     if (selectedCategories.includes(category)) {
       setSelectedCategories(selectedCategories.filter(cat => cat !== category));
     } else {
@@ -175,10 +200,10 @@ const CampaignExplorer = () => {
       // Apply sorting
       switch (sortBy) {
         case 'newest':
-          filteredCampaigns.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+          filteredCampaigns.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
           break;
         case 'endingSoon':
-          filteredCampaigns.sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
+          filteredCampaigns.sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime());
           break;
         case 'mostFunded':
           filteredCampaigns.sort((a, b) => (b.currentAmount / b.goalAmount) - (a.currentAmount / a.goalAmount));
@@ -196,16 +221,16 @@ const CampaignExplorer = () => {
   }, [searchTerm, selectedCategories, sortBy]);
 
   // Calculate days remaining for a campaign
-  const getDaysRemaining = (endDate) => {
+  const getDaysRemaining = (endDate: string): number => {
     const end = new Date(endDate);
     const today = new Date();
-    const diffTime = end - today;
+    const diffTime = end.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
 
   // Format currency
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',

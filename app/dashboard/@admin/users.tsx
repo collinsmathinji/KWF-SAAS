@@ -155,44 +155,47 @@ export default function UserManagementPage({organisationDetails}: any) {
         </div>
       </div>
 
-      {activeSection === "data" ?(<DataManagement/>):activeSection ==='add-member'?
-      <>
-      <AddMemberForm/>
-      </>:activeSection==='add-memberType'?<><AddMemberTypeForm/></>:(
+      {activeSection === "data" ? (
+        <DataManagement />
+      ) : activeSection === 'add-member' ? (
+        <AddMemberForm />
+      ) : activeSection === 'add-memberType' ? (
+        <AddMemberTypeForm onClose={() => setActiveSection('')} />
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {view === "members" ? (
             <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {view === "members" ? (
-          <>
-            {membershipTypes.map((type) => (
-              <Card key={type.id}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{type.name}</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{type.members}</div>
-                  <p className="text-xs text-muted-foreground">Total members</p>
-                </CardContent>
-              </Card>
-            ))}
-          </>
-        ) : (
-          <>
-            {userRoles.map((role) => (
-              <Card key={role.id}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{role.name}</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{role.users}</div>
-                  <p className="text-xs text-muted-foreground">Total users</p>
-                </CardContent>
-              </Card>
-            ))}
-          </>
-        )}
-      </div>
+              {membershipTypes.map((type) => (
+                <Card key={type.id}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{type.name}</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{type.members}</div>
+                    <p className="text-xs text-muted-foreground">Total members</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </>
+          ) : (
+            <>
+              {userRoles.map((role) => (
+                <Card key={role.id}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{role.name}</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{role.users}</div>
+                    <p className="text-xs text-muted-foreground">Total users</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </>
+          )}
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -317,10 +320,8 @@ export default function UserManagementPage({organisationDetails}: any) {
               </TableBody>
             </Table>
           </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
