@@ -40,9 +40,9 @@ export default function DashboardLayout({
       
       // Set user type based on the value
       let userTypeValue: "admin" | "user" | null = null;
-      if (userType === '2') {
+      if (userType === '1') {
         userTypeValue = "admin";
-      } else if (userType === '1') {
+      } else if (userType === '2') {
         userTypeValue = "user";
       }
       
