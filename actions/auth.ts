@@ -62,7 +62,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           // Make sure the API endpoint is correct based on your environment
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+          const apiUrl = process.env.API_URL || 'http://localhost:5000';
           
           const res = await fetch(`${apiUrl}/admin/auth/login`, {
             method: "POST",
