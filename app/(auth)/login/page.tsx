@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AlertCircle, CheckCircle } from "lucide-react"
 import { useSession } from "next-auth/react"
-export default function LoginForm() {
+
+function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const from = searchParams.get("from") || "/dashboard"
@@ -205,4 +206,12 @@ export default function LoginForm() {
       </div>
     </div>
   )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
+  );
 }
