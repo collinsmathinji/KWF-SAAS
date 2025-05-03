@@ -98,8 +98,8 @@ const EventsDisplay: React.FC = () => {
       organizationId: event.organizationId || organizationId || '',
       quantity: 1,
       mode: 'payment',
-      successUrl: `http://localhost:3000/payment-success`,
-      cancelUrl: `http://localhost:3000/payment-cancelled`,
+      successUrl: `https://kwf-saas.vercel.app/success`,
+      cancelUrl: `https://kwf-saas.vercel.app/events`,
       guests: []
     });
     setShowCheckout(true);
