@@ -177,7 +177,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       };
       
       console.log("Sending checkout data:", checkoutData);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkout/create-payment-checkout-session`, {
+      const response = await fetch(`http://192.46.218.168:3001/checkout/create-payment-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

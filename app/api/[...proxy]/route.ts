@@ -60,7 +60,7 @@ async function handleRequest(request: NextRequest, pathSegments: string[]) {
     if (session?.accessToken) {
       headers['Authorization'] = `Bearer ${session.accessToken}`;
     }
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl =  'http://192.46.218.168:3001';
     // Construct the URL for the backend API
     const backendUrl = `${apiUrl}/admin/${path}`;
     console.log(`Proxying ${method} request to: ${backendUrl}`);
