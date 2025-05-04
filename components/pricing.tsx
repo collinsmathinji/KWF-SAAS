@@ -96,7 +96,7 @@ export function Pricing() {
   const handlePlansFetch = async () => {
     setLoading(true)
     try {
-      const response = await fetch("http://localhost:5000/admin/subscriptionPlan/list", {
+      const response = await fetch(`${process.env.API_URL }/admin/subscriptionPlan/list`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -262,7 +262,7 @@ export function Pricing() {
   
       console.log("Sending request with body:", requestBody);
   
-      const response = await fetch("http://localhost:5000/checkout/create-subscription-checkout-session", {
+      const response = await fetch(`${process.env.API_URL}/checkout/create-subscription-checkout-session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
