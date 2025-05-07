@@ -3,13 +3,10 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormDescription, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createEvent } from "@/lib/event";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { cn } from "@/lib/utils";
-import { CalendarDays } from "lucide-react";
+import { AlertCircle, X, ExternalLink } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,72 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { v4 as uuidv4 } from 'uuid';
-
-// Define region type to ensure type safety
-type Region = "Africa" | "Asia" | "Europe" | "North America" | "South America" | "Oceania" | "Antarctica";
-
-// Define subregion type for Africa
-type AfricaSubRegion = "North Africa" | "West Africa" | "East Africa" | "Central Africa" | "Southern Africa";
-type AsiaSubRegion = "East Asia" | "Southeast Asia" | "South Asia" | "Central Asia" | "Western Asia";
-type EuropeSubRegion = "Northern Europe" | "Western Europe" | "Eastern Europe" | "Southern Europe";
-type NorthAmericaSubRegion = "Northern America" | "Central America" | "Caribbean";
-type SouthAmericaSubRegion = "Brazil and the Guianas" | "Andes Nations" | "Southern Cone";
-type OceaniaSubRegion = "Australia and New Zealand" | "Melanesia" | "Micronesia" | "Polynesia";
-type AntarcticaSubRegion = "Antarctic region";
-
-// Union type of all subregions
-type SubRegion = AfricaSubRegion | AsiaSubRegion | EuropeSubRegion | NorthAmericaSubRegion | 
-                SouthAmericaSubRegion | OceaniaSubRegion | AntarcticaSubRegion;
-
-// Data for dropdowns
-const regions: Region[] = [
-  "Africa",
-  "Asia",
-  "Europe",
-  "North America",
-  "South America",
-  "Oceania",
-  "Antarctica"
-];
-
-const subRegions: Record<Region, string[]> = {
-  "Africa": ["North Africa", "West Africa", "East Africa", "Central Africa", "Southern Africa"],
-  "Asia": ["East Asia", "Southeast Asia", "South Asia", "Central Asia", "Western Asia"],
-  "Europe": ["Northern Europe", "Western Europe", "Eastern Europe", "Southern Europe"],
-  "North America": ["Northern America", "Central America", "Caribbean"],
-  "South America": ["Brazil and the Guianas", "Andes Nations", "Southern Cone"],
-  "Oceania": ["Australia and New Zealand", "Melanesia", "Micronesia", "Polynesia"],
-  "Antarctica": ["Antarctic region"]
-};
-
-const countries: Record<SubRegion, string[]> = {
-  "North Africa": ["Algeria", "Egypt", "Libya", "Morocco", "Tunisia"],
-  "West Africa": ["Benin", "Burkina Faso", "Côte d'Ivoire", "Ghana", "Guinea", "Liberia", "Mali", "Niger", "Nigeria", "Senegal"],
-  "East Africa": ["Ethiopia", "Kenya", "Rwanda", "Somalia", "Tanzania", "Uganda"],
-  "Central Africa": ["Cameroon", "Central African Republic", "Chad", "Democratic Republic of the Congo", "Republic of the Congo"],
-  "Southern Africa": ["Angola", "Botswana", "Lesotho", "Malawi", "Mozambique", "Namibia", "South Africa", "Zambia", "Zimbabwe"],
-  // Add other subregion countries
-  "East Asia": ["China", "Japan", "Mongolia", "North Korea", "South Korea", "Taiwan"],
-  "Southeast Asia": ["Brunei", "Cambodia", "Indonesia", "Laos", "Malaysia", "Myanmar", "Philippines", "Singapore", "Thailand", "Vietnam"],
-  "South Asia": ["Bangladesh", "Bhutan", "India", "Maldives", "Nepal", "Pakistan", "Sri Lanka"],
-  "Central Asia": ["Kazakhstan", "Kyrgyzstan", "Tajikistan", "Turkmenistan", "Uzbekistan"],
-  "Western Asia": ["Armenia", "Azerbaijan", "Bahrain", "Cyprus", "Georgia", "Iraq", "Israel", "Jordan", "Kuwait", "Lebanon"],
-  "Northern Europe": ["Denmark", "Estonia", "Finland", "Iceland", "Ireland", "Latvia", "Lithuania", "Norway", "Sweden", "United Kingdom"],
-  "Western Europe": ["Austria", "Belgium", "France", "Germany", "Liechtenstein", "Luxembourg", "Monaco", "Netherlands", "Switzerland"],
-  "Eastern Europe": ["Belarus", "Bulgaria", "Czech Republic", "Hungary", "Moldova", "Poland", "Romania", "Russia", "Slovakia", "Ukraine"],
-  "Southern Europe": ["Albania", "Andorra", "Bosnia and Herzegovina", "Croatia", "Greece", "Italy", "Malta", "Montenegro", "North Macedonia", "Portugal"],
-  "Northern America": ["Canada", "United States"],
-  "Central America": ["Belize", "Costa Rica", "El Salvador", "Guatemala", "Honduras", "Nicaragua", "Panama"],
-  "Caribbean": ["Antigua and Barbuda", "Bahamas", "Barbados", "Cuba", "Dominica", "Dominican Republic", "Grenada", "Haiti", "Jamaica"],
-  "Brazil and the Guianas": ["Brazil", "Guyana", "Suriname", "French Guiana"],
-  "Andes Nations": ["Bolivia", "Colombia", "Ecuador", "Peru", "Venezuela"],
-  "Southern Cone": ["Argentina", "Chile", "Paraguay", "Uruguay"],
-  "Australia and New Zealand": ["Australia", "New Zealand"],
-  "Melanesia": ["Fiji", "Papua New Guinea", "Solomon Islands", "Vanuatu"],
-  "Micronesia": ["Kiribati", "Marshall Islands", "Micronesia", "Nauru", "Palau"],
-  "Polynesia": ["Samoa", "Tonga", "Tuvalu"],
-  "Antarctic region": ["Antarctic Treaty area"]
-};
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Country, State, City } from 'country-state-city';
 
 const eventFormSchema = z.object({
   name: z.string().min(2, "Event name must be at least 2 characters"),
@@ -96,9 +29,8 @@ const eventFormSchema = z.object({
   hostOrganization: z.string().min(2, "Host organization is required"),
   coHost: z.string().optional(),
   sponsor: z.string().optional(),
-  region: z.string().min(2, "Region is required"),
-  subRegion: z.string().optional(),
-  nation: z.string().min(2, "Nation is required"),
+  countryCode: z.string().min(2, "Country is required"),
+  stateCode: z.string().optional(),
   city: z.string().min(2, "City is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   capacity: z.string().optional(),
@@ -117,6 +49,10 @@ interface EventFormProps {
 const EventForm = ({ onSuccess, onClose }: EventFormProps) => {
   // Form submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isStripeError, setIsStripeError] = useState(false);
+  const [stripeOnboardingUrl, setStripeOnboardingUrl] = useState<string | null>(null);
+  const [isStripeLoading, setIsStripeLoading] = useState(false);
   
   // Get session data
   const { data: session, status } = useSession();
@@ -128,6 +64,13 @@ const EventForm = ({ onSuccess, onClose }: EventFormProps) => {
   // Get real or fallback UUIDs
   const orgId = session?.user?.organizationId || defaultOrgId;
   const createdBy = session?.user?.id || defaultUserId;
+
+  // Get list of countries, will be used for dropdown
+  const countries = Country.getAllCountries();
+
+  // State for storing states and cities based on selected country/state
+  const [states, setStates] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
@@ -142,9 +85,8 @@ const EventForm = ({ onSuccess, onClose }: EventFormProps) => {
       hostOrganization: "",
       coHost: "",
       sponsor: "",
-      region: "",
-      subRegion: "",
-      nation: "",
+      countryCode: "",
+      stateCode: "",
       city: "",
       description: "",
       organizationId: orgId,
@@ -163,23 +105,92 @@ const EventForm = ({ onSuccess, onClose }: EventFormProps) => {
     }
   }, [session, form]);
 
-  // Watch for region changes to update subRegion options
-  const selectedRegion = form.watch("region") as Region | "";
-  const selectedSubRegion = form.watch("subRegion") as SubRegion | "";
+  // Watch form fields for dependencies
   const isPaid = form.watch("isPaid");
+  const selectedCountryCode = form.watch("countryCode");
+  const selectedStateCode = form.watch("stateCode");
 
-  // Reset subRegion when region changes
+  // Update states when country changes
   useEffect(() => {
-    form.setValue("subRegion", "");
-    form.setValue("nation", "");
-  }, [selectedRegion, form]);
+    if (selectedCountryCode) {
+      const countryStates = State.getStatesOfCountry(selectedCountryCode);
+      setStates(countryStates);
+      form.setValue("stateCode", "");
+      form.setValue("city", "");
+    } else {
+      setStates([]);
+    }
+  }, [selectedCountryCode, form]);
 
-  // Reset nation when subRegion changes
+  // Update cities when state changes
   useEffect(() => {
-    form.setValue("nation", "");
-  }, [selectedSubRegion, form]);
+    if (selectedCountryCode && selectedStateCode) {
+      const stateCities = City.getCitiesOfState(selectedCountryCode, selectedStateCode);
+      setCities(stateCities);
+    } else {
+      setCities([]);
+    }
+  }, [selectedCountryCode, selectedStateCode]);
+
+  // Stripe onboarding function
+  const initiateStripeOnboarding = async () => {
+    try {
+      setIsStripeLoading(true);
+      const response = await fetch('http://localhost:5000/admin/organization/stripe/createAccount', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`,
+        }
+      });
+      console.log("session.accesstoken",session?.accessToken)
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to initiate Stripe onboarding');
+      }
+      
+      setStripeOnboardingUrl(data.data.onboardingUrl);
+      
+      // Attempt to open the URL in a new tab
+      const newWindow = window.open(data.data.onboardingUrl, '_blank');
+      
+      // If popup was blocked, we'll let the user click a button instead
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        console.log('Popup blocked, user will need to click the button');
+      }
+      
+      return data.data; // Contains stripeAccountId and onboardingUrl
+    } catch (error) {
+      console.error('Error initiating Stripe onboarding:', error);
+      throw error;
+    } finally {
+      setIsStripeLoading(false);
+    }
+  };
+
+  // Handle Stripe onboarding button click
+  const handleStripeOnboarding = async () => {
+    try {
+      await initiateStripeOnboarding();
+    } catch (error) {
+      console.error("Stripe onboarding failed:", error);
+      setError("Failed to initiate Stripe onboarding. Please try again.");
+    }
+  };
+
+  // Check if error is related to Stripe onboarding
+  const checkForStripeError = (errorMessage: string) => {
+    const stripeOnboardingErrorPattern = /Your organization's Stripe account is not fully enabled for charges or payouts. Please complete onboarding/i;
+    return stripeOnboardingErrorPattern.test(errorMessage);
+  };
 
   async function onSubmit(data: EventFormValues) {
+    // Clear any previous errors
+    setError(null);
+    setIsStripeError(false);
+    setStripeOnboardingUrl(null);
+    
     try {
       setIsSubmitting(true);
       
@@ -197,6 +208,7 @@ const EventForm = ({ onSuccess, onClose }: EventFormProps) => {
       console.log("Submitting event data:", eventData);
 
       const response = await createEvent(eventData);
+      console.log(session?.accessToken)
       console.log("Event created successfully:", response);
       
       // Call success callback if provided
@@ -211,9 +223,32 @@ const EventForm = ({ onSuccess, onClose }: EventFormProps) => {
       
       // Reset the form
       form.reset();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create event:", error);
-      // Handle error - show error message to user
+      
+      // Extract error message
+      let errorMessage = "Failed to create event. Please try again.";
+      
+      if (error.response) {
+        // If it's an axios error with a response
+        if (error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data && error.response.data.error) {
+          errorMessage = error.response.data.error;
+        } else if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        }
+      } else if (error.message) {
+        // If it has a generic message property
+        errorMessage = error.message;
+      }
+      
+      // Check if this is a Stripe onboarding error
+      if (checkForStripeError(errorMessage)) {
+        setIsStripeError(true);
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -222,6 +257,55 @@ const EventForm = ({ onSuccess, onClose }: EventFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Error display */}
+        {error && (
+          <Alert variant={isStripeError ? "warning" : "destructive"} className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>{isStripeError ? "Stripe Account Required" : "Error"}</AlertTitle>
+            <div className="flex justify-between items-start">
+              <AlertDescription className="mt-1">
+                {error}
+                {isStripeError && (
+                  <div className="mt-4">
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
+                      onClick={handleStripeOnboarding}
+                      disabled={isStripeLoading}
+                    >
+                      {isStripeLoading ? "Processing..." : "Retry Stripe Onboarding"}
+                    </Button>
+                    
+                    {stripeOnboardingUrl && (
+                      <div className="mt-2 text-sm">
+                        <p>If a new window didn't open, click the button below:</p>
+                        <Button 
+                          variant="link" 
+                          className="flex items-center gap-1 p-0 h-auto text-blue-600"
+                          onClick={() => window.open(stripeOnboardingUrl, '_blank')}
+                        >
+                          Open Stripe Onboarding <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </AlertDescription>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0" 
+                onClick={() => {
+                  setError(null);
+                  setIsStripeError(false);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </Alert>
+        )}
+
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList className="w-full grid grid-cols-3 gap-2">
             <TabsTrigger value="general" className="text-center">General</TabsTrigger>
@@ -451,83 +535,56 @@ const EventForm = ({ onSuccess, onClose }: EventFormProps) => {
               <div className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="region"
+                  name="countryCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Region</FormLabel>
+                      <FormLabel>Country</FormLabel>
                       <Select 
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                        }} 
+                        onValueChange={field.onChange} 
                         value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a region" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {regions.map((region) => (
-                            <SelectItem key={region} value={region}>
-                              {region}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="subRegion"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Sub-Region</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        value={field.value || ""} 
-                        disabled={!selectedRegion}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a sub-region" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {selectedRegion && subRegions[selectedRegion as Region]?.map((subRegion) => (
-                            <SelectItem key={subRegion} value={subRegion}>
-                              {subRegion}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="nation"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nation</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        value={field.value || ""} 
-                        disabled={!selectedSubRegion}
                       >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a country" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                          {selectedSubRegion && countries[selectedSubRegion as SubRegion]?.map((country) => (
-                            <SelectItem key={country} value={country}>
-                              {country}
+                        <SelectContent className="max-h-60">
+                          {countries.map((country:any) => (
+                            <SelectItem key={country.isoCode} value={country.isoCode}>
+                              {country.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="stateCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State/Province</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value || ""} 
+                        disabled={!selectedCountryCode || states.length === 0}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={
+                              selectedCountryCode && states.length === 0 
+                                ? "No states available for this country" 
+                                : "Select a state/province"
+                            } />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-60">
+                          {states.map((state) => (
+                            <SelectItem key={state.isoCode} value={state.isoCode}>
+                              {state.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -543,8 +600,42 @@ const EventForm = ({ onSuccess, onClose }: EventFormProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>City</FormLabel>
+                      {cities.length > 0 ? (
+                        <Select 
+                          onValueChange={field.onChange} 
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a city" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-60">
+                            {cities.map((city) => (
+                              <SelectItem key={city.name} value={city.name}>
+                                {city.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <FormControl>
+                          <Input placeholder="Enter city name" {...field} />
+                        </FormControl>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Venue/Address</FormLabel>
                       <FormControl>
-                        <Input placeholder="Accra" {...field} />
+                        <Input placeholder="Conference Center, 123 Main St" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

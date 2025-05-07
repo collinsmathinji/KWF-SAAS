@@ -145,7 +145,6 @@ export function getStoredOrganization(): OrganizationType | null {
 
 const initiateStripeOnboarding = async () => {
   try {
-    const token = localStorage.getItem('authToken');
     const response = await fetch('/api/organization/stripe/createAccount', {
       method: 'POST',
       headers: {

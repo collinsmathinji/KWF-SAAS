@@ -60,9 +60,8 @@ async function handleRequest(request: NextRequest, pathSegments: string[]) {
     if (session?.accessToken) {
       headers['Authorization'] = `Bearer ${session.accessToken}`;
     }
-    const apiUrl =  'http://192.46.218.168:3001';
     // Construct the URL for the backend API
-    const backendUrl = `${apiUrl}/admin/${path}`;
+    const backendUrl = `${process.env.API_URL}/admin/${path}`;
     console.log(`Proxying ${method} request to: ${backendUrl}`);
     console.log(`Request body: ${JSON.stringify(body)}`);
     console.log(`Request headers: ${headers['Content-Type']}`);

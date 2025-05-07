@@ -77,6 +77,7 @@ export const authOptions: NextAuthOptions = {
           console.log("Login Response from backend:", data);
           
           if (!res.ok || !data.data?.token) {
+            // Forward the exact error message from the backend
             throw new Error(data.message || "Invalid credentials");
           }
           
@@ -92,7 +93,11 @@ export const authOptions: NextAuthOptions = {
           };
         } catch (error) {
           console.error("Error during authorize:", error);
-          return null;
+          // Forward the error message properly
+          if (error instanceof Error) {
+            throw error;
+          }
+          throw new Error("Authentication failed");
         }
       },
     }),
@@ -143,8 +148,7 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
     // You can add other custom pages here if needed
-    // error: '/auth/error',
-    // signOut: '/auth/signout',
+    error: '/login', // This redirects to login page with error param
   },
   secret: process.env.NEXTAUTH_SECRET || "your-fallback-secret-for-development",
   session: {
