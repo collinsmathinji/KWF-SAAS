@@ -203,6 +203,8 @@ const EventForm = ({ onSuccess, onClose }: EventFormProps) => {
         organizationId: data.organizationId || defaultOrgId,
         createdBy: data.createdBy || defaultUserId,
         addedBy: createdBy,
+        region: data.stateCode || "",
+        nation: data.countryCode || "",
       };
 
       console.log("Submitting event data:", eventData);
@@ -259,7 +261,7 @@ const EventForm = ({ onSuccess, onClose }: EventFormProps) => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Error display */}
         {error && (
-          <Alert variant={isStripeError ? "warning" : "destructive"} className="mb-6">
+          <Alert variant={isStripeError ? "default" : "destructive"} className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>{isStripeError ? "Stripe Account Required" : "Error"}</AlertTitle>
             <div className="flex justify-between items-start">
