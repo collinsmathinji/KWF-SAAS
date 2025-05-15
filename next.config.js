@@ -7,6 +7,9 @@ const nextConfig = {
         hostname: 'images.unsplash.com',
       },
     ],
+    domains: [
+      'mbosaasbucket.s3.us-east-2.amazonaws.com'
+    ],
   },
 }
 require("dotenv").config();

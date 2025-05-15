@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calendar, 
   Coins, 
@@ -21,91 +21,31 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-
+import { useSession } from 'next-auth/react';
 // Import your campaign form component here
 import CampaignCreationForm from './campaignForm';
 
 // Types
 interface Campaign {
   id: string;
-  name: string;
-  description: string;
+  title: string;  // changed from name
+  cause: string;  // added
   category: string;
-  status: 'active' | 'draft' | 'ended' | 'pending';
+  donationType: 'one-time' | 'recurring';  // added
+  targetAmount: number;  // changed from goalAmount
+  coverImage: string;
+  gallery?: string[];  // added
+  description: string;
   startDate: string;
   endDate?: string;
-  goalAmount: number;
-  currentAmount: number;
-  coverImage: string;
-  donorCount: number;
+  status: 'draft' | 'active' | 'ended' | 'pending';
+  organizationId: string;
+  groupId?: string;
+  stripeProductId?: string;
+  stripePriceId?: string;
+  currentAmount?: number;
+  donorCount?: number;
 }
-
-// Sample campaigns data
-const SAMPLE_CAMPAIGNS: Campaign[] = [
-  {
-    id: 'camp-1',
-    name: 'Save Local Wildlife',
-    description: 'Help us protect and preserve the local wildlife in our community parks and reserves.',
-    category: 'environment',
-    status: 'active',
-    startDate: '2025-03-15',
-    endDate: '2025-06-15',
-    goalAmount: 15000,
-    currentAmount: 9750,
-    coverImage: '/api/placeholder/800/400',
-    donorCount: 128
-  },
-  {
-    id: 'camp-2',
-    name: 'Community Library Upgrade',
-    description: 'Support our initiative to upgrade the local library with new books and digital resources.',
-    category: 'education',
-    status: 'active',
-    startDate: '2025-04-01',
-    endDate: '2025-07-01',
-    goalAmount: 10000,
-    currentAmount: 3200,
-    coverImage: '/api/placeholder/800/400',
-    donorCount: 42
-  },
-  {
-    id: 'camp-3',
-    name: 'Annual Charity Gala',
-    description: 'Our annual fundraising gala to support multiple local causes and community projects.',
-    category: 'charity',
-    status: 'draft',
-    startDate: '2025-06-20',
-    goalAmount: 25000,
-    currentAmount: 0,
-    coverImage: '/api/placeholder/800/400', 
-    donorCount: 0
-  },
-  {
-    id: 'camp-4',
-    name: 'School Music Program',
-    description: 'Help fund instruments and equipment for underprivileged schools in our district.',
-    category: 'education',
-    status: 'ended',
-    startDate: '2024-09-01',
-    endDate: '2025-02-01',
-    goalAmount: 8000,
-    currentAmount: 9200,
-    coverImage: '/api/placeholder/800/400',
-    donorCount: 89
-  },
-  {
-    id: 'camp-5',
-    name: 'Emergency Relief Fund',
-    description: 'Support for families affected by recent natural disasters in our region.',
-    category: 'charity',
-    status: 'pending',
-    startDate: '2025-05-01',
-    goalAmount: 50000,
-    currentAmount: 0,
-    coverImage: '/api/placeholder/800/400',
-    donorCount: 0
-  }
-];
 
 // Category name mapping
 const CATEGORY_LABELS: Record<string, string> = {
@@ -128,14 +68,16 @@ const STATUS_COLORS: Record<string, { bg: string, text: string }> = {
 };
 
 // Dialog component for the form
-const FormDialog = ({ isOpen, onClose, children }:any) => {
+const FormDialog = ({ isOpen, onClose, children, isEditMode }:any) => {
   if (!isOpen) return null;
   
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-blue-800">Create New Campaign</h2>
+          <h2 className="text-xl font-bold text-blue-800">
+            {isEditMode ? 'Edit Campaign' : 'Create New Campaign'}
+          </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X size={24} />
           </button>
@@ -154,17 +96,80 @@ const OrganizationCampaigns: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
-  // State for campaign detail view
+    const { data: session } = useSession();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
-  
-  // State for campaign creation dialog
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  
+  // Update the fetchCampaigns function
+
+const fetchCampaigns = async () => {
+  try {
+    setLoading(true);
+    const response = await fetch('/api/donation/list', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: {
+          organizationId: session?.user?.organizationId
+        },
+        options: {
+          paginate: 20,
+          page: 1,
+          select: [
+            'id',
+            'title',
+            'cause',
+            'category', 
+            'donationType',
+            'targetAmount',
+            'coverImage',
+            'description',
+            'startDate',
+            'endDate',
+            'status',
+            'organizationId'
+          ]
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch campaigns');
+    }
+
+    const data = await response.json();
+    if (data.status === "SUCCESS") {
+      // Initialize currentAmount and donorCount as 0 since they don't exist in DB
+      const campaignsWithDefaults = (data.data.rows || []).map((campaign:any) => ({
+        ...campaign,
+        currentAmount: 0,
+        donorCount: 0
+      }));
+      setCampaigns(campaignsWithDefaults);
+    } else {
+      throw new Error(data.message || 'Failed to fetch campaigns');
+    }
+  } catch (error) {
+    console.error('Error fetching campaigns:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
   
   // Filter campaigns
-  const filteredCampaigns = SAMPLE_CAMPAIGNS.filter(campaign => {
-    const matchesSearch = campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          campaign.description.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredCampaigns = campaigns.filter(campaign => {
+    const matchesSearch = campaign.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         campaign.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || campaign.status === statusFilter;
     const matchesCategory = categoryFilter === 'all' || campaign.category === categoryFilter;
     
@@ -199,10 +204,27 @@ const OrganizationCampaigns: React.FC = () => {
   };
   
   // Handle campaign deletion (mock)
-  const handleDeleteCampaign = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this campaign? This action cannot be undone.')) {
-      // In a real app, this would call an API to delete the campaign
-      console.log(`Deleting campaign ${id}`);
+  const handleDeleteCampaign = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this campaign? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/admin/donation/softDelete/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete campaign');
+      }
+
+      // Refresh campaigns list
+      fetchCampaigns();
+    } catch (error) {
+      console.error('Error deleting campaign:', error);
     }
   };
   
@@ -227,10 +249,60 @@ const OrganizationCampaigns: React.FC = () => {
   };
   
   // Handle form submission (mock)
-  const handleFormSubmit = (formData:any) => {
-    // In a real app, this would call an API to create the campaign
-    console.log('Form submitted:', formData);
-    closeFormDialog();
+  const handleFormSubmit = async (formData: any) => {
+    try {
+      const response = await fetch('/admin/donation/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          organizationId: sessionStorage.getItem('organizationId')
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create campaign');
+      }
+
+      await fetchCampaigns();
+      closeFormDialog();
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+    }
+  };
+
+  // Add the handleUpdateCampaign function
+  const handleUpdateCampaign = async (id: string, updatedData: Partial<Campaign>) => {
+    try {
+      const response = await fetch(`/admin/donation/update/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(updatedData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update campaign');
+      }
+
+      await fetchCampaigns();
+      setIsEditMode(false);
+      setEditingCampaign(null);
+      closeFormDialog();
+    } catch (error) {
+      console.error('Error updating campaign:', error);
+    }
+  };
+  
+  // Add an edit button handler
+  const handleEditClick = (campaign: Campaign) => {
+    setEditingCampaign(campaign);
+    setIsEditMode(true);
+    setIsFormDialogOpen(true);
   };
 
   // Campaign details view
@@ -249,7 +321,7 @@ const OrganizationCampaigns: React.FC = () => {
             <div className="relative h-56 md:h-64">
               <Image 
                 src={selectedCampaign.coverImage}
-                alt={selectedCampaign.name}
+                alt={selectedCampaign.title}
                 fill
                 style={{ objectFit: 'cover' }}
                 className="w-full"
@@ -263,7 +335,7 @@ const OrganizationCampaigns: React.FC = () => {
             
             <div className="p-6">
               <div className="flex flex-wrap justify-between items-start mb-4">
-                <h1 className="text-2xl font-bold text-blue-800 mb-2">{selectedCampaign.name}</h1>
+                <h1 className="text-2xl font-bold text-blue-800 mb-2">{selectedCampaign.title}</h1>
                 <div className="flex space-x-2">
                   <Link 
                     href={`/campaigns/edit/${selectedCampaign.id}`}
@@ -305,20 +377,20 @@ const OrganizationCampaigns: React.FC = () => {
                     <h3 className="text-blue-800 font-medium mb-1">Progress</h3>
                     <div className="flex items-end mb-2">
                       <span className="text-2xl font-bold text-blue-600">
-                        {formatCurrency(selectedCampaign.currentAmount)}
+                        {formatCurrency(selectedCampaign.currentAmount || 0)}
                       </span>
                       <span className="text-gray-500 ml-1">
-                        of {formatCurrency(selectedCampaign.goalAmount)}
+                        of {formatCurrency(selectedCampaign.targetAmount)}
                       </span>
                     </div>
                     <div className="h-2 w-full bg-blue-100 rounded-full">
                       <div 
                         className="h-2 bg-blue-600 rounded-full" 
-                        style={{ width: `${calculateProgress(selectedCampaign.currentAmount, selectedCampaign.goalAmount)}%` }}
+                        style={{ width: `${calculateProgress(selectedCampaign.currentAmount || 0, selectedCampaign.targetAmount)}%` }}
                       ></div>
                     </div>
                     <div className="text-sm text-gray-500 mt-1">
-                      {calculateProgress(selectedCampaign.currentAmount, selectedCampaign.goalAmount)}% of goal
+                      {calculateProgress(selectedCampaign.currentAmount || 0, selectedCampaign.targetAmount)}% of goal
                     </div>
                   </div>
                   
@@ -326,7 +398,7 @@ const OrganizationCampaigns: React.FC = () => {
                     <h3 className="text-blue-800 font-medium mb-1">Donors</h3>
                     <div className="flex items-center">
                       <Users size={18} className="text-blue-600 mr-2" />
-                      <span className="text-2xl font-bold text-blue-600">{selectedCampaign.donorCount}</span>
+                      <span className="text-2xl font-bold text-blue-600">{selectedCampaign.donorCount || 0}</span>
                     </div>
                   </div>
                   
@@ -394,6 +466,15 @@ const OrganizationCampaigns: React.FC = () => {
       </div>
     );
   }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-blue-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
@@ -520,13 +601,12 @@ const OrganizationCampaigns: React.FC = () => {
                 {filteredCampaigns.map((campaign) => (
                   <div 
                     key={campaign.id}
-                    className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => openCampaignDetails(campaign)}
+                    className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                   >
-                    <div className="relative h-40">
+                    <div className="relative h-48">
                       <Image 
                         src={campaign.coverImage}
-                        alt={campaign.name}
+                        alt={campaign.title}
                         fill
                         className="object-cover"
                       />
@@ -535,77 +615,67 @@ const OrganizationCampaigns: React.FC = () => {
                           {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
                         </span>
                       </div>
+                      {campaign.donationType === 'recurring' && (
+                        <div className="absolute top-3 left-3">
+                          <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-1 rounded-full">
+                            Recurring
+                          </span>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium text-gray-900 mb-1">{campaign.name}</h3>
-                          <div className="text-xs text-gray-500 mb-3">{CATEGORY_LABELS[campaign.category] || campaign.category}</div>
-                        </div>
-                      </div>
-                      
-                      <div className="text-sm text-gray-700 mb-3 flex items-center">
-                        <Calendar size={14} className="mr-1" />
-                        {formatDate(campaign.startDate)}
-                        {campaign.endDate && (
-                          <>
-                            <span className="px-1">-</span>
-                            {formatDate(campaign.endDate)}
-                          </>
-                        )}
+                      <h3 className="font-medium text-gray-900 mb-1 line-clamp-1">{campaign.title}</h3>
+                      <div className="text-xs text-gray-500 mb-3">
+                        {campaign.cause} • {CATEGORY_LABELS[campaign.category] || campaign.category}
                       </div>
                       
                       <div className="mb-4">
                         <div className="text-sm text-gray-700 mb-1 flex justify-between">
-                          <span className="font-medium">{formatCurrency(campaign.currentAmount)}</span>
-                          <span className="text-gray-500">{formatCurrency(campaign.goalAmount)}</span>
+                          <span className="font-medium">{formatCurrency(campaign.currentAmount || 0)}</span>
+                          <span className="text-gray-500">{formatCurrency(campaign.targetAmount)}</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div 
                             className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${calculateProgress(campaign.currentAmount, campaign.goalAmount)}%` }}
+                            style={{ width: `${calculateProgress(campaign.currentAmount || 0, campaign.targetAmount)}%` }}
                           ></div>
-                        </div>
-                        <div className="text-xs text-right mt-1 text-gray-500">
-                          {calculateProgress(campaign.currentAmount, campaign.goalAmount)}% Complete
                         </div>
                       </div>
                       
-                      <div className="flex justify-end space-x-1 border-t pt-3" onClick={(e) => e.stopPropagation()}>
-                        <Link 
-                          href={`/campaigns/edit/${campaign.id}`}
-                          className="text-blue-600 hover:text-blue-800 p-1"
-                        >
-                          <Edit size={16} />
-                        </Link>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openCampaignDetails(campaign);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 p-1"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        {campaign.status === 'active' && (
-                          <Link 
-                            href={`/campaigns/${campaign.id}`}
-                            className="text-blue-600 hover:text-blue-800 p-1"
-                            target="_blank"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <ArrowUpRight size={16} />
-                          </Link>
+                      <div className="flex items-center justify-between text-sm text-gray-500">
+                        <span className="flex items-center">
+                          <Clock size={14} className="mr-1" />
+                          {formatDate(campaign.startDate)}
+                        </span>
+                        {campaign.donorCount !== undefined && (
+                          <span className="flex items-center">
+                            <Users size={14} className="mr-1" />
+                            {campaign.donorCount}
+                          </span>
                         )}
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteCampaign(campaign.id);
-                          }}
-                          className="text-red-500 hover:text-red-700 p-1"
+                      </div>
+                      <div className="flex justify-end mt-4 space-x-2">
+                        <button
+                          onClick={() => handleEditClick(campaign)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                          title="Edit campaign"
                         >
-                          <Trash2 size={16} />
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => openCampaignDetails(campaign)}
+                          className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+                          title="View details"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCampaign(campaign.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          title="Delete campaign"
+                        >
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </div>
@@ -617,10 +687,27 @@ const OrganizationCampaigns: React.FC = () => {
         </div>
       </div>
       
-      {/* Campaign creation dialog */}
-      <FormDialog isOpen={isFormDialogOpen} onClose={closeFormDialog}>
-        {/* Replace this with your actual form component */}
-        <CampaignCreationForm />
+      {/* Campaign creation/editing dialog */}
+      <FormDialog 
+        isOpen={isFormDialogOpen} 
+        onClose={() => {
+          closeFormDialog();
+          setIsEditMode(false);
+          setEditingCampaign(null);
+        }}
+        isEditMode={isEditMode}
+      >
+        <CampaignCreationForm 
+          initialData={editingCampaign || undefined}
+          onSubmit={async (formData) => {
+            if (isEditMode && editingCampaign) {
+              await handleUpdateCampaign(editingCampaign.id, formData);
+            } else {
+              await handleFormSubmit(formData);
+            }
+            closeFormDialog();
+          }}
+        />
       </FormDialog>
     </div>
   );

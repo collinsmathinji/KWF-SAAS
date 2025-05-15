@@ -61,7 +61,7 @@ async function handleRequest(request: NextRequest, pathSegments: string[]) {
       headers['Authorization'] = `Bearer ${session.accessToken}`;
     }
     // Construct the URL for the backend API
-    const backendUrl = `${process.env.API_URL}/admin/${path}`;
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/admin/${path}`;
     console.log(`Proxying ${method} request to: ${backendUrl}`);
     console.log(`Request body: ${JSON.stringify(body)}`);
     console.log(`Request headers: ${headers['Content-Type']}`);

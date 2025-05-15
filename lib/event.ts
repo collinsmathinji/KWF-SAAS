@@ -1,3 +1,4 @@
+"use client"
 export interface EventData {
   name: string;
   startDate: string; // ISO date string
@@ -15,7 +16,7 @@ export interface EventData {
   city: string;
   description: string;
 }
-
+import { useSession } from "next-auth/react"
 export async function createEvent(eventData: EventData): Promise<any> {
   try {
     const response = await fetch("/api/event/create", {
@@ -39,28 +40,42 @@ export async function createEvent(eventData: EventData): Promise<any> {
   }
 }
 
-// Updated fetchEvents function to accept organizationId
-export async function fetchEvents(organizationId?: string): Promise<EventData[]> {
-  try {
-    const response = await fetch("/api/event/list", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+export const fetchEvents = async (organizationId?: string) => {
+  const response = await fetch('/api/event/list', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query: {
+        organizationId: organizationId
       },
-      body: JSON.stringify({
-        organizationId: organizationId // Include organizationId in the request body
-      }),
-    });
+      options: {
+        sort: { createdAt: -1 },
+        select: [
+          'id',
+          'name',
+          'startDate',
+          'endDate',
+          'venue',
+          'address',
+          'city',
+          'country',
+          'description',
+          'isPaid',
+          'price',
+          'coverImage',
+          'organizationId',
+          'stripeProductId',
+          'stripePriceId'
+        ]
+      }
+    })
+  });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch events");
-    }
-
-    const responseData = await response.json();
-    return responseData as EventData[];
-  } catch (error) {
-    console.error("Error fetching events:", error);
-    throw error;
+  if (!response.ok) {
+    throw new Error('Failed to fetch events');
   }
-}
+
+  return response.json();
+};

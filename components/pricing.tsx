@@ -256,8 +256,8 @@ export function Pricing() {
         priceId: selectedPlan.stripePriceId,
         customerName: customerData.name,
         email: customerData.email, 
-        successUrl: "https://kwf-saas.vercel.app/success",
-        cancelUrl: "https://kwf-saas.vercel.app/pricing",
+        successUrl: `${process.env.NEXT_PUBLIC_API_URL}/success`,
+        cancelUrl: `${process.env.NEXT_PUBLIC_API_URL}/pricing`,
       };
   
       console.log("Sending request with body:", requestBody);

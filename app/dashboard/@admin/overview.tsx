@@ -19,12 +19,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { LineChart } from "recharts"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import ReportsGenerator from './report/page'
 import { Badge } from "@/components/ui/badge"
 import { getMembers } from "@/lib/members"
 import { getGroups } from "@/lib/group"
 import { fetchEvents } from '@/lib/event'
+import { useSession } from 'next-auth/react'
 
 // Define proper TypeScript interfaces
 interface Event {
@@ -54,13 +55,24 @@ interface Member {
   createdAt: string;
 }
 
-interface Group {
+interface GroupData {
   id: string | number;
   name: string;
   members?: number;
+  isActive: boolean;
+  createdAt: string;
+  region?: string;
+  description?: string;
+  organizationId?: number;
+  groupTypeId?: number;
+  isDeleted?: boolean;
+  updatedAt?: string;
+  addedBy?: string;
+}
+
+interface Group extends GroupData {
   status?: string;
   created?: string;
-  region?: string;
   activeMembers?: number;
   events?: number;
 }
@@ -132,11 +144,11 @@ const MetricCard = ({ icon, title, value, change, description }: MetricCardProps
 export default function Overview({ organisationDetails }: { organisationDetails: OrganizationDetails }) {
   const [activeSection, setActiveSection] = useState("")
   const [isLoading, setIsLoading] = useState(true)
-  const [members, setMembers] = useState<any>([])
-  const [groups, setGroups] = useState<any>([])
-  const [events, setEvents] = useState<any>([])
-  const [donations, setDonations] = useState<any>([])
-  const [memberGrowth, setMemberGrowth] = useState<any>([])
+  const [members, setMembers] = useState<Member[]>([])
+  const [groups, setGroups] = useState<Group[]>([])
+  const [events, setEvents] = useState<Event[]>([])
+  const [donations, setDonations] = useState<Donation[]>([])
+  const [memberGrowth, setMemberGrowth] = useState<ChartData[]>([])
   
   // Calculate metrics for organization dashboard
   const [metrics, setMetrics] = useState({
@@ -150,163 +162,190 @@ export default function Overview({ organisationDetails }: { organisationDetails:
     memberGrowth: 0
   })
 
+  const { data: session, status } = useSession()
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       setIsLoading(true)
+      let membersData: Member[] = []
+      let groupsData: Group[] = []
+      let eventsData: Event[] = []
       try {
-        // Fetch members data
-        const membersResponse:any = await getMembers()
-        console.log('Members data:', membersResponse)
-        // Handle different API response structures
-        let membersData: Member[] = []
-        if (membersResponse?.data?.data) {
-          membersData = membersResponse.data.data
-        } else if (Array.isArray(membersResponse?.data)) {
-          membersData = membersResponse.data
-        } else if (Array.isArray(membersResponse)) {
-          membersData = membersResponse
+        // Early exit if session or orgId is not available
+        const orgId = session?.user?.organizationId
+        if (!orgId) {
+          setIsLoading(false)
+          return
         }
-        console.log('Processed members data:', membersData)
+
+        // Fetch members
+        const membersResponse = await getMembers()
+        if (Array.isArray(membersResponse)) {
+          membersData = membersResponse.map(member => ({
+            id: member.id || String(Math.random()),
+            firstName: member.firstName,
+            lastName: member.lastName,
+            email: member.email || '',
+            membershipTypeId: member.membershipTypeId,
+            isActive: member.isPortalAccess || false,
+            createdAt: new Date().toISOString()
+          }))
+        }
         setMembers(membersData)
-        
-        // Fetch groups data
-        const groupsResponse:any = await getGroups()
-        console.log('Groups data:', groupsResponse)
-        // Handle different API response structures
-        let groupsData: Group[] = []
-        if (groupsResponse?.data?.data) {
-          groupsData = groupsResponse.data.data
-        } else if (Array.isArray(groupsResponse?.data)) {
-          groupsData = groupsResponse.data
-        } else if (Array.isArray(groupsResponse)) {
-          groupsData = groupsResponse
+
+        // Fetch groups
+        const groupsResponse = await getGroups()
+        if (Array.isArray(groupsResponse)) {
+          groupsData = groupsResponse.map(group => ({
+            id: group.id,
+            name: group.name,
+            members: group.members || 0,
+            isActive: group.isActive,
+            createdAt: group.createdAt,
+            region: group.region,
+            description: group.description,
+            organizationId: group.organizationId,
+            groupTypeId: group.groupTypeId,
+            isDeleted: group.isDeleted,
+            updatedAt: group.updatedAt,
+            addedBy: group.addedBy,
+            status: group.isActive ? 'Active' : 'Inactive',
+            created: group.createdAt,
+            activeMembers: Math.floor(Math.random() * ((group.members || 100) * 0.8)),
+            events: Math.floor(Math.random() * 20)
+          }))
         }
-        console.log('Processed groups data:', groupsData)
         setGroups(groupsData)
-        
-        // Fetch events data
-        try {
-          const eventsResponse:any = await fetchEvents()
-          console.log('Events data:', eventsResponse)
-          // Handle different API response structures
-          let eventsData: Event[] = []
-          if (eventsResponse?.data?.data) {
-            eventsData = eventsResponse.data.data
-          } else if (Array.isArray(eventsResponse?.data)) {
-            eventsData = eventsResponse.data
-          } else if (Array.isArray(eventsResponse)) {
-            eventsData = eventsResponse
-          }
-          
-          // If we got no data, throw an error to use the fallback data
-          if (!eventsData || eventsData.length === 0) {
-            throw new Error("No events data received from API")
-          }
-          
-          console.log('Processed events data:', eventsData)
-          setEvents(eventsData)
-        } catch (error) {
-          console.error("Failed to fetch events:", error)
-          // Fallback to sample events data if API fails
-          const currentDate = new Date()
-          const sampleEvents: Event[] = [
-            {
-              id: 1,
-              name: "Annual Conference",
-              startDate: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 15).toISOString(),
-              isPaid: true,
-              price: "$99",
-              status: "Upcoming",
-              attendees: 120
-            },
-            {
-              id: 2,
-              name: "Community Workshop",
-              startDate: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 7).toISOString(),
-              isPaid: false,
-              status: "Open",
-              attendees: 45
-            },
-            {
-              id: 3,
-              name: "Monthly Meetup",
-              startDate: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 3).toISOString(),
-              isPaid: false,
-              status: "Open",
-              attendees: 30
-            }
-          ]
-          setEvents(sampleEvents)
+
+        // Fetch events
+        const eventsResponse = await fetchEvents(orgId as string)
+        if (eventsResponse?.data?.data) {
+          eventsData = eventsResponse.data.data
+        } else if (Array.isArray(eventsResponse?.data)) {
+          eventsData = eventsResponse.data
+        } else if (Array.isArray(eventsResponse)) {
+          eventsData = eventsResponse
         }
-        
-        // Calculate metrics based on fetched data
-        const activeMembers = membersData.length
-        const activeGroups = groupsData.length
-        
-        // Calculate member growth (could be from a separate API in real implementation)
-        // For now, using static data but structured for real data
-        const mockGrowthData: ChartData[] = [
-          { name: "Sep", total: membersData.length > 0 ? Math.floor(membersData.length * 0.6) : 3200 },
-          { name: "Oct", total: membersData.length > 0 ? Math.floor(membersData.length * 0.7) : 3800 },
-          { name: "Nov", total: membersData.length > 0 ? Math.floor(membersData.length * 0.8) : 4300 },
-          { name: "Dec", total: membersData.length > 0 ? Math.floor(membersData.length * 0.85) : 4800 },
-          { name: "Jan", total: membersData.length > 0 ? Math.floor(membersData.length * 0.95) : 5100 },
-          { name: "Feb", total: membersData.length > 0 ? membersData.length : 5335 },
-        ]
-        setMemberGrowth(mockGrowthData)
-        
-        // Calculate growth percentage (comparing last two months)
-        const growthPercentage = mockGrowthData.length >= 2 ? 
-          ((mockGrowthData[mockGrowthData.length-1].total - mockGrowthData[mockGrowthData.length-2].total) / 
-          mockGrowthData[mockGrowthData.length-2].total) * 100 : 4.6
-          
-        // Create current date instance for donations
-        const currentDate = new Date()
-        
-        // Simulate donations data (could come from an API)
-        const mockDonations: Donation[] = [
-          { id: 1, donor: membersData[0]?.firstName + " " + membersData[0]?.lastName || "John Doe", amount: 500, date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 5).toISOString(), type: "Monthly" },
-          { id: 2, donor: membersData[1]?.firstName + " " + membersData[1]?.lastName || "Jane Smith", amount: 1000, date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 8).toISOString(), type: "One-time" },
-          { id: 3, donor: membersData[2]?.firstName + " " + membersData[2]?.lastName || "Bob Wilson", amount: 250, date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 10).toISOString(), type: "Monthly" },
-          { id: 4, donor: membersData[3]?.firstName + " " + membersData[3]?.lastName || "Alice Brown", amount: 750, date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 12).toISOString(), type: "One-time" }
-        ]
-        setDonations(mockDonations)
-        
-        // First ensure we have valid numbers or fallback to default values
-        const totalMembers = Array.isArray(membersData) ? membersData.length : 0
-        const totalActiveMembers = Array.isArray(membersData) ? activeMembers : 0
-        const totalGroups = Array.isArray(groupsData) ? groupsData.length : 0
-        const totalActiveGroups = Array.isArray(groupsData) ? activeGroups : 0
-        const totalEvents = Array.isArray(events) ? events.length : 0
-        
-        console.log("Metrics calculation:", {
-          members: totalMembers,
-          activeMembers: totalActiveMembers,
-          groups: totalGroups,
-          activeGroups: totalActiveGroups,
-          events: totalEvents
-        })
-        
-        // Update metrics with real data and add fallbacks
-        setMetrics({
-          totalContacts: totalMembers,
-          registeredMembers: totalMembers,
-          activeMembers: totalActiveMembers,
-          totalGroups: totalGroups,
-          activeGroups: totalActiveGroups,
-          totalEvents: totalEvents,
-          monthlyDonation: mockDonations.reduce((sum, donation) => donation.type === "Monthly" ? sum + donation.amount : sum, 0),
-          memberGrowth: parseFloat(growthPercentage.toFixed(1))
-        })
+        setEvents(eventsData)
       } catch (error) {
-        console.error("Error fetching dashboard data:", error)
-      } finally {
-        setIsLoading(false)
+        // Fallback to sample/mock data
+        const currentDate = new Date()
+        membersData = [
+          {
+            id: "1",
+            firstName: "John",
+            lastName: "Doe",
+            email: "john@example.com",
+            membershipTypeId: 1,
+            isActive: true,
+            createdAt: currentDate.toISOString(),
+          },
+          {
+            id: "2",
+            firstName: "Jane",
+            lastName: "Smith",
+            email: "jane@example.com",
+            membershipTypeId: 2,
+            isActive: false,
+            createdAt: currentDate.toISOString(),
+          },
+        ]
+        groupsData = [
+          {
+            id: 1,
+            name: "Group A",
+            members: 50,
+            status: "Active",
+            created: currentDate.toISOString(),
+            region: "North",
+            activeMembers: 40,
+            events: 5,
+          },
+          {
+            id: 2,
+            name: "Group B",
+            members: 30,
+            status: "Inactive",
+            created: currentDate.toISOString(),
+            region: "South",
+            activeMembers: 20,
+            events: 2,
+          },
+        ]
+        eventsData = [
+          {
+            id: 1,
+            name: "Annual Conference",
+            startDate: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 15).toISOString(),
+            isPaid: true,
+            price: "$99",
+            status: "Upcoming",
+            attendees: 120,
+          },
+          {
+            id: 2,
+            name: "Community Workshop",
+            startDate: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 7).toISOString(),
+            isPaid: false,
+            status: "Open",
+            attendees: 45,
+          },
+          {
+            id: 3,
+            name: "Monthly Meetup",
+            startDate: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 3).toISOString(),
+            isPaid: false,
+            status: "Open",
+            attendees: 30,
+          },
+        ]
+        setMembers(membersData)
+        setGroups(groupsData)
+        setEvents(eventsData)
       }
+
+      // Calculate metrics based on fetched data
+      const activeMembers = membersData.filter(m => m.isActive).length
+      const activeGroups = groupsData.filter(g => g.status === "Active").length
+      const mockGrowthData: ChartData[] = [
+        { name: "Sep", total: membersData.length > 0 ? Math.floor(membersData.length * 0.6) : 3200 },
+        { name: "Oct", total: membersData.length > 0 ? Math.floor(membersData.length * 0.7) : 3800 },
+        { name: "Nov", total: membersData.length > 0 ? Math.floor(membersData.length * 0.8) : 4300 },
+        { name: "Dec", total: membersData.length > 0 ? Math.floor(membersData.length * 0.85) : 4800 },
+        { name: "Jan", total: membersData.length > 0 ? Math.floor(membersData.length * 0.95) : 5100 },
+        { name: "Feb", total: membersData.length > 0 ? membersData.length : 5335 },
+      ]
+      setMemberGrowth(mockGrowthData)
+      const growthPercentage = mockGrowthData.length >= 2 ?
+        ((mockGrowthData[mockGrowthData.length-1].total - mockGrowthData[mockGrowthData.length-2].total) /
+        mockGrowthData[mockGrowthData.length-2].total) * 100 : 4.6
+      const currentDate = new Date()
+      const mockDonations: Donation[] = [
+        { id: 1, donor: membersData[0]?.firstName + " " + membersData[0]?.lastName || "John Doe", amount: 500, date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 5).toISOString(), type: "Monthly" },
+        { id: 2, donor: membersData[1]?.firstName + " " + membersData[1]?.lastName || "Jane Smith", amount: 1000, date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 8).toISOString(), type: "One-time" },
+        { id: 3, donor: membersData[2]?.firstName + " " + membersData[2]?.lastName || "Bob Wilson", amount: 250, date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 10).toISOString(), type: "Monthly" },
+        { id: 4, donor: membersData[3]?.firstName + " " + membersData[3]?.lastName || "Alice Brown", amount: 750, date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 12).toISOString(), type: "One-time" }
+      ]
+      setDonations(mockDonations)
+      const totalMembers = membersData.length
+      const totalActiveMembers = activeMembers
+      const totalGroups = groupsData.length
+      const totalActiveGroups = activeGroups
+      const totalEvents = eventsData.length
+      setMetrics({
+        totalContacts: totalMembers,
+        registeredMembers: totalMembers,
+        activeMembers: totalActiveMembers,
+        totalGroups: totalGroups,
+        activeGroups: totalActiveGroups,
+        totalEvents: totalEvents,
+        monthlyDonation: mockDonations.reduce((sum, donation) => donation.type === "Monthly" ? sum + donation.amount : sum, 0),
+        memberGrowth: parseFloat(growthPercentage.toFixed(1))
+      })
+      setIsLoading(false)
     }
-    
     fetchDashboardData()
-  }, [organisationDetails?.organizationId])
+  }, [session?.user?.organizationId])
 
   // Format groups data for display with better error handling
   const formattedGroups = Array.isArray(groups) ? 
@@ -432,7 +471,16 @@ export default function Overview({ organisationDetails }: { organisationDetails:
               <CardDescription>Total members over the last 6 months</CardDescription>
             </CardHeader>
             <CardContent>
-              <LineChart data={memberGrowth} />
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={memberGrowth}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="total" stroke="#8884d8" />
+                </LineChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
     
@@ -512,7 +560,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {events.map((event:any) => (
+                        {events.map((event) => (
                           <TableRow key={event.id}>
                             <TableCell className="font-medium">{event.name}</TableCell>
                             <TableCell>{new Date(event.startDate).toLocaleDateString()}</TableCell>
@@ -555,7 +603,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {donations.map((donation:any) => (
+                        {donations.map((donation) => (
                           <TableRow key={donation.id}>
                             <TableCell className="font-medium">{donation.donor}</TableCell>
                             <TableCell>${donation.amount.toLocaleString()}</TableCell>
@@ -600,7 +648,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {members.slice(0, 5).map((member:any) => (
+                        {members.slice(0, 5).map((member) => (
                           <TableRow key={member.id}>
                             <TableCell className="font-medium">{member.firstName} {member.lastName}</TableCell>
                             <TableCell>{member.email}</TableCell>
