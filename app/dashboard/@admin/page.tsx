@@ -29,6 +29,7 @@ import EventPage from "./event/page"
 // API functions
 import { fetchMemberType } from "@/lib/members"
 import { getOrganizationById } from "@/lib/organization"
+import { EventCalendar } from "./EventCalendar"
 
 // Types
 type UserType = "admin" | "user" | null;
@@ -78,12 +79,7 @@ export default function DashboardPage() {
       section: "campaigns",
       description: "donations and campaigns",
     },
-    {
-      icon: <Layers />,
-      label: "Organization",
-      section: "organization",
-      description: "Manage organization settings",
-    },
+    
     {
       icon: <Calendar />,
       label: "Events",
@@ -91,10 +87,16 @@ export default function DashboardPage() {
       description: "Manage organization events",
     },
     {
-      icon: <Landmark />,
-      label: "Stripe Account Settings",
-      section: "stripe-settings",
-      description: "Manage stripe account settings",
+          icon: <Calendar />,
+          label: "Calendar",
+          section: "calender",
+          description: "Manage organization events",
+        },
+   {
+      icon: <Layers />,
+      label: "Organization",
+      section: "organization",
+      description: "Manage organization settings",
     },
   ]
   
@@ -206,14 +208,15 @@ export default function DashboardPage() {
         return <UserManagementPage />;
       case "campaigns":
         return <OrganizationCampaigns />;
-      case "organization":
-        return <OrganizationProfile organisationDetails={orgData} />;
+    
       case "event":
         return <EventPage organisationDetails={orgData} />;
+      case "calender":
+              return <EventCalendar />
       case "settings":
         return <SettingsPage organisationDetails={orgData} />;
-      case "stripe-settings":
-        return <ConnectPage organisationDetails={orgData} />;
+        case "organization":
+        return <OrganizationProfile organisationDetails={orgData} />;
       default:
         return (
           <div className="text-center text-muted-foreground">

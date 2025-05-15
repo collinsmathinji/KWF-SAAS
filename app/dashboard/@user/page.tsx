@@ -20,7 +20,6 @@ import Overview from "./overview"
 import EventsDisplay from "./eventsDisplay"
 import GroupsExplorer from "./groupExplorer"
 import { cn } from "@/lib/utils"
-
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("overview")
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -46,6 +45,12 @@ export default function DashboardPage() {
       icon: <Calendar />,
       label: "Events",
       section: "event",
+      description: "Manage organization events",
+    },
+    {
+      icon: <Calendar />,
+      label: "Calendar",
+      section: "calender",
       description: "Manage organization events",
     },
  
@@ -88,6 +93,7 @@ export default function DashboardPage() {
         return <EventsDisplay />
       case "groups":
         return <GroupsExplorer />
+
       default:
         return (
           <div className="text-center text-muted-foreground p-12">

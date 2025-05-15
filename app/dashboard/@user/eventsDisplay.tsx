@@ -1,4 +1,5 @@
 "use client"
+
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -19,8 +20,17 @@ import {
   Twitter,
   Linkedin,
   Mail,
+  Tag,
+  Search,
+  Filter,
 } from "lucide-react"
 import { Calendar as EventCalendar } from "@/components/ui/calendar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Event {
   id: string
@@ -38,6 +48,7 @@ interface Event {
   stripePriceId?: string
   coverImage?: string
   organizationId: string
+  category?: string
 }
 
 interface Guest {
@@ -59,13 +70,18 @@ interface CheckoutFormData {
 }
 
 const EventsDisplay: React.FC = () => {
-  const [events, setEvents] = useState<any>([])
+  const [events, setEvents] = useState<Event[]>([])
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [showCheckout, setShowCheckout] = useState<boolean>(false)
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [organizationId, setOrganizationId] = useState<string | null>(null)
   const { data: session, status } = useSession()
+  const [searchTerm, setSearchTerm] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState<string>("all")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+
   const [formData, setFormData] = useState<CheckoutFormData>({
     email: "",
     guestFirstName: "",
@@ -87,26 +103,63 @@ const EventsDisplay: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [eventsByDate, setEventsByDate] = useState<Record<string, Event[]>>({})
 
+  // Mock categories for the filter
+  const categories = ["Workshop", "Conference", "Meetup", "Webinar", "Training"]
+
   useEffect(() => {
     async function loadEvents() {
       try {
-        const events = await fetchEvents(session?.user?.organizationId as string | undefined);
-        setEvents(events || []) // Ensure events is always an array
+        setLoading(true)
+
+        // Check if session exists and has organizationId
+        if (!session?.user?.organizationId) {
+          setError("No organization ID found. Please log in to view events.")
+          setEvents([])
+          setFilteredEvents([])
+          setLoading(false)
+          return
+        }
+
+        // Fetch events from the API
+        const fetchedEvents = await fetchEvents(session.user.organizationId)
+        console.log("Fetched events:", fetchedEvents)
+
+        // Handle different API response structures
+        let eventsData: Event[] = []
+        if (fetchedEvents?.data?.data) {
+          eventsData = fetchedEvents.data.data
+        } else if (Array.isArray(fetchedEvents?.data)) {
+          eventsData = fetchedEvents.data
+        } else if (Array.isArray(fetchedEvents)) {
+          eventsData = fetchedEvents
+        }
+
+        // Set the events data
+        setEvents(eventsData)
+        setFilteredEvents(eventsData)
+
+        // If no events were found, set an empty array
+        if (!eventsData || eventsData.length === 0) {
+          console.log("No events found")
+        }
+
         setLoading(false)
       } catch (error) {
         console.error("Failed to fetch events:", error)
         setError("Failed to load events. Please try again later.")
-        setEvents([]) // Fallback to an empty array in case of an error
+        setEvents([])
+        setFilteredEvents([])
         setLoading(false)
       }
     }
 
-    if (session?.user?.organizationId) {
+    if (status === "authenticated") {
       loadEvents()
-    } else {
+    } else if (status === "unauthenticated") {
+      setError("Please log in to view events.")
       setLoading(false)
     }
-  }, [session?.user?.organizationId])
+  }, [session?.user?.organizationId, status])
 
   useEffect(() => {
     // Group events by date (YYYY-MM-DD)
@@ -121,6 +174,41 @@ const EventsDisplay: React.FC = () => {
     setEventsByDate(byDate)
   }, [events])
 
+  // Filter events based on search term and category
+  useEffect(() => {
+    if (!Array.isArray(events)) return
+
+    let filtered = [...events]
+
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (event) =>
+          event.name.toLowerCase().includes(term) ||
+          event.description.toLowerCase().includes(term) ||
+          event.venue.toLowerCase().includes(term) ||
+          (event.city && event.city.toLowerCase().includes(term)),
+      )
+    }
+
+    // Apply category filter
+    if (categoryFilter && categoryFilter !== "all") {
+      filtered = filtered.filter((event) => event.category === categoryFilter)
+    }
+
+    // Apply date filter
+    if (selectedDate) {
+      const dateKey = selectedDate.toISOString().split("T")[0]
+      filtered = filtered.filter((event) => {
+        const eventDate = new Date(event.startDate).toISOString().split("T")[0]
+        return eventDate === dateKey
+      })
+    }
+
+    setFilteredEvents(filtered)
+  }, [events, searchTerm, categoryFilter, selectedDate])
+
   const handleRegister = (event: Event) => {
     setSelectedEvent(event)
     // Initialize form with default values
@@ -130,8 +218,8 @@ const EventsDisplay: React.FC = () => {
       organizationId: event.organizationId || organizationId || "",
       quantity: 1,
       mode: "payment",
-      successUrl: `${process.env.NEXT_PUBLIC_API_URL}/success`,
-      cancelUrl: `${process.env.NEXT_PUBLIC_API_URL}/events`,
+      successUrl: `${process.env.NEXT_PUBLIC_API_URL || window.location.origin}/success`,
+      cancelUrl: `${process.env.NEXT_PUBLIC_API_URL || window.location.origin}/events`,
       guests: [],
     })
     setShowCheckout(true)
@@ -145,8 +233,8 @@ const EventsDisplay: React.FC = () => {
     })
   }
 
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const quantity = Number.parseInt(e.target.value)
+  const handleQuantityChange = (value: string) => {
+    const quantity = Number.parseInt(value)
 
     // Update quantity and resize guests array
     const newGuests = [...formData.guests]
@@ -261,7 +349,6 @@ const EventsDisplay: React.FC = () => {
         const data = await response.json()
 
         if (data.sessionUrl) {
-          // Remove pre-registration code - as requested
           // Directly redirect to Stripe checkout
           window.location.href = data.sessionUrl
         } else {
@@ -322,8 +409,30 @@ const EventsDisplay: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-6">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <Skeleton className="h-10 w-64 mx-auto mb-3" />
+            <Skeleton className="h-6 w-96 mx-auto" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-xl overflow-hidden shadow-lg border border-blue-50">
+                <Skeleton className="h-56 w-full" />
+                <div className="p-6 space-y-4">
+                  <Skeleton className="h-6 w-3/4" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                    <Skeleton className="h-4 w-4/6" />
+                  </div>
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -339,6 +448,13 @@ const EventsDisplay: React.FC = () => {
             <h3 className="text-xl font-bold text-red-800">Error loading events</h3>
           </div>
           <p className="text-red-700">{error}</p>
+          <Button
+            variant="outline"
+            className="mt-4 w-full border-red-200 text-red-700 hover:bg-red-50"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </Button>
         </div>
       </div>
     )
@@ -347,59 +463,186 @@ const EventsDisplay: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-blue-800 mb-3">Upcoming Events</h1>
           <p className="text-blue-600 max-w-2xl mx-auto">
             Discover and register for our exciting events happening soon
           </p>
         </div>
 
-        {/* Calendar View */}
-        <div className="mb-10 flex flex-col items-center">
-          <EventCalendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            modifiers={{
-              hasEvent: (date: Date) => {
-                const key = date.toISOString().split("T")[0]
-                return !!eventsByDate[key]
-              },
-            }}
-            modifiersClassNames={{
-              hasEvent: "bg-blue-200 text-blue-900 font-bold border border-blue-400",
-            }}
-          />
-          {/* List events for selected date */}
-          {selectedDate && eventsByDate[selectedDate.toISOString().split("T")[0]] && (
-            <div className="w-full max-w-xl mt-6 bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-blue-700 mb-4 flex items-center gap-2">
-                <Calendar className="w-5 h-5" /> Events on {selectedDate.toLocaleDateString()}
-              </h2>
-              <ul className="space-y-4">
-                {eventsByDate[selectedDate.toISOString().split("T")[0]].map((event) => (
-                  <li key={event.id} className="border-b pb-2 last:border-b-0 last:pb-0">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-blue-800">{event.name}</span>
-                      <button
-                        onClick={() => handleRegister(event)}
-                        className="ml-4 px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-700 text-sm"
-                      >
-                        {event.isPaid ? "Pay & Register" : "Register"}
-                      </button>
-                    </div>
-                    <div className="text-sm text-blue-600">{formatDate(event.startDate)} - {formatDate(event.endDate)}</div>
-                    <div className="text-xs text-blue-500">{event.venue}{event.city ? `, ${event.city}` : ""}{event.country ? `, ${event.country}` : ""}</div>
-                  </li>
-                ))}
-              </ul>
+        {/* Search and Filter Section */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400" size={18} />
+              <Input
+                placeholder="Search events..."
+                className="pl-10 border-blue-200 focus:border-blue-400"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-          )}
+
+            <div className="flex items-center gap-2">
+              <Filter size={18} className="text-blue-500" />
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="border-blue-200 focus:border-blue-400">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant={selectedDate ? "default" : "outline"}
+                onClick={() => setSelectedDate(selectedDate ? undefined : new Date())}
+                className={selectedDate ? "bg-blue-600" : "border-blue-200 text-blue-700"}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                {selectedDate ? "Clear Date Filter" : "Filter by Date"}
+              </Button>
+
+              <div className="flex rounded-md overflow-hidden border border-blue-200">
+                <Button
+                  variant="ghost"
+                  className={`rounded-none px-3 ${viewMode === "grid" ? "bg-blue-100 text-blue-700" : "text-blue-600"}`}
+                  onClick={() => setViewMode("grid")}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect width="7" height="7" x="3" y="3" rx="1" />
+                    <rect width="7" height="7" x="14" y="3" rx="1" />
+                    <rect width="7" height="7" x="14" y="14" rx="1" />
+                    <rect width="7" height="7" x="3" y="14" rx="1" />
+                  </svg>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={`rounded-none px-3 ${viewMode === "list" ? "bg-blue-100 text-blue-700" : "text-blue-600"}`}
+                  onClick={() => setViewMode("list")}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="3" x2="21" y1="6" y2="6" />
+                    <line x1="3" x2="21" y1="12" y2="12" />
+                    <line x1="3" x2="21" y1="18" y2="18" />
+                  </svg>
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Calendar View (when date filter is active) */}
+        {selectedDate && (
+          <div className="mb-10 flex flex-col md:flex-row gap-6 bg-white p-6 rounded-xl shadow-md">
+            <div className="md:w-1/3">
+              <EventCalendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                modifiers={{
+                  hasEvent: (date: Date) => {
+                    const key = date.toISOString().split("T")[0]
+                    return !!eventsByDate[key]
+                  },
+                }}
+                modifiersClassNames={{
+                  hasEvent: "bg-blue-200 text-blue-900 font-bold border border-blue-400",
+                }}
+                className="rounded-md border border-blue-200"
+              />
+            </div>
+
+            <div className="md:w-2/3">
+              <h2 className="text-xl font-bold text-blue-700 mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Events on {selectedDate.toLocaleDateString()}
+              </h2>
+
+              {eventsByDate[selectedDate.toISOString().split("T")[0]] &&
+              eventsByDate[selectedDate.toISOString().split("T")[0]].length > 0 ? (
+                <div className="space-y-4">
+                  {eventsByDate[selectedDate.toISOString().split("T")[0]].map((event) => (
+                    <div
+                      key={event.id}
+                      className="border border-blue-100 rounded-lg p-4 hover:bg-blue-50 transition-colors"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-blue-800 text-lg">{event.name}</h3>
+                          <div className="text-sm text-blue-600 mt-1">
+                            {formatDate(event.startDate)} - {formatDate(event.endDate)}
+                          </div>
+                          <div className="text-sm text-blue-500 mt-1 flex items-center gap-1">
+                            <MapPin className="w-4 h-4" />
+                            {event.venue}
+                            {event.city ? `, ${event.city}` : ""}
+                            {event.country ? `, ${event.country}` : ""}
+                          </div>
+                          {event.category && (
+                            <Badge className="mt-2 bg-blue-100 text-blue-700 hover:bg-blue-200">{event.category}</Badge>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <Badge
+                            variant={event.isPaid ? "default" : "outline"}
+                            className={event.isPaid ? "bg-green-500" : "border-blue-300 text-blue-700"}
+                          >
+                            {event.isPaid ? `$${event.price}` : "Free"}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            onClick={() => handleRegister(event)}
+                            className={event.isPaid ? "bg-green-600 hover:bg-green-700" : ""}
+                          >
+                            {event.isPaid ? "Pay & Register" : "Register"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-blue-50 rounded-lg border border-blue-100">
+                  <Calendar className="w-12 h-12 text-blue-300 mx-auto mb-3" />
+                  <p className="text-blue-700 font-medium">No events scheduled for this date</p>
+                  <p className="text-blue-500 text-sm mt-1">Try selecting a different date</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Checkout Modal */}
         {showCheckout && selectedEvent && (
-          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 overflow-y-auto">
             <div className="bg-white p-6 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6 border-b border-blue-100 pb-4">
                 <h2 className="text-2xl font-bold text-blue-800">
@@ -418,6 +661,7 @@ const EventsDisplay: React.FC = () => {
                   <Calendar className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold text-blue-800 text-lg">{selectedEvent.name}</h3>
+                    <p className="text-blue-600 text-sm mt-1">{formatDate(selectedEvent.startDate)}</p>
                     {selectedEvent.isPaid && (
                       <p className="text-green-600 font-semibold mt-1">
                         <DollarSign className="w-4 h-4 inline-block mr-1" />${selectedEvent.price}
@@ -437,37 +681,37 @@ const EventsDisplay: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-blue-700 mb-1">First Name *</label>
-                      <input
+                      <Input
                         type="text"
                         name="guestFirstName"
                         value={formData.guestFirstName}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="border-blue-200 focus:border-blue-500"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-blue-700 mb-1">Last Name *</label>
-                      <input
+                      <Input
                         type="text"
                         name="guestLastName"
                         value={formData.guestLastName}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="border-blue-200 focus:border-blue-500"
                       />
                     </div>
 
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-blue-700 mb-1">Email *</label>
-                      <input
+                      <Input
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="border-blue-200 focus:border-blue-500"
                       />
                     </div>
                   </div>
@@ -484,68 +728,69 @@ const EventsDisplay: React.FC = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-blue-700 mb-1">Quantity *</label>
-                          <select
-                            name="quantity"
-                            value={formData.quantity}
-                            onChange={handleQuantityChange}
-                            required
-                            className="w-full px-4 py-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                          >
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                              <option key={num} value={num}>
-                                {num}
-                              </option>
-                            ))}
-                          </select>
+                          <Select value={formData.quantity.toString()} onValueChange={handleQuantityChange}>
+                            <SelectTrigger className="border-blue-200 focus:border-blue-500">
+                              <SelectValue placeholder="Select quantity" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                                <SelectItem key={num} value={num.toString()}>
+                                  {num}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-blue-700 mb-1">Payment Mode *</label>
-                          <select
-                            name="mode"
+                          <Select
                             value={formData.mode}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full px-4 py-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                            onValueChange={(value) => setFormData({ ...formData, mode: value })}
                           >
-                            <option value="payment">One-time Payment</option>
-                            <option value="subscription">Subscription</option>
-                          </select>
+                            <SelectTrigger className="border-blue-200 focus:border-blue-500">
+                              <SelectValue placeholder="Select payment mode" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="payment">One-time Payment</SelectItem>
+                              <SelectItem value="subscription">Subscription</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
 
                         <div className="md:col-span-2">
                           <label className="block text-sm font-medium text-blue-700 mb-1">Organization ID *</label>
-                          <input
+                          <Input
                             type="text"
                             name="organizationId"
                             value={formData.organizationId}
                             onChange={handleInputChange}
                             required
-                            className="w-full px-4 py-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="border-blue-200 focus:border-blue-500"
                           />
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-blue-700 mb-1">Success URL *</label>
-                          <input
+                          <Input
                             type="text"
                             name="successUrl"
                             value={formData.successUrl}
                             onChange={handleInputChange}
                             required
-                            className="w-full px-4 py-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="border-blue-200 focus:border-blue-500"
                           />
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-blue-700 mb-1">Cancel URL *</label>
-                          <input
+                          <Input
                             type="text"
                             name="cancelUrl"
                             value={formData.cancelUrl}
                             onChange={handleInputChange}
                             required
-                            className="w-full px-4 py-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="border-blue-200 focus:border-blue-500"
                           />
                         </div>
                       </div>
@@ -572,25 +817,25 @@ const EventsDisplay: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-blue-700 mb-1">Full Name *</label>
-                                <input
+                                <Input
                                   type="text"
                                   value={guest.name}
                                   onChange={(e) => handleGuestChange(index, "name", e.target.value)}
                                   required
                                   placeholder="Full Name"
-                                  className="w-full px-4 py-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  className="border-blue-200 focus:border-blue-500"
                                 />
                               </div>
 
                               <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-blue-700 mb-1">Email *</label>
-                                <input
+                                <Input
                                   type="email"
                                   value={guest.email}
                                   onChange={(e) => handleGuestChange(index, "email", e.target.value)}
                                   required
                                   placeholder="Email Address"
-                                  className="w-full px-4 py-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  className="border-blue-200 focus:border-blue-500"
                                 />
                               </div>
                             </div>
@@ -601,16 +846,16 @@ const EventsDisplay: React.FC = () => {
                   </>
                 )}
 
-                <button
+                <Button
                   type="submit"
-                  className={`w-full py-3 px-6 rounded-lg text-white font-bold text-lg transition-all transform hover:scale-[1.02] ${
+                  className={`w-full py-6 text-lg ${
                     selectedEvent.isPaid
-                      ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg"
-                      : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg"
+                      ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                      : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
                   }`}
                 >
                   {selectedEvent.isPaid ? "Proceed to Payment" : "Complete Registration"}
-                </button>
+                </Button>
               </form>
             </div>
           </div>
@@ -633,140 +878,298 @@ const EventsDisplay: React.FC = () => {
               <p className="mb-6 text-blue-700">Share "{shareEvent.name}" with your network:</p>
 
               <div className="grid grid-cols-2 gap-4">
-                <button
+                <Button
                   onClick={() => shareToSocial("facebook")}
-                  className="flex items-center justify-center gap-2 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center justify-center gap-2 p-3 bg-blue-600 text-white hover:bg-blue-700"
                 >
                   <Facebook className="w-5 h-5" />
                   <span>Facebook</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
                   onClick={() => shareToSocial("twitter")}
-                  className="flex items-center justify-center gap-2 p-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors"
+                  className="flex items-center justify-center gap-2 p-3 bg-sky-500 text-white hover:bg-sky-600"
                 >
                   <Twitter className="w-5 h-5" />
                   <span>Twitter</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
                   onClick={() => shareToSocial("linkedin")}
-                  className="flex items-center justify-center gap-2 p-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
+                  className="flex items-center justify-center gap-2 p-3 bg-blue-700 text-white hover:bg-blue-800"
                 >
                   <Linkedin className="w-5 h-5" />
                   <span>LinkedIn</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
                   onClick={() => shareToSocial("email")}
-                  className="flex items-center justify-center gap-2 p-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  className="flex items-center justify-center gap-2 p-3 bg-gray-600 text-white hover:bg-gray-700"
                 >
                   <Mail className="w-5 h-5" />
                   <span>Email</span>
-                </button>
+                </Button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Events Grid */}
-        {Array.isArray(events) ? events.map((event: any) => (
-          <div
-            key={event.id}
-            className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] border border-blue-50"
-          >
-            {event.coverImage ? (
-              <div className="relative h-56">
-                <Image
-                  src={event.coverImage || "/placeholder.svg"}
-                  alt={event.name}
-                  fill
-                  className="object-cover"
-                />
-                {event.isPaid && (
-                  <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-                    ${event.price}
-                  </div>
-                )}
-                {!event.isPaid && (
-                  <div className="absolute top-4 right-4 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-                    Free
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-gradient-to-r from-blue-100 to-blue-50 h-56 flex items-center justify-center relative">
-                <Calendar className="w-16 h-16 text-blue-300" />
-                {event.isPaid && (
-                  <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-                    ${event.price}
-                  </div>
-                )}
-                {!event.isPaid && (
-                  <div className="absolute top-4 right-4 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-                    Free
-                  </div>
-                )}
-              </div>
-            )}
+        {/* Events Display */}
+        <div className="mb-6">
+          <Tabs defaultValue="upcoming" className="w-full">
+            <TabsList className="mb-6 w-full justify-start border-b pb-0 bg-transparent">
+              <TabsTrigger
+                value="upcoming"
+                className="data-[state=active]:border-b-2 data-[state=active]:border-blue-600 rounded-none data-[state=active]:shadow-none bg-transparent"
+              >
+                Upcoming Events
+              </TabsTrigger>
+              <TabsTrigger
+                value="featured"
+                className="data-[state=active]:border-b-2 data-[state=active]:border-blue-600 rounded-none data-[state=active]:shadow-none bg-transparent"
+              >
+                Featured Events
+              </TabsTrigger>
+              <TabsTrigger
+                value="past"
+                className="data-[state=active]:border-b-2 data-[state=active]:border-blue-600 rounded-none data-[state=active]:shadow-none bg-transparent"
+              >
+                Past Events
+              </TabsTrigger>
+            </TabsList>
 
-            <div className="p-6">
-              <h3 className="text-xl font-bold mb-3 text-blue-800 truncate">{event.name}</h3>
+            <TabsContent value="upcoming" className="mt-0">
+              {filteredEvents.length > 0 ? (
+                viewMode === "grid" ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredEvents.map((event: Event) => (
+                      <div
+                        key={event.id}
+                        className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] border border-blue-50"
+                      >
+                        <div className="relative h-56">
+                          <Image
+                            src={event.coverImage || "/placeholder.svg?height=400&width=600"}
+                            alt={event.name}
+                            fill
+                            className="object-cover"
+                          />
+                          {event.isPaid && (
+                            <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                              ${event.price}
+                            </div>
+                          )}
+                          {!event.isPaid && (
+                            <div className="absolute top-4 right-4 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                              Free
+                            </div>
+                          )}
+                          {event.category && (
+                            <div className="absolute bottom-4 left-4 bg-white/90 text-blue-700 px-3 py-1 rounded-full text-sm font-medium shadow-sm flex items-center gap-1">
+                              <Tag size={14} />
+                              {event.category}
+                            </div>
+                          )}
+                        </div>
 
-              <div className="mb-4 space-y-2">
-                <div className="flex items-center text-blue-700">
-                  <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <p className="text-sm">
-                    <span className="font-medium">Start:</span> {formatDate(event.startDate)}
-                  </p>
-                </div>
-                <div className="flex items-center text-blue-700">
-                  <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <p className="text-sm">
-                    <span className="font-medium">End:</span> {formatDate(event.endDate)}
-                  </p>
-                </div>
-                <div className="flex items-center text-blue-700">
-                  <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <p className="text-sm">
-                    <span className="font-medium">Location:</span> {event.venue}
-                    {event.city && `, ${event.city}`}
-                    {event.country && `, ${event.country}`}
-                  </p>
-                </div>
-              </div>
+                        <div className="p-6">
+                          <h3 className="text-xl font-bold mb-3 text-blue-800 truncate">{event.name}</h3>
 
-              <div className="mb-5">
-                <p className="text-sm text-blue-600 line-clamp-3">
-                  {event.description || "No description available"}
+                          <div className="mb-4 space-y-2">
+                            <div className="flex items-center text-blue-700">
+                              <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+                              <p className="text-sm">
+                                <span className="font-medium">Start:</span> {formatDate(event.startDate)}
+                              </p>
+                            </div>
+                            <div className="flex items-center text-blue-700">
+                              <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+                              <p className="text-sm">
+                                <span className="font-medium">End:</span> {formatDate(event.endDate)}
+                              </p>
+                            </div>
+                            <div className="flex items-center text-blue-700">
+                              <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+                              <p className="text-sm truncate">
+                                <span className="font-medium">Location:</span> {event.venue}
+                                {event.city && `, ${event.city}`}
+                                {event.country && `, ${event.country}`}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mb-5">
+                            <p className="text-sm text-blue-600 line-clamp-3">
+                              {event.description || "No description available"}
+                            </p>
+                          </div>
+
+                          <div className="flex justify-between items-center mb-4">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => handleShare(event, e)}
+                              className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2"
+                            >
+                              <Share2 className="w-4 h-4" />
+                              <span className="text-sm font-medium">Share</span>
+                            </Button>
+                            {event.isPaid && <span className="font-semibold text-green-600">${event.price}</span>}
+                          </div>
+
+                          <Button
+                            onClick={() => handleRegister(event)}
+                            className={`w-full ${
+                              event.isPaid
+                                ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                                : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                            }`}
+                          >
+                            {event.isPaid ? "Pay & Register" : "Register Now"}
+                            <ChevronRight className="w-5 h-5 ml-1" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredEvents.map((event: Event) => (
+                      <div
+                        key={event.id}
+                        className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all border border-blue-50 flex flex-col md:flex-row"
+                      >
+                        <div className="relative md:w-1/4 h-48 md:h-auto">
+                          <Image
+                            src={event.coverImage || "/placeholder.svg?height=400&width=600"}
+                            alt={event.name}
+                            fill
+                            className="object-cover"
+                          />
+                          {event.category && (
+                            <div className="absolute bottom-4 left-4 bg-white/90 text-blue-700 px-3 py-1 rounded-full text-sm font-medium shadow-sm flex items-center gap-1">
+                              <Tag size={14} />
+                              {event.category}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="p-6 flex-1 flex flex-col justify-between">
+                          <div>
+                            <div className="flex justify-between items-start">
+                              <h3 className="text-xl font-bold mb-2 text-blue-800">{event.name}</h3>
+                              {event.isPaid ? (
+                                <Badge className="bg-green-500">${event.price}</Badge>
+                              ) : (
+                                <Badge className="bg-blue-500">Free</Badge>
+                              )}
+                            </div>
+
+                            <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+                              <div className="flex items-center text-blue-700">
+                                <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+                                <p className="text-sm">
+                                  <span className="font-medium">Start:</span> {formatDate(event.startDate)}
+                                </p>
+                              </div>
+                              <div className="flex items-center text-blue-700">
+                                <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+                                <p className="text-sm">
+                                  <span className="font-medium">End:</span> {formatDate(event.endDate)}
+                                </p>
+                              </div>
+                              <div className="flex items-center text-blue-700 md:col-span-2">
+                                <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+                                <p className="text-sm">
+                                  <span className="font-medium">Location:</span> {event.venue}
+                                  {event.city && `, ${event.city}`}
+                                  {event.country && `, ${event.country}`}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <p className="text-sm text-blue-600 line-clamp-2">
+                                {event.description || "No description available"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => handleShare(event, e)}
+                              className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2"
+                            >
+                              <Share2 className="w-4 h-4" />
+                              <span className="text-sm font-medium">Share</span>
+                            </Button>
+
+                            <Button
+                              onClick={() => handleRegister(event)}
+                              className={`${
+                                event.isPaid
+                                  ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                                  : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                              }`}
+                            >
+                              {event.isPaid ? "Pay & Register" : "Register Now"}
+                              <ChevronRight className="w-5 h-5 ml-1" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : (
+                <div className="text-center py-16 bg-blue-50 rounded-xl border border-blue-100">
+                  <Calendar className="w-16 h-16 text-blue-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-blue-800 mb-2">No events found</h3>
+                  <p className="text-blue-600 max-w-md mx-auto">
+                    {searchTerm || categoryFilter !== "all" || selectedDate
+                      ? "Try adjusting your search filters to find events"
+                      : "There are no upcoming events scheduled at this time"}
+                  </p>
+                  {(searchTerm || categoryFilter !== "all" || selectedDate) && (
+                    <Button
+                      variant="outline"
+                      className="mt-4 border-blue-200 text-blue-700"
+                      onClick={() => {
+                        setSearchTerm("")
+                        setCategoryFilter("all")
+                        setSelectedDate(undefined)
+                      }}
+                    >
+                      Clear All Filters
+                    </Button>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="featured" className="mt-0">
+              <div className="text-center py-16 bg-blue-50 rounded-xl border border-blue-100">
+                <Calendar className="w-16 h-16 text-blue-300 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-blue-800 mb-2">Featured Events Coming Soon</h3>
+                <p className="text-blue-600 max-w-md mx-auto">
+                  We're working on some exciting featured events. Check back soon!
                 </p>
               </div>
+            </TabsContent>
 
-              <div className="flex justify-between items-center mb-4">
-                <button
-                  onClick={(e) => handleShare(event, e)}
-                  className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                  <Share2 className="w-4 h-4" />
-                  <span className="text-sm font-medium">Share</span>
-                </button>
-                {event.isPaid && <span className="font-semibold text-green-600">${event.price}</span>}
+            <TabsContent value="past" className="mt-0">
+              <div className="text-center py-16 bg-blue-50 rounded-xl border border-blue-100">
+                <Calendar className="w-16 h-16 text-blue-300 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-blue-800 mb-2">Past Events Archive</h3>
+                <p className="text-blue-600 max-w-md mx-auto">
+                  Our past events archive is currently being updated. Please check back later.
+                </p>
               </div>
-
-              <button
-                onClick={() => handleRegister(event)}
-                className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-white font-bold transition-all ${
-                  event.isPaid
-                    ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                    : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                }`}
-              >
-                {event.isPaid ? "Pay & Register" : "Register Now"}
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        )) : null}
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   )
