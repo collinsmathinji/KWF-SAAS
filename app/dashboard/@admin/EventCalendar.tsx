@@ -291,125 +291,129 @@ export function EventCalendar() {
         <TabsContent value="calendar" className="m-0 p-0">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Calendar */}
-            <Card className="border shadow-sm lg:col-span-1">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-medium">
-                    {format(currentMonth, "MMMM yyyy")}
-                  </CardTitle>
-                  <div className="flex items-center space-x-1">
-                    <Button variant="ghost" size="sm" onClick={handlePreviousMonth} className="h-8 w-8 p-0 rounded-full">
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={handleNextMonth} className="h-8 w-8 p-0 rounded-full">
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-2">
-                <div className="rounded-md border border-gray-100 shadow-sm">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={handleDateSelect}
-                    month={currentMonth}
-                    onMonthChange={setCurrentMonth}
-                    className="rounded-md border-0"
-                    modifiers={{
-                      hasEvents: (date) => {
-                        const dateKey = date.toISOString().split("T")[0]
-                        return !!eventsByDate[dateKey] && eventsByDate[dateKey].length > 0
-                      },
-                      today: (date) => isDateToday(date),
-                    }}
-                    modifiersClassNames={{
-                      hasEvents: "relative bg-blue-50 text-blue-900 font-medium",
-                      selected:
-                        "bg-blue-600 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white",
-                      today: "border border-blue-300 font-bold",
-                    }}
-                    components={{
-                      DayContent: (props) => {
-                        const dateKey = props.date.toISOString().split("T")[0]
-                        const hasEvents = !!eventsByDate[dateKey] && eventsByDate[dateKey].length > 0
-                        const isSelected = selectedDate && isSameDay(props.date, selectedDate)
-                        const isCurrentMonth = isSameMonth(props.date, currentMonth)
-                        const isTodayDate = isDateToday(props.date)
+           <Card className="border shadow-sm">
+  <CardHeader className="pb-2">
+    <div className="flex items-center justify-between">
+      <CardTitle className="text-lg font-medium">
+        {format(currentMonth, "MMMM yyyy")}
+      </CardTitle>
+      <div className="flex items-center space-x-1">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handlePreviousMonth} 
+          className="h-8 w-8 p-0 rounded-full"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleNextMonth} 
+          className="h-8 w-8 p-0 rounded-full"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  </CardHeader>
+  <CardContent className="pt-2">
+    <div className="rounded-md border shadow-sm">
+      <Calendar
+        mode="single"
+        selected={selectedDate}
+        onSelect={handleDateSelect}
+        month={currentMonth}
+        onMonthChange={setCurrentMonth}
+        className="w-full"
+        modifiers={{
+          hasEvents: (date) => {
+            const dateKey = date.toISOString().split("T")[0];
+            return !!eventsByDate[dateKey] && eventsByDate[dateKey].length > 0;
+          },
+          today: (date) => isDateToday(date),
+        }}
+        modifiersClassNames={{
+          hasEvents: "bg-blue-50 text-blue-900 font-medium",
+          selected: "bg-blue-600 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white",
+          today: "border border-blue-300 font-bold",
+        }}
+        components={{
+          DayContent: ({ date }) => {
+            const dateKey = date.toISOString().split("T")[0];
+            const hasEvents = !!eventsByDate[dateKey] && eventsByDate[dateKey].length > 0;
+            const eventsCount = hasEvents ? eventsByDate[dateKey].length : 0;
+            const isSelected = selectedDate && isSameDay(date, selectedDate);
+            const isCurrentMonth = isSameMonth(date, currentMonth);
+            const isTodayDate = isDateToday(date);
 
-                        return (
-                          <div className="relative w-full h-full flex items-center justify-center">
-                            <div
-                              className={cn(
-                                "flex items-center justify-center w-9 h-9 rounded-full transition-colors",
-                                isSelected ? "bg-blue-600 text-white" : "",
-                                !isCurrentMonth ? "text-gray-300" : "",
-                                hasEvents && !isSelected ? "text-blue-900" : "",
-                                isTodayDate && !isSelected ? "border border-blue-300 font-bold" : ""
-                              )}
-                            >
-                              {props.date.getDate()}
-                            </div>
-                            {hasEvents && (
-                              <div className="absolute bottom-1 flex gap-0.5 justify-center">
-                                <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
-                                {eventsByDate[dateKey].length > 1 && (
-                                  <>
-                                    <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
-                                    {eventsByDate[dateKey].length > 2 && (
-                                      <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
-                                    )}
-                                  </>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )
-                      },
-                    }}
-                  />
+            return (
+              <div className="relative w-full h-full flex flex-col items-center">
+                <div
+                  className={cn(
+                    "flex items-center justify-center w-8 h-8 rounded-full transition-colors",
+                    isSelected ? "bg-blue-600 text-white" : "",
+                    !isCurrentMonth ? "text-gray-300" : "",
+                    hasEvents && !isSelected ? "text-blue-900" : "",
+                    isTodayDate && !isSelected ? "border border-blue-300 font-bold" : ""
+                  )}
+                >
+                  {date.getDate()}
                 </div>
+                {hasEvents && (
+                  <div className="absolute bottom-0 flex gap-0.5 justify-center">
+                    {Array.from({ length: Math.min(3, eventsCount) }).map((_, i) => (
+                      <div key={i} className="w-1 h-1 bg-blue-500 rounded-full" />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          },
+        }}
+      />
+    </div>
 
-                {/* Legend */}
-                <div className="mt-4 flex items-center justify-center text-xs text-gray-500 space-x-4">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-blue-50 border border-blue-200 rounded-full mr-1"></div>
-                    <span>Has events</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full mr-1"></div>
-                    <span>Selected</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 border border-blue-300 rounded-full mr-1"></div>
-                    <span>Today</span>
-                  </div>
-                </div>
+    {/* Legend */}
+    <div className="mt-3 flex items-center justify-center text-xs text-gray-500 space-x-4">
+      <div className="flex items-center">
+        <div className="w-2 h-2 bg-blue-50 border border-blue-200 rounded-full mr-1"></div>
+        <span>Has events</span>
+      </div>
+      <div className="flex items-center">
+        <div className="w-2 h-2 bg-blue-600 rounded-full mr-1"></div>
+        <span>Selected</span>
+      </div>
+      <div className="flex items-center">
+        <div className="w-2 h-2 border border-blue-300 rounded-full mr-1"></div>
+        <span>Today</span>
+      </div>
+    </div>
 
-                {/* Monthly Statistics */}
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <h4 className="text-sm font-medium text-slate-700 mb-2">This Month</h4>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="p-3 rounded-md bg-blue-50 border border-blue-100">
-                      <div className="text-lg font-bold text-blue-700">{getCurrentMonthEvents().length}</div>
-                      <div className="text-xs text-blue-600">Total Events</div>
-                    </div>
-                    <div className="p-3 rounded-md bg-green-50 border border-green-100">
-                      <div className="text-lg font-bold text-green-700">
-                        {getCurrentMonthEvents().filter(e => e.isPaid).length}
-                      </div>
-                      <div className="text-xs text-green-600">Paid Events</div>
-                    </div>
-                    <div className="p-3 rounded-md bg-purple-50 border border-purple-100">
-                      <div className="text-lg font-bold text-purple-700">
-                        {getCurrentMonthEvents().filter(e => !e.isPaid).length}
-                      </div>
-                      <div className="text-xs text-purple-600">Free Events</div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+    {/* Monthly Statistics */}
+    <div className="mt-4 pt-3 border-t border-gray-100">
+      <h4 className="text-sm font-medium text-slate-700 mb-2">This Month</h4>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="p-3 rounded-md bg-blue-50 border border-blue-100">
+          <div className="text-lg font-bold text-blue-700">{getCurrentMonthEvents().length}</div>
+          <div className="text-xs text-blue-600">Total Events</div>
+        </div>
+        <div className="p-3 rounded-md bg-green-50 border border-green-100">
+          <div className="text-lg font-bold text-green-700">
+            {getCurrentMonthEvents().filter(e => e.isPaid).length}
+          </div>
+          <div className="text-xs text-green-600">Paid Events</div>
+        </div>
+        <div className="p-3 rounded-md bg-purple-50 border border-purple-100">
+          <div className="text-lg font-bold text-purple-700">
+            {getCurrentMonthEvents().filter(e => !e.isPaid).length}
+          </div>
+          <div className="text-xs text-purple-600">Free Events</div>
+        </div>
+      </div>
+    </div>
+  </CardContent>
+</Card>
 
             {/* Selected Date Events */}
             <Card className="border shadow-sm lg:col-span-2">
