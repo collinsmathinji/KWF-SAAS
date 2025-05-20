@@ -1,0 +1,239 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "noData": "Aucune donnée disponible",
+    "actions": "Actions",
+    "status": "Statut",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "viewAll": "Voir Tout",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "submit": "Soumettre",
+    "confirm": "Confirmer",
+    "required": "Requis"
+  },
+  "auth": {
+    "signIn": "Connexion",
+    "signUp": "Inscription",
+    "signOut": "Déconnexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "rememberMe": "Se souvenir de moi",
+    "noAccount": "Pas de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "invalidCredentials": "Email ou mot de passe invalide",
+    "signInRequired": "Veuillez vous connecter pour accéder à cette page"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue",
+    "quickStats": "Statistiques rapides",
+    "recentActivity": "Activité récente",
+    "viewAsUser": "Voir en tant qu'utilisateur",
+    "backToAdmin": "Retour à l'administrateur",
+    "notifications": "Notifications",
+    "settings": "Paramètres",
+    "profile": "Profil"
+  },
+  "members": {
+    "title": "Membres",
+    "addMember": "Ajouter un membre",
+    "editMember": "Modifier le membre",
+    "deleteMember": "Supprimer le membre",
+    "memberDetails": "Détails du membre",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "Email",
+    "phone": "Téléphone",
+    "joinDate": "Date d'inscription",
+    "membershipType": "Type d'adhésion",
+    "status": "Statut",
+    "searchMembers": "Rechercher des membres",
+    "filterByType": "Filtrer par type",
+    "filterByStatus": "Filtrer par statut"
+  },
+  "groups": {
+    "title": "Groupes",
+    "addGroup": "Ajouter un groupe",
+    "editGroup": "Modifier le groupe",
+    "deleteGroup": "Supprimer le groupe",
+    "groupDetails": "Détails du groupe",
+    "groupName": "Nom du groupe",
+    "description": "Description",
+    "leader": "Leader",
+    "members": "Membres",
+    "createdDate": "Date de création",
+    "searchGroups": "Rechercher des groupes",
+    "filterByRegion": "Filtrer par région",
+    "filterByStatus": "Filtrer par statut"
+  },
+  "events": {
+    "title": "Événements",
+    "addEvent": "Ajouter un événement",
+    "editEvent": "Modifier l'événement",
+    "deleteEvent": "Supprimer l'événement",
+    "eventDetails": "Détails de l'événement",
+    "eventName": "Nom de l'événement",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "location": "Lieu",
+    "description": "Description",
+    "attendees": "Participants",
+    "price": "Prix",
+    "status": "Statut",
+    "searchEvents": "Rechercher des événements",
+    "filterByDate": "Filtrer par date",
+    "filterByType": "Filtrer par type"
+  },
+  "donations": {
+    "title": "Dons",
+    "addDonation": "Ajouter un don",
+    "editDonation": "Modifier le don",
+    "deleteDonation": "Supprimer le don",
+    "donationDetails": "Détails du don",
+    "donor": "Donateur",
+    "amount": "Montant",
+    "date": "Date",
+    "type": "Type",
+    "status": "Statut",
+    "searchDonations": "Rechercher des dons",
+    "filterByType": "Filtrer par type",
+    "filterByDate": "Filtrer par date"
+  },
+  "reports": {
+    "title": "Rapports",
+    "generateReport": "Générer un rapport",
+    "downloadReport": "Télécharger le rapport",
+    "reportType": "Type de rapport",
+    "dateRange": "Période",
+    "format": "Format",
+    "filters": "Filtres",
+    "preview": "Aperçu",
+    "export": "Exporter"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "general": "Général",
+    "profile": "Profil",
+    "security": "Sécurité",
+    "notifications": "Notifications",
+    "language": "Langue",
+    "theme": "Thème",
+    "saveChanges": "Enregistrer les modifications",
+    "resetSettings": "Réinitialiser les paramètres"
+  },
+  "organization": {
+    "title": "Organisation",
+    "details": "Détails de l'organisation",
+    "name": "Nom",
+    "logo": "Logo",
+    "website": "Site web",
+    "address": "Adresse",
+    "phone": "Téléphone",
+    "email": "Email",
+    "description": "Description",
+    "settings": "Paramètres de l'organisation",
+    "members": "Membres de l'organisation",
+    "groups": "Groupes de l'organisation"
+  },
+  "overview": {
+    "title": "Aperçu de l'Organisation",
+    "reports": "Rapports",
+    "backToOverview": "Retour à l'Aperçu",
+    "reportGeneration": "Génération de Rapports",
+    "dashboardOverview": "Aperçu du Tableau de Bord",
+    "email": "Email",
+    "phone": "Téléphone",
+    "website": "Site Web",
+    "established": "Fondé",
+    "notSpecified": "Non spécifié",
+    "metrics": {
+      "totalMembers": "Total des Membres",
+      "activeMembers": "Membres Actifs",
+      "totalGroups": "Total des Groupes",
+      "monthlyDonation": "Don Mensuel",
+      "engagementRate": "Taux d'engagement de {rate}%",
+      "activeGroups": "{count} groupes actifs",
+      "growth": "Croissance de {value}%"
+    },
+    "membershipGrowth": {
+      "title": "Croissance des Membres",
+      "description": "Total des membres sur les 6 derniers mois"
+    },
+    "tabs": {
+      "topGroups": "Meilleurs Groupes",
+      "upcomingEvents": "Événements à Venir",
+      "recentDonations": "Dons Récents",
+      "recentMembers": "Membres Récents"
+    },
+    "groups": {
+      "title": "Groupes les Plus Performants",
+      "description": "Basé sur l'adhésion et l'activité",
+      "viewAll": "Voir Tout",
+      "groupName": "Nom du Groupe",
+      "totalMembers": "Total des Membres",
+      "activeMembers": "Membres Actifs",
+      "eventsThisMonth": "Événements ce Mois",
+      "status": "Statut",
+      "noData": {
+        "title": "Aucune donnée de groupe disponible",
+        "description": "Créez votre premier groupe pour voir les données ici"
+      }
+    },
+    "events": {
+      "title": "Événements à Venir",
+      "description": "30 prochains jours",
+      "eventName": "Nom de l'Événement",
+      "date": "Date",
+      "expectedAttendees": "Participants Attendus",
+      "price": "Prix",
+      "status": "Statut",
+      "free": "Gratuit",
+      "noData": {
+        "title": "Aucun événement à venir",
+        "description": "Créez un événement pour le voir ici"
+      }
+    },
+    "donations": {
+      "title": "Dons Récents",
+      "description": "Dernières contributions",
+      "donor": "Donateur",
+      "amount": "Montant",
+      "type": "Type",
+      "date": "Date",
+      "noData": {
+        "title": "Aucun don récent",
+        "description": "Les dons apparaîtront ici lorsqu'ils seront reçus"
+      }
+    },
+    "members": {
+      "title": "Membres Récents",
+      "description": "Derniers membres inscrits",
+      "name": "Nom",
+      "email": "Email",
+      "status": "Statut",
+      "joinDate": "Date d'Inscription",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "noData": {
+        "title": "Aucune donnée de membre disponible",
+        "description": "Ajoutez des membres pour les voir ici"
+      }
+    }
+  }
+} 

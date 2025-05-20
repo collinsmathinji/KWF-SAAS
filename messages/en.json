@@ -1,0 +1,239 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "noData": "No data available",
+    "actions": "Actions",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "viewAll": "View All",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "required": "Required"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember Me",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "resetPassword": "Reset Password",
+    "confirmPassword": "Confirm Password",
+    "passwordMismatch": "Passwords do not match",
+    "invalidCredentials": "Invalid email or password",
+    "signInRequired": "Please sign in to access this page"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome",
+    "quickStats": "Quick Stats",
+    "recentActivity": "Recent Activity",
+    "viewAsUser": "View as User",
+    "backToAdmin": "Back to Admin",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "profile": "Profile"
+  },
+  "members": {
+    "title": "Members",
+    "addMember": "Add Member",
+    "editMember": "Edit Member",
+    "deleteMember": "Delete Member",
+    "memberDetails": "Member Details",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "joinDate": "Join Date",
+    "membershipType": "Membership Type",
+    "status": "Status",
+    "searchMembers": "Search Members",
+    "filterByType": "Filter by Type",
+    "filterByStatus": "Filter by Status"
+  },
+  "groups": {
+    "title": "Groups",
+    "addGroup": "Add Group",
+    "editGroup": "Edit Group",
+    "deleteGroup": "Delete Group",
+    "groupDetails": "Group Details",
+    "groupName": "Group Name",
+    "description": "Description",
+    "leader": "Leader",
+    "members": "Members",
+    "createdDate": "Created Date",
+    "searchGroups": "Search Groups",
+    "filterByRegion": "Filter by Region",
+    "filterByStatus": "Filter by Status"
+  },
+  "events": {
+    "title": "Events",
+    "addEvent": "Add Event",
+    "editEvent": "Edit Event",
+    "deleteEvent": "Delete Event",
+    "eventDetails": "Event Details",
+    "eventName": "Event Name",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "location": "Location",
+    "description": "Description",
+    "attendees": "Attendees",
+    "price": "Price",
+    "status": "Status",
+    "searchEvents": "Search Events",
+    "filterByDate": "Filter by Date",
+    "filterByType": "Filter by Type"
+  },
+  "donations": {
+    "title": "Donations",
+    "addDonation": "Add Donation",
+    "editDonation": "Edit Donation",
+    "deleteDonation": "Delete Donation",
+    "donationDetails": "Donation Details",
+    "donor": "Donor",
+    "amount": "Amount",
+    "date": "Date",
+    "type": "Type",
+    "status": "Status",
+    "searchDonations": "Search Donations",
+    "filterByType": "Filter by Type",
+    "filterByDate": "Filter by Date"
+  },
+  "reports": {
+    "title": "Reports",
+    "generateReport": "Generate Report",
+    "downloadReport": "Download Report",
+    "reportType": "Report Type",
+    "dateRange": "Date Range",
+    "format": "Format",
+    "filters": "Filters",
+    "preview": "Preview",
+    "export": "Export"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "profile": "Profile",
+    "security": "Security",
+    "notifications": "Notifications",
+    "language": "Language",
+    "theme": "Theme",
+    "saveChanges": "Save Changes",
+    "resetSettings": "Reset Settings"
+  },
+  "organization": {
+    "title": "Organization",
+    "details": "Organization Details",
+    "name": "Name",
+    "logo": "Logo",
+    "website": "Website",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
+    "description": "Description",
+    "settings": "Organization Settings",
+    "members": "Organization Members",
+    "groups": "Organization Groups"
+  },
+  "overview": {
+    "title": "Organization Overview",
+    "reports": "Reports",
+    "backToOverview": "Back to Overview",
+    "reportGeneration": "Report Generation",
+    "dashboardOverview": "Dashboard Overview",
+    "email": "Email",
+    "phone": "Phone",
+    "website": "Website",
+    "established": "Established",
+    "notSpecified": "Not specified",
+    "metrics": {
+      "totalMembers": "Total Members",
+      "activeMembers": "Active Members",
+      "totalGroups": "Total Groups",
+      "monthlyDonation": "Monthly Donation",
+      "engagementRate": "{rate}% engagement rate",
+      "activeGroups": "{count} active groups",
+      "growth": "{value}% growth"
+    },
+    "membershipGrowth": {
+      "title": "Membership Growth",
+      "description": "Total members over the last 6 months"
+    },
+    "tabs": {
+      "topGroups": "Top Groups",
+      "upcomingEvents": "Upcoming Events",
+      "recentDonations": "Recent Donations",
+      "recentMembers": "Recent Members"
+    },
+    "groups": {
+      "title": "Top Performing Groups",
+      "description": "Based on membership and activity",
+      "viewAll": "View All",
+      "groupName": "Group Name",
+      "totalMembers": "Total Members",
+      "activeMembers": "Active Members",
+      "eventsThisMonth": "Events This Month",
+      "status": "Status",
+      "noData": {
+        "title": "No groups data available",
+        "description": "Create your first group to see data here"
+      }
+    },
+    "events": {
+      "title": "Upcoming Events",
+      "description": "Next 30 days",
+      "eventName": "Event Name",
+      "date": "Date",
+      "expectedAttendees": "Expected Attendees",
+      "price": "Price",
+      "status": "Status",
+      "free": "Free",
+      "noData": {
+        "title": "No upcoming events",
+        "description": "Create an event to see it here"
+      }
+    },
+    "donations": {
+      "title": "Recent Donations",
+      "description": "Latest contributions",
+      "donor": "Donor",
+      "amount": "Amount",
+      "type": "Type",
+      "date": "Date",
+      "noData": {
+        "title": "No recent donations",
+        "description": "Donations will appear here when received"
+      }
+    },
+    "members": {
+      "title": "Recent Members",
+      "description": "Latest joined members",
+      "name": "Name",
+      "email": "Email",
+      "status": "Status",
+      "joinDate": "Join Date",
+      "active": "Active",
+      "inactive": "Inactive",
+      "noData": {
+        "title": "No members data available",
+        "description": "Add members to see them here"
+      }
+    }
+  }
+}

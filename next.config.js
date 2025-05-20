@@ -1,3 +1,5 @@
+const withNextIntl = require('next-intl/plugin')('./i18n/request.ts');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -10,8 +12,8 @@ const nextConfig = {
     domains: [
       'mbosaasbucket.s3.us-east-2.amazonaws.com'
     ],
-  },
+  }
 }
 require("dotenv").config();
 
-module.exports = nextConfig
+module.exports = withNextIntl(nextConfig);

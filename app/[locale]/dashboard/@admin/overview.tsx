@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
+import { useTranslations } from "next-intl"
 import {
   Users,
   Building2,
@@ -34,6 +35,7 @@ import { getMembers } from "@/lib/members"
 import { getGroups } from "@/lib/group"
 import { fetchEvents } from "@/lib/event"
 import ReportsGenerator from "./report/page"
+import { LanguageSwitcher } from "@/components/language-switcher"
 
 // Define proper TypeScript interfaces
 interface Event {
@@ -149,6 +151,7 @@ const MetricCard = ({ icon, title, value, change, description, color = "blue" }:
 }
 
 export default function Overview({ organisationDetails }: { organisationDetails: OrganizationDetails }) {
+  const t = useTranslations('overview')
   const [activeSection, setActiveSection] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [members, setMembers] = useState<any>([])
@@ -423,25 +426,28 @@ export default function Overview({ organisationDetails }: { organisationDetails:
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold tracking-tight text-blue-800">
-          {activeSection === "reports" ? "Reports" : "Organization Overview"}
+          {activeSection === "reports" ? t('reports') : t('title')}
         </h2>
-        <Button
-          variant="outline"
-          onClick={() => setActiveSection(activeSection === "reports" ? "" : "reports")}
-          className="flex items-center gap-2 transition-all hover:gap-3"
-        >
-          {activeSection === "reports" ? (
-            <>
-              <LayoutDashboard className="h-4 w-4" />
-              Back to Overview
-            </>
-          ) : (
-            <>
-              <FileText className="h-4 w-4" />
-              Report Generation
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <Button
+            variant="outline"
+            onClick={() => setActiveSection(activeSection === "reports" ? "" : "reports")}
+            className="flex items-center gap-2 transition-all hover:gap-3"
+          >
+            {activeSection === "reports" ? (
+              <>
+                <LayoutDashboard className="h-4 w-4" />
+                {t('backToOverview')}
+              </>
+            ) : (
+              <>
+                <FileText className="h-4 w-4" />
+                {t('reportGeneration')}
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {activeSection === "reports" ? (
@@ -466,7 +472,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                   <CardTitle className="text-2xl text-blue-800">
                     {organisationDetails?.name || "Organization"}
                   </CardTitle>
-                  <CardDescription>Dashboard Overview</CardDescription>
+                  <CardDescription>{t('dashboardOverview')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -477,7 +483,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                     <Mail className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm text-gray-500">Email</span>
+                    <span className="text-sm text-gray-500">{t('email')}</span>
                     <span className="text-sm font-medium truncate max-w-[180px]">
                       {organisationDetails?.email || "contact@organization.com"}
                     </span>
@@ -488,8 +494,8 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                     <Phone className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm text-gray-500">Phone</span>
-                    <span className="text-sm font-medium">{organisationDetails?.phone || "Not specified"}</span>
+                    <span className="text-sm text-gray-500">{t('phone')}</span>
+                    <span className="text-sm font-medium">{organisationDetails?.phone || t('notSpecified')}</span>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
@@ -497,9 +503,9 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                     <Globe className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm text-gray-500">Website</span>
+                    <span className="text-sm text-gray-500">{t('website')}</span>
                     <span className="text-sm font-medium truncate max-w-[180px]">
-                      {organisationDetails?.website || "Not specified"}
+                      {organisationDetails?.website || t('notSpecified')}
                     </span>
                   </div>
                 </div>
@@ -508,11 +514,11 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                     <Calendar className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm text-gray-500">Established</span>
+                    <span className="text-sm text-gray-500">{t('established')}</span>
                     <span className="text-sm font-medium">
                       {organisationDetails?.foundedDate
                         ? new Date(organisationDetails.foundedDate).toLocaleDateString()
-                        : "Not specified"}
+                        : t('notSpecified')}
                     </span>
                   </div>
                 </div>
@@ -524,28 +530,28 @@ export default function Overview({ organisationDetails }: { organisationDetails:
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               icon={<Users className="h-4 w-4" />}
-              title="Total Members"
+              title={t('metrics.totalMembers')}
               value={metrics.totalContacts.toLocaleString()}
               change={metrics.memberGrowth}
               color="blue"
             />
             <MetricCard
               icon={<UserPlus className="h-4 w-4" />}
-              title="Active Members"
+              title={t('metrics.activeMembers')}
               value={metrics.activeMembers.toLocaleString()}
-              description={`${Math.round((metrics.activeMembers / metrics.totalContacts) * 100) || 0}% engagement rate`}
+              description={t('metrics.engagementRate', { rate: Math.round((metrics.activeMembers / metrics.totalContacts) * 100) || 0 })}
               color="green"
             />
             <MetricCard
               icon={<Building2 className="h-4 w-4" />}
-              title="Total Groups"
+              title={t('metrics.totalGroups')}
               value={metrics.totalGroups.toLocaleString()}
-              description={`${metrics.activeGroups} active groups`}
+              description={t('metrics.activeGroups', { count: metrics.activeGroups })}
               color="amber"
             />
             <MetricCard
               icon={<CircleDollarSign className="h-4 w-4" />}
-              title="Monthly Donation"
+              title={t('metrics.monthlyDonation')}
               value={`$${metrics.monthlyDonation.toLocaleString()}`}
               change={7.5}
               color="purple"
@@ -559,12 +565,12 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5 text-blue-600" />
-                    Membership Growth
+                    {t('membershipGrowth.title')}
                   </CardTitle>
-                  <CardDescription>Total members over the last 6 months</CardDescription>
+                  <CardDescription>{t('membershipGrowth.description')}</CardDescription>
                 </div>
                 <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                  {metrics.memberGrowth > 0 ? `+${metrics.memberGrowth}%` : `${metrics.memberGrowth}%`} growth
+                  {t('metrics.growth', { value: metrics.memberGrowth > 0 ? `+${metrics.memberGrowth}` : metrics.memberGrowth })}
                 </Badge>
               </div>
             </CardHeader>
@@ -616,16 +622,16 @@ export default function Overview({ organisationDetails }: { organisationDetails:
           <Tabs defaultValue="groups" className="space-y-4">
             <TabsList className="grid grid-cols-4 h-auto p-1">
               <TabsTrigger value="groups" className="py-2">
-                Top Groups
+                {t('tabs.topGroups')}
               </TabsTrigger>
               <TabsTrigger value="events" className="py-2">
-                Upcoming Events
+                {t('tabs.upcomingEvents')}
               </TabsTrigger>
               <TabsTrigger value="donations" className="py-2">
-                Recent Donations
+                {t('tabs.recentDonations')}
               </TabsTrigger>
               <TabsTrigger value="members" className="py-2">
-                Recent Members
+                {t('tabs.recentMembers')}
               </TabsTrigger>
             </TabsList>
 
@@ -637,12 +643,12 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         <Building2 className="h-5 w-5 text-amber-600" />
-                        Top Performing Groups
+                        {t('groups.title')}
                       </CardTitle>
-                      <CardDescription>Based on membership and activity</CardDescription>
+                      <CardDescription>{t('groups.description')}</CardDescription>
                     </div>
                     <Button variant="outline" size="sm" className="text-xs gap-1">
-                      View All <ChevronRight className="h-3 w-3" />
+                      {t('groups.viewAll')} <ChevronRight className="h-3 w-3" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -652,11 +658,11 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Group Name</TableHead>
-                            <TableHead className="text-right">Total Members</TableHead>
-                            <TableHead className="text-right">Active Members</TableHead>
-                            <TableHead className="text-right">Events This Month</TableHead>
-                            <TableHead>Status</TableHead>
+                            <TableHead>{t('groups.groupName')}</TableHead>
+                            <TableHead className="text-right">{t('groups.totalMembers')}</TableHead>
+                            <TableHead className="text-right">{t('groups.activeMembers')}</TableHead>
+                            <TableHead className="text-right">{t('groups.eventsThisMonth')}</TableHead>
+                            <TableHead>{t('groups.status')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -686,8 +692,8 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-gray-500 bg-gray-50 rounded-md">
                       <Building2 className="h-12 w-12 text-gray-300 mb-2" />
-                      <p className="text-sm font-medium">No groups data available</p>
-                      <p className="text-xs text-gray-400">Create your first group to see data here</p>
+                      <p className="text-sm font-medium">{t('groups.noData.title')}</p>
+                      <p className="text-xs text-gray-400">{t('groups.noData.description')}</p>
                     </div>
                   )}
                 </CardContent>
@@ -702,12 +708,12 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-blue-600" />
-                        Upcoming Events
+                        {t('events.title')}
                       </CardTitle>
-                      <CardDescription>Next 30 days</CardDescription>
+                      <CardDescription>{t('events.description')}</CardDescription>
                     </div>
                     <Button variant="outline" size="sm" className="text-xs gap-1">
-                      View All <ChevronRight className="h-3 w-3" />
+                      {t('groups.viewAll')} <ChevronRight className="h-3 w-3" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -717,11 +723,11 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Event Name</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead className="text-right">Expected Attendees</TableHead>
-                            <TableHead>Price</TableHead>
-                            <TableHead>Status</TableHead>
+                            <TableHead>{t('events.eventName')}</TableHead>
+                            <TableHead>{t('events.date')}</TableHead>
+                            <TableHead className="text-right">{t('events.expectedAttendees')}</TableHead>
+                            <TableHead>{t('events.price')}</TableHead>
+                            <TableHead>{t('events.status')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -730,7 +736,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                               <TableCell className="font-medium">{event.name}</TableCell>
                               <TableCell>{new Date(event.startDate).toLocaleDateString()}</TableCell>
                               <TableCell className="text-right">{event.attendees?.toLocaleString() || "N/A"}</TableCell>
-                              <TableCell>{event.isPaid ? event.price : "Free"}</TableCell>
+                              <TableCell>{event.isPaid ? event.price : t('events.free')}</TableCell>
                               <TableCell>
                                 <Badge variant="outline" className="bg-blue-50 text-blue-700">
                                   {event.status || "Upcoming"}
@@ -744,8 +750,8 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-gray-500 bg-gray-50 rounded-md">
                       <Calendar className="h-12 w-12 text-gray-300 mb-2" />
-                      <p className="text-sm font-medium">No upcoming events</p>
-                      <p className="text-xs text-gray-400">Create an event to see it here</p>
+                      <p className="text-sm font-medium">{t('events.noData.title')}</p>
+                      <p className="text-xs text-gray-400">{t('events.noData.description')}</p>
                     </div>
                   )}
                 </CardContent>
@@ -760,12 +766,12 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         <CircleDollarSign className="h-5 w-5 text-purple-600" />
-                        Recent Donations
+                        {t('donations.title')}
                       </CardTitle>
-                      <CardDescription>Latest contributions</CardDescription>
+                      <CardDescription>{t('donations.description')}</CardDescription>
                     </div>
                     <Button variant="outline" size="sm" className="text-xs gap-1">
-                      View All <ChevronRight className="h-3 w-3" />
+                      {t('groups.viewAll')} <ChevronRight className="h-3 w-3" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -775,10 +781,10 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Donor</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Date</TableHead>
+                            <TableHead>{t('donations.donor')}</TableHead>
+                            <TableHead className="text-right">{t('donations.amount')}</TableHead>
+                            <TableHead>{t('donations.type')}</TableHead>
+                            <TableHead>{t('donations.date')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -809,8 +815,8 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-gray-500 bg-gray-50 rounded-md">
                       <CircleDollarSign className="h-12 w-12 text-gray-300 mb-2" />
-                      <p className="text-sm font-medium">No recent donations</p>
-                      <p className="text-xs text-gray-400">Donations will appear here when received</p>
+                      <p className="text-sm font-medium">{t('donations.noData.title')}</p>
+                      <p className="text-xs text-gray-400">{t('donations.noData.description')}</p>
                     </div>
                   )}
                 </CardContent>
@@ -825,12 +831,12 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         <Users className="h-5 w-5 text-blue-600" />
-                        Recent Members
+                        {t('members.title')}
                       </CardTitle>
-                      <CardDescription>Latest joined members</CardDescription>
+                      <CardDescription>{t('members.description')}</CardDescription>
                     </div>
                     <Button variant="outline" size="sm" className="text-xs gap-1">
-                      View All <ChevronRight className="h-3 w-3" />
+                      {t('groups.viewAll')} <ChevronRight className="h-3 w-3" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -840,10 +846,10 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Join Date</TableHead>
+                            <TableHead>{t('members.name')}</TableHead>
+                            <TableHead>{t('members.email')}</TableHead>
+                            <TableHead>{t('members.status')}</TableHead>
+                            <TableHead>{t('members.joinDate')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -868,7 +874,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                                   variant="outline"
                                   className={member.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}
                                 >
-                                  {member.isActive ? "Active" : "Inactive"}
+                                  {member.isActive ? t('members.active') : t('members.inactive')}
                                 </Badge>
                               </TableCell>
                               <TableCell>
@@ -882,8 +888,8 @@ export default function Overview({ organisationDetails }: { organisationDetails:
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-gray-500 bg-gray-50 rounded-md">
                       <Users className="h-12 w-12 text-gray-300 mb-2" />
-                      <p className="text-sm font-medium">No members data available</p>
-                      <p className="text-xs text-gray-400">Add members to see them here</p>
+                      <p className="text-sm font-medium">{t('members.noData.title')}</p>
+                      <p className="text-xs text-gray-400">{t('members.noData.description')}</p>
                     </div>
                   )}
                 </CardContent>

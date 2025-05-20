@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { EyeIcon, UserIcon } from "lucide-react";
 import OrganizationManagement from "@/app/setup/page";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default function DashboardLayout({
   user,
@@ -87,26 +88,29 @@ export default function DashboardLayout({
 
   return (
     <div className="relative">
-      {isAdmin && isOnBoarded==="true" && (
-        <Button
-          onClick={toggleView}
-          variant="outline"
-          size="sm"
-          className="fixed top-4 right-4 z-50 flex items-center gap-2"
-        >
-          {viewAs === "admin" ? (
-            <>
-              <UserIcon className="h-4 w-4" />
-              View as User
-            </>
-          ) : (
-            <>
-              <EyeIcon className="h-4 w-4" />
-              Back to Admin
-            </>
-          )}
-        </Button>
-      )}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <LanguageSwitcher />
+        {isAdmin && isOnBoarded==="true" && (
+          <Button
+            onClick={toggleView}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            {viewAs === "admin" ? (
+              <>
+                <UserIcon className="h-4 w-4" />
+                View as User
+              </>
+            ) : (
+              <>
+                <EyeIcon className="h-4 w-4" />
+                Back to Admin
+              </>
+            )}
+          </Button>
+        )}
+      </div>
       {showContent()}
     </div>
   );
