@@ -1,50 +1,51 @@
 "use client"
 
-import { useLocale } from "next-intl"
-import { useRouter, usePathname } from "next/navigation"
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Globe } from "lucide-react"
 
-const languages = [
-  { code: "en", name: "English" },
-  { code: "fr", name: "Français" },
-]
-
 export function LanguageSwitcher() {
-  const locale = useLocale()
-  const router = useRouter()
-  const pathname = usePathname()
+  useEffect(() => {
+    // Add Google Translate script
+    const script = document.createElement('script');
+    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    script.async = true;
+    document.body.appendChild(script);
 
-  const handleLanguageChange = (newLocale: string) => {
-    const newPath = pathname.replace(`/${locale}`, `/${newLocale}`)
-    router.push(newPath)
-  }
+    // Initialize Google Translate
+    window.googleTranslateElementInit = function() {
+      new window.google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,fr,es,de,it,pt,ru,zh-CN,ja,ko', // Add more languages as needed
+        layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false,
+      }, 'google_translate_element');
+    };
+
+    return () => {
+      // Cleanup
+      document.body.removeChild(script);
+      delete window.googleTranslateElementInit;
+    };
+  }, []);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="h-8 w-8">
-          <Globe className="h-4 w-4" />
-          <span className="sr-only">Switch language</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {languages.map((language) => (
-          <DropdownMenuItem
-            key={language.code}
-            onClick={() => handleLanguageChange(language.code)}
-            className={locale === language.code ? "bg-accent" : ""}
-          >
-            {language.name}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
+    <div className="flex items-center gap-2">
+      <div id="google_translate_element" className="hidden" />
+      <Button
+        variant="outline"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => {
+          const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+          if (select) {
+            select.click();
+          }
+        }}
+      >
+        <Globe className="h-4 w-4" />
+        <span className="sr-only">Translate page</span>
+      </Button>
+    </div>
+  );
 } 
