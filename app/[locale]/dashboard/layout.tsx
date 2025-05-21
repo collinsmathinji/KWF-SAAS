@@ -1,11 +1,12 @@
 // app/dashboard/layout.tsx
 "use client";
 
+import React from "react";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { EyeIcon, UserIcon } from "lucide-react";
-import OrganizationManagement from "@/app/setup/page";
+import OrganizationManagement from "@/app/[locale]/setup/page";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default function DashboardLayout({
