@@ -13,14 +13,18 @@ export default [
   {
     ignores: ["node_modules/**", ".next/**", "out/**"],
   },
-  ...compat.extends("next/core-web-vitals"),
   {
-    files: ["**/*.ts", "**/*.tsx"],
+    files: ["**/*.{js,jsx,ts,tsx}"],
     languageOptions: {
       parser: "@typescript-eslint/parser",
       parserOptions: {
         project: "./tsconfig.json",
       },
+    },
+    plugins: {
+      "@typescript-eslint": compat.plugin("@typescript-eslint"),
+      "react": compat.plugin("react"),
+      "react-hooks": compat.plugin("react-hooks"),
     },
     rules: {
       "react/no-unescaped-entities": "off",
@@ -30,4 +34,5 @@ export default [
       "eslint-comments/disable-enable-pair": "off",
     },
   },
+  ...compat.extends("next/core-web-vitals"),
 ];

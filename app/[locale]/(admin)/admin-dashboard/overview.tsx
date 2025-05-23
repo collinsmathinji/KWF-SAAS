@@ -123,14 +123,18 @@ const [activeSection, setActiveSection] = useState("")
               </CardHeader>
               <CardContent>
                 <LineChart
-                  data={[
-                    { name: "Sep", total: 3200 },
-                    { name: "Oct", total: 3800 },
-                    { name: "Nov", total: 4300 },
-                    { name: "Dec", total: 4800 },
-                    { name: "Jan", total: 5100 },
-                    { name: "Feb", total: 5335 },
-                  ]}
+                  data={{
+                    labels: ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb"],
+                    datasets: [
+                      {
+                        label: "Total Members",
+                        data: [3200, 3800, 4300, 4800, 5100, 5335],
+                        borderColor: "rgb(59, 130, 246)",
+                        backgroundColor: "rgba(59, 130, 246, 0.1)",
+                        tension: 0.4
+                      }
+                    ]
+                  }}
                 />
               </CardContent>
             </Card>
