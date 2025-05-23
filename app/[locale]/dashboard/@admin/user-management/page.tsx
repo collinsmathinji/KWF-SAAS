@@ -27,6 +27,7 @@ import AddMemberForm from "../invite-member"
 import { deleteMemberById, getMembers } from "@/lib/members"
 import { fetchMemberType } from "@/lib/members"
 import { getGroups } from "@/lib/group"
+import { useSession } from "next-auth/react"
 
 interface MemberType {
   id: any
@@ -89,6 +90,7 @@ const groupTypeDisplayNames: Record<string, string> = {
 
 export default function UserManagementPage() {
   const router = useRouter()
+  const { data: session } = useSession()
   const [view, setView] = useState<"members" | "groups">("members")
   const [selectedColumns, setSelectedColumns] = useState<string[]>(["name", "email", "type", "status", "joinDate"])
   const [searchQuery, setSearchQuery] = useState("")
@@ -119,8 +121,16 @@ export default function UserManagementPage() {
     const fetchData = async () => {
       setIsLoading(true)
       try {
+        if (!session?.user?.organizationId) {
+          console.error("No organization ID found in session")
+          setMembershipTypes([])
+          setMembers([])
+          setGroups([])
+          return
+        }
+
         // Fetch membership types
-        const response: any = await fetchMemberType()
+        const response: any = await fetchMemberType(session.user.organizationId)
 
         if (response && response.data && response.data.data) {
           setMembershipTypes(response.data.data)
@@ -130,7 +140,7 @@ export default function UserManagementPage() {
         }
 
         // Fetch members
-        const membersResponse: any = await getMembers()
+        const membersResponse: any = await getMembers(session.user.organizationId)
 
         if (membersResponse && membersResponse.data && membersResponse.data.data) {
           setMembers(membersResponse.data.data)
@@ -141,22 +151,19 @@ export default function UserManagementPage() {
 
         // Fetch groups
         try {
-          const groupsResponse: any = await getGroups()
+          const groupsResponse: any = await getGroups(session.user.organizationId)
           if (groupsResponse && groupsResponse.data && groupsResponse.data.data) {
             const formattedGroups = groupsResponse.data.data.map((group: any) => ({
               ...group,
-              // Ensure all required fields are present or provide defaults
               members: group.members || 0,
               created: group.createdAt || new Date().toISOString(),
-              status: "Active", // Default status if not provided
-              // Ensure groupType is available for filtering and display
+              status: "Active",
               groupType: group.groupType || "private",
             }))
 
             console.log("Fetched groups:", formattedGroups)
             setGroups(formattedGroups)
           } else {
-            console.error("Unexpected groups response structure:", groupsResponse)
             setGroups([])
           }
         } catch (groupError) {
@@ -174,7 +181,7 @@ export default function UserManagementPage() {
     }
 
     fetchData()
-  }, [])
+  }, [session?.user?.organizationId])
 
   // Filter members based on search query
   const filteredMembers = members.filter((member) => {

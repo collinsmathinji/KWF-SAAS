@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Globe } from "lucide-react"
+import { Globe } from "lucide-react" 
 
 const languages = [
   { code: "en", name: "English" },

@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { getGroups } from "@/lib/group"
+import { useSession } from "next-auth/react"
 
 // Mock current user ID for demonstration
 const CURRENT_USER_ID = "user123"; 
@@ -795,6 +796,7 @@ const GroupEmptyState = ({ filter, searchQuery, onCreateGroup }) => {
 
 // ===== Component: GroupsExplorer =====
 export default function GroupsExplorer() {
+  const { data: session } = useSession()
   const [view, setView] = useState("grid"); // grid or list
   const [groups, setGroups] = useState([]);
   const [filteredGroups, setFilteredGroups] = useState([]);
@@ -809,10 +811,15 @@ export default function GroupsExplorer() {
     const fetchGroups = async () => {
       setIsLoading(true);
       try {
+        if (!session?.user?.organizationId) {
+          console.error("No organization ID found in session")
+          setGroups([])
+          return
+        }
         // Ensure we get an array of groups
-        const fetchedGroups = await getGroups();
+        const fetchedGroups = await getGroups(Number(session.user.organizationId));
         console.log("groupArray",fetchedGroups)
-        const groupsArray =fetchedGroups.data.data
+        const groupsArray = fetchedGroups.data.data
         
         setGroups(groupsArray);
         applyFilters(groupsArray, searchQuery, activeFilter);

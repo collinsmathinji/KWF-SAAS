@@ -256,8 +256,12 @@ export function Pricing() {
         priceId: selectedPlan.stripePriceId,
         customerName: customerData.name,
         email: customerData.email, 
-        successUrl: `${process.env.NEXT_PUBLIC_API_URL}/success`,
-        cancelUrl: `${process.env.NEXT_PUBLIC_API_URL}/pricing`,
+        successUrl: `http://localhost:3000/success`,
+        cancelUrl: `http://localhost:3000
+        
+        
+        
+        ;/pricing`,
       };
   
       console.log("Sending request with body:", requestBody);
@@ -274,7 +278,11 @@ export function Pricing() {
         const errorMessage = await response.text();
 
 
-        
+
+
+
+
+
         throw new Error(errorMessage || "Failed to create checkout session");
       }
   

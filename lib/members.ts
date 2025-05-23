@@ -16,24 +16,25 @@ export interface member {
   isPortalAccess: boolean | null
 }
 
-export async function getMembers(): Promise<member[]> {
+export async function getMembers(organizationId: string): Promise<member[]> {
   try {
     const response = await fetch("/api/member/list", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({ organizationId }),
     })
     
     const data = await response.json()
     
     if (!response.ok) {
-      throw new Error(data.message || "Failed to fetch organizations")
+      throw new Error(data.message || "Failed to fetch members")
     }
     
     return data
   } catch (error) {
-    console.error("Error fetching organizations:", error)
+    console.error("Error fetching members:", error)
     throw error
   }
 }
@@ -87,13 +88,14 @@ export async function createMember(data: member): Promise<member> {
   }
 }
 
-export async function fetchMemberType(): Promise<memberType[]> {
+export async function fetchMemberType(organizationId: string): Promise<memberType[]> {
   try {
     const response = await fetch("/api/membershipType/list", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({ organizationId }),
     })
     
     const responseData = await response.json()

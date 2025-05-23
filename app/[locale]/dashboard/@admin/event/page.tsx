@@ -57,6 +57,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import EventsPage from "./events-display";
+import { useSession } from "next-auth/react"
+
 // Form schemas
 
 const invitationFormSchema = z.object({
@@ -183,9 +185,16 @@ export default function EventManagementPage({ organisationDetails }: any) {
 
   const ITEMS_PER_PAGE = 5;
 
+  const { data: session } = useSession()
+
   async function loadEvents() {
     try {
-      const response:any = await fetchEvents();
+      if (!session?.user?.organizationId) {
+        console.error("No organization ID found in session")
+        setEvents([])
+        return
+      }
+      const response:any = await fetchEvents(session.user.organizationId);
       
       setEvents(response.data || []); // Ensure events is always an array
     } catch (error) {
@@ -195,8 +204,10 @@ export default function EventManagementPage({ organisationDetails }: any) {
   }
 
   useEffect(() => {
-    loadEvents();
-  }, []);
+    if (session?.user?.organizationId) {
+      loadEvents();
+    }
+  }, [session?.user?.organizationId]);
 
   // Filter events based on search term and status
   // const filteredEvents = events.filter((event) => {

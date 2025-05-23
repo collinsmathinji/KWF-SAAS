@@ -166,7 +166,7 @@ export default function DashboardPage() {
         
         if (orgId) {
           console.log('Fetching member types for organization ID:', orgId);
-          const response:any = await fetchMemberType();
+          const response:any = await fetchMemberType(orgId);
           console.log("Member types response:", response);
           setMemberType(response as unknown as string[]);
         } else {

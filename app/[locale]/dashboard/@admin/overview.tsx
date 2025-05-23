@@ -180,7 +180,12 @@ export default function Overview({ organisationDetails }: { organisationDetails:
       setIsLoading(true)
       try {
         // Fetch members data
-        const membersResponse: any = await getMembers()
+        if (!session.user.organizationId) {
+          console.error("No organization ID found in session")
+          setMembers([])
+          return
+        }
+        const membersResponse: any = await getMembers(session.user.organizationId)
         console.log("Members data:", membersResponse)
         // Handle different API response structures
         let membersData: Member[] = []
@@ -195,7 +200,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
         setMembers(membersData)
 
         // Fetch groups data
-        const groupsResponse: any = await getGroups()
+        const groupsResponse: any = await getGroups(organisationDetails.id)
         console.log("Groups data:", groupsResponse)
         // Handle different API response structures
         let groupsData: Group[] = []
