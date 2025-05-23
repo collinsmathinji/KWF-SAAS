@@ -286,23 +286,39 @@ export default function Overview({ organisationDetails }: { organisationDetails:
         const activeMembers = membersData.length
         const activeGroups = groupsData.length
 
-        // Calculate member growth (could be from a separate API in real implementation)
-        // For now, using static data but structured for real data
-        const mockGrowthData: ChartData[] = [
-          { name: "Sep", total: membersData.length > 0 ? Math.floor(membersData.length * 0.6) : 3200 },
-          { name: "Oct", total: membersData.length > 0 ? Math.floor(membersData.length * 0.7) : 3800 },
-          { name: "Nov", total: membersData.length > 0 ? Math.floor(membersData.length * 0.8) : 4300 },
-          { name: "Dec", total: membersData.length > 0 ? Math.floor(membersData.length * 0.85) : 4800 },
-          { name: "Jan", total: membersData.length > 0 ? Math.floor(membersData.length * 0.95) : 5100 },
-          { name: "Feb", total: membersData.length > 0 ? membersData.length : 5335 },
-        ]
-        setMemberGrowth(mockGrowthData)
+        // Calculate member growth (aggregate by join month for last 6 months)
+        function getLastSixMonthsLabels() {
+          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          const result = [];
+          const now = new Date();
+          for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            result.push({
+              label: months[d.getMonth()],
+              year: d.getFullYear(),
+              month: d.getMonth()
+            });
+          }
+          return result;
+        }
+
+        const lastSixMonths = getLastSixMonthsLabels();
+        // Count members joined in each of the last 6 months
+        const memberCountsByMonth = lastSixMonths.map(({ year, month, label }) => {
+          const count = membersData.filter((m) => {
+            if (!m.createdAt) return false;
+            const date = new Date(m.createdAt);
+            return date.getFullYear() === year && date.getMonth() === month;
+          }).length;
+          return { name: label, total: count };
+        });
+        setMemberGrowth(memberCountsByMonth);
 
         // Calculate growth percentage (comparing last two months)
         const growthPercentage =
-          mockGrowthData.length >= 2
-            ? ((mockGrowthData[mockGrowthData.length - 1].total - mockGrowthData[mockGrowthData.length - 2].total) /
-                mockGrowthData[mockGrowthData.length - 2].total) *
+          memberCountsByMonth.length >= 2
+            ? ((memberCountsByMonth[memberCountsByMonth.length - 1].total - memberCountsByMonth[memberCountsByMonth.length - 2].total) /
+                memberCountsByMonth[memberCountsByMonth.length - 2].total) *
               100
             : 4.6
 
