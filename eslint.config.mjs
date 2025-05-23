@@ -9,10 +9,19 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-const eslintConfig = [
+export default [
+  {
+    ignores: ["node_modules/**", ".next/**", "out/**"],
+  },
   ...compat.extends("next/core-web-vitals"),
   {
     files: ["**/*.ts", "**/*.tsx"],
+    languageOptions: {
+      parser: "@typescript-eslint/parser",
+      parserOptions: {
+        project: "./tsconfig.json",
+      },
+    },
     rules: {
       "react/no-unescaped-entities": "off",
       "@typescript-eslint/no-unused-vars": "off",
@@ -22,5 +31,3 @@ const eslintConfig = [
     },
   },
 ];
-
-export default eslintConfig;
