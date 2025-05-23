@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { useToast } from "@/components/ui/use-toast"
-import { createCheckoutSession } from "@/app/actions/create-checkout-session"
+import { createCheckoutSession } from "@/app/[locale]/actions/create-checkout-session"
 
 
 interface PlanFeature {
