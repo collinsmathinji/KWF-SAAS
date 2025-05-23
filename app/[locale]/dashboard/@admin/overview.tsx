@@ -179,37 +179,36 @@ export default function Overview({ organisationDetails }: { organisationDetails:
 
       setIsLoading(true)
       try {
-        // Fetch members data
         if (!session.user.organizationId) {
           console.error("No organization ID found in session")
           setMembers([])
+          setGroups([])
+          setEvents([])
           return
         }
+
+        // Fetch members data
         const membersResponse: any = await getMembers(session.user.organizationId)
         console.log("Members data:", membersResponse)
         // Handle different API response structures
         let membersData: Member[] = []
-        if (membersResponse?.data?.data) {
-          membersData = membersResponse.data.data
-        } else if (Array.isArray(membersResponse?.data)) {
-          membersData = membersResponse.data
-        } else if (Array.isArray(membersResponse)) {
+        if (Array.isArray(membersResponse)) {
           membersData = membersResponse
+        } else if (membersResponse?.data) {
+          membersData = Array.isArray(membersResponse.data) ? membersResponse.data : []
         }
         console.log("Processed members data:", membersData)
         setMembers(membersData)
 
         // Fetch groups data
-        const groupsResponse: any = await getGroups(organisationDetails.id)
+        const groupsResponse: any = await getGroups(session.user.organizationId)
         console.log("Groups data:", groupsResponse)
         // Handle different API response structures
         let groupsData: Group[] = []
-        if (groupsResponse?.data?.data) {
-          groupsData = groupsResponse.data.data
-        } else if (Array.isArray(groupsResponse?.data)) {
-          groupsData = groupsResponse.data
-        } else if (Array.isArray(groupsResponse)) {
+        if (Array.isArray(groupsResponse)) {
           groupsData = groupsResponse
+        } else if (groupsResponse?.data) {
+          groupsData = Array.isArray(groupsResponse.data) ? groupsResponse.data : []
         }
         console.log("Processed groups data:", groupsData)
         setGroups(groupsData)
@@ -217,7 +216,6 @@ export default function Overview({ organisationDetails }: { organisationDetails:
         // Fetch events data
         try {
           if (session?.user?.organizationId) {
-            // Fixed: Added proper optional chaining
             const eventsResponse = await fetchEvents(session.user.organizationId)
             console.log("Events data:", eventsResponse)
             // Handle different API response structures

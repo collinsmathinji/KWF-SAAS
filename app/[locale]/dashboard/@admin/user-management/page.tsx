@@ -131,9 +131,10 @@ export default function UserManagementPage() {
 
         // Fetch membership types
         const response: any = await fetchMemberType(session.user.organizationId)
-
-        if (response && response.data && response.data.data) {
-          setMembershipTypes(response.data.data)
+        console.log("Membership types response:", response)
+        if (response && Array.isArray(response.data)) {
+          console.log("Setting membership types:", response.data)
+          setMembershipTypes(response.data)
         } else {
           console.error("Unexpected response structure:", response)
           setMembershipTypes([])
@@ -141,9 +142,10 @@ export default function UserManagementPage() {
 
         // Fetch members
         const membersResponse: any = await getMembers(session.user.organizationId)
-
-        if (membersResponse && membersResponse.data && membersResponse.data.data) {
-          setMembers(membersResponse.data.data)
+        console.log("Members response:", membersResponse)
+        if (membersResponse && Array.isArray(membersResponse.data)) {
+          console.log("Setting members:", membersResponse.data)
+          setMembers(membersResponse.data)
         } else {
           console.error("Unexpected response structure:", membersResponse)
           setMembers([])
@@ -152,15 +154,25 @@ export default function UserManagementPage() {
         // Fetch groups
         try {
           const groupsResponse: any = await getGroups(session.user.organizationId)
-          if (groupsResponse && groupsResponse.data && groupsResponse.data.data) {
-            const formattedGroups = groupsResponse.data.data.map((group: any) => ({
+          console.log("Groups response:", groupsResponse)
+          if (Array.isArray(groupsResponse)) {
+            const formattedGroups = groupsResponse.map((group: any) => ({
               ...group,
               members: group.members || 0,
               created: group.createdAt || new Date().toISOString(),
               status: "Active",
               groupType: group.groupType || "private",
             }))
-
+            console.log("Fetched groups:", formattedGroups)
+            setGroups(formattedGroups)
+          } else if (Array.isArray(groupsResponse.data)) {
+            const formattedGroups = groupsResponse.data.map((group: any) => ({
+              ...group,
+              members: group.members || 0,
+              created: group.createdAt || new Date().toISOString(),
+              status: "Active",
+              groupType: group.groupType || "private",
+            }))
             console.log("Fetched groups:", formattedGroups)
             setGroups(formattedGroups)
           } else {

@@ -51,7 +51,12 @@ interface GroupResponse {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ organizationId }),
+        body: JSON.stringify({
+          query: { organizationId },
+          options: {
+            select: ['id', 'name', 'logo', 'description', 'organizationId', 'groupTypeId', 'isActive', 'createdAt', 'updatedAt']
+          }
+        }),
       })
   
       const data = await response.json()
@@ -60,7 +65,7 @@ interface GroupResponse {
         throw new Error(data.message || "Failed to fetch groups")
       }
   
-      return data
+      return data.data || []
     } catch (error) {
       console.error("Error fetching groups:", error)
       throw error

@@ -23,7 +23,12 @@ export async function getMembers(organizationId: string): Promise<member[]> {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ organizationId }),
+      body: JSON.stringify({
+        query: { organizationId },
+        options: {
+          select: ['id', 'firstName', 'lastName', 'email', 'membershipTypeId', 'isActive', 'createdAt']
+        }
+      }),
     })
     
     const data = await response.json()
@@ -32,7 +37,7 @@ export async function getMembers(organizationId: string): Promise<member[]> {
       throw new Error(data.message || "Failed to fetch members")
     }
     
-    return data
+    return data.data || []
   } catch (error) {
     console.error("Error fetching members:", error)
     throw error
@@ -95,7 +100,12 @@ export async function fetchMemberType(organizationId: string): Promise<memberTyp
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ organizationId }),
+      body: JSON.stringify({
+        query: { organizationId },
+        options: {
+          select: ['id', 'name', 'description', 'organizationId']
+        }
+      }),
     })
     
     const responseData = await response.json()
@@ -105,12 +115,12 @@ export async function fetchMemberType(organizationId: string): Promise<memberTyp
     }
     
     // Store the data in localStorage if needed
-    if (responseData.data && responseData.data.data) {
-      localStorage.setItem('currentMemberType', JSON.stringify(responseData.data.data));
+    if (responseData.data) {
+      localStorage.setItem('currentMemberType', JSON.stringify(responseData.data));
     }
     
     console.log("memberTypes fetched:", responseData)
-    return responseData
+    return responseData.data || []
   } catch (error) {
     console.error("Error fetching memberTypes:", error)
     throw error
