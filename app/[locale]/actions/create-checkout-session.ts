@@ -1,7 +1,7 @@
 "use server"
 
-import { PLANS } from "../api/stripe/config"
-import { stripe } from "../api/stripe/stripehook"
+import { PLANS } from "@/app/api/stripe/config"
+import { stripe } from "@/app/api/stripe/stripehook"
 
 export async function createCheckoutSession(planId: string, seats: number, customerId?: string) {
   try {

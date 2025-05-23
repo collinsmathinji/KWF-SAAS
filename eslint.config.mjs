@@ -19,20 +19,25 @@ export default [
       parser: "@typescript-eslint/parser",
       parserOptions: {
         project: "./tsconfig.json",
-      },
+        ecmaVersion: "latest",
+        sourceType: "module",
+        ecmaFeatures: {
+          jsx: true
+        }
+      }
     },
-    plugins: {
-      "@typescript-eslint": compat.plugin("@typescript-eslint"),
-      "react": compat.plugin("react"),
-      "react-hooks": compat.plugin("react-hooks"),
+    settings: {
+      react: {
+        version: "detect"
+      }
     },
     rules: {
       "react/no-unescaped-entities": "off",
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
       "eslint-comments/no-unused-disable": "off",
-      "eslint-comments/disable-enable-pair": "off",
-    },
+      "eslint-comments/disable-enable-pair": "off"
+    }
   },
-  ...compat.extends("next/core-web-vitals"),
+  ...compat.extends("next/core-web-vitals")
 ];
