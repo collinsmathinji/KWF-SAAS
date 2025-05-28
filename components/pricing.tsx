@@ -1,7 +1,7 @@
 "use client"
 
 import { Check, HelpCircle, X } from "lucide-react"
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
 import { useRouter } from "next/navigation"
@@ -83,17 +83,14 @@ export function Pricing() {
   const [memberOptions, setMemberOptions] = useState("0")
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
-  const [clientSecret, setClientSecret] = useState<string>("")
   const [plans, setPlans] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [customerEmail, setCustomerEmail] = useState("")
-  const [customerName, setCustomerName] = useState("")
 
-  const handlePlansFetch = async () => {
+  const handlePlansFetch = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/subscriptionPlan/list`, {
@@ -104,7 +101,7 @@ export function Pricing() {
         body: JSON.stringify({
           query: {
             billingCycle: "Monthly",
-            isActive:true,
+            isActive: true,
             isDeleted: false,
           },
           options: {
@@ -132,7 +129,7 @@ export function Pricing() {
           id: apiPlan._id as PlanId,
           name: apiPlan.planName,
           stripePriceId: apiPlan.stripePriceId,
-          isActive: apiPlan.isActive??true,
+          isActive: apiPlan.isActive ?? true,
           description: apiPlan.description,
           basePrice: apiPlan.price,
           maxContacts: apiPlan.maxMembers,
@@ -147,7 +144,6 @@ export function Pricing() {
         }))
 
         setPlans(transformedPlans)
-        console.log("Fetched plans:", data.data.data)
       } else {
         console.error("Invalid data format:", data)
         toast({
@@ -166,23 +162,22 @@ export function Pricing() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
 
   useEffect(() => {
     handlePlansFetch()
-  }, [])
+  }, [handlePlansFetch])
+
   const filteredPlans = useMemo(() => {
     const contactsNum = Number.parseInt(selectedContacts)
     const membersNum = Number.parseInt(memberOptions)
 
     return plans
       .filter((plan) => {
-        // Filter by contacts
         if (typeof plan.maxContacts === "number" && plan.maxContacts < contactsNum) {
           return false
         }
 
-        // Filter by member portal
         if (membersNum > 0 && plan.features.memberPortal === false) {
           return false
         }
@@ -194,12 +189,10 @@ export function Pricing() {
         return true
       })
       .sort((a, b) => {
-        // Sort by price
         if (typeof a.basePrice === "number" && typeof b.basePrice === "number") {
           return a.basePrice - b.basePrice
         }
 
-        // "Contact Us" plans go last
         if (a.basePrice === "Contact Us") return 1
         if (b.basePrice === "Contact Us") return -1
 
@@ -207,7 +200,6 @@ export function Pricing() {
       })
   }, [plans, selectedContacts, memberOptions])
 
-  // Find the recommended plan
   const recommendedPlan = useMemo(() => {
     if (filteredPlans.length === 0) return null
 
@@ -228,88 +220,69 @@ export function Pricing() {
     return filteredPlans[0]
   }, [filteredPlans, selectedContacts, memberOptions])
 
-  // Handle plan selection
-  const handlePlanSelection = (plan: Plan) => {
+  const handlePlanSelection = useCallback((plan: Plan) => {
     if (plan.basePrice === "Contact Us") {
       router.push("/contact-sales")
       return
     }
 
     setSelectedPlan(plan)
-    setClientSecret("")
     setIsPaymentModalOpen(true)
-  }
+  }, [router])
 
-  const handleCustomerSubmit = async (customerData: { name: string; email: string }) => {
+  const handleCustomerSubmit = useCallback(async (customerData: { name: string; email: string }) => {
     if (!selectedPlan) {
-      console.error("Error: No selected plan.");
-      return;
+      console.error("Error: No selected plan.")
+      return
     }
-  
-    console.log("Selected Plan:", selectedPlan);
-    console.log("Customer Data:", customerData);
-  
-    setIsSubmitting(true);
-  
+
+    setIsSubmitting(true)
+
     try {
       const requestBody = {
         priceId: selectedPlan.stripePriceId,
         customerName: customerData.name,
-        email: customerData.email, 
-        successUrl: `http://localhost:3000/success`,
-        cancelUrl: `http://localhost:3000
-        
-        
-        
-        ;/pricing`,
-      };
-  
-      console.log("Sending request with body:", requestBody);
-  
+        email: customerData.email,
+        successUrl: `${window.location.origin}/success`,
+        cancelUrl: `${window.location.origin}/pricing`,
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkout/create-subscription-checkout-session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(requestBody),
-      });
-  
+      })
+
       if (!response.ok) {
-        const errorMessage = await response.text();
-
-
-
-
-
-
-
-        throw new Error(errorMessage || "Failed to create checkout session");
+        const errorMessage = await response.text()
+        throw new Error(errorMessage || "Failed to create checkout session")
       }
-  
-      const data = await response.json();
-  
+
+      const data = await response.json()
+
       if (data.sessionUrl) {
-        console.log("Redirecting to Stripe Checkout:", data.sessionUrl);
-        window.location.href = data.sessionUrl; // ✅ Redirect user to Stripe Checkout
+        window.location.href = data.sessionUrl
       } else {
         toast({
           title: "Error",
           description: "Could not redirect to payment. Please try again.",
           variant: "destructive",
-        });
+        })
       }
     } catch (error) {
-      console.error("Error creating checkout session:", error);
-  
+      console.error("Error creating checkout session:", error)
+
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to initialize payment. Please try again.",
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }, [selectedPlan, toast])
 
   return (
     <section className="container py-24 space-y-8">
@@ -428,15 +401,16 @@ export function Pricing() {
             </DialogDescription>
           </DialogHeader>
 
-          {!clientSecret ? (
+          {!selectedPlan && (
             <CustomerForm onSubmit={handleCustomerSubmit} isLoading={isSubmitting} />
-          ) : (
-            selectedPlan &&
+          )}
+
+          {selectedPlan &&
             typeof selectedPlan.basePrice === "number" && (
               <Elements
                 stripe={stripePromise}
                 options={{
-                  clientSecret,
+                  clientSecret: "",
                   appearance: {
                     theme: "stripe",
                     variables: {
@@ -460,7 +434,7 @@ export function Pricing() {
                 />
               </Elements>
             )
-          )}
+          }
         </DialogContent>
       </Dialog>
     </section>

@@ -128,11 +128,13 @@ function LoginContent() {
         return;
       }
       
-      setShowToast(true)
-      setTimeout(() => {
-        setShowToast(false)
+      // Only show toast and redirect if login was successful
+      if (result?.ok) {
+        setShowToast(true)
+        // Wait for session to be updated
+        await new Promise(resolve => setTimeout(resolve, 1000))
         router.push(from)
-      }, 3000)
+      }
     } catch (err:any) {
       console.error("Login error:", err)
       // Try to extract the backend error message

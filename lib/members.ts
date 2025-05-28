@@ -46,7 +46,6 @@ export async function getMembers(organizationId: string): Promise<member[]> {
 
 export async function createMemberType(data: memberType): Promise<memberType> {
   try {
-    // Make sure the Content-Type header is set
     const response = await fetch("/api/membershipType/create", {
       method: "POST",
       headers: {
@@ -61,8 +60,11 @@ export async function createMemberType(data: memberType): Promise<memberType> {
       throw new Error(responseData.message || "Failed to create memberType")
     }
     
-    console.log("memberType created:", responseData)
-    return responseData
+    if (!responseData.data) {
+      throw new Error("No data received from server")
+    }
+    
+    return responseData.data
   } catch (error) {
     console.error("Error creating memberType:", error)
     throw error

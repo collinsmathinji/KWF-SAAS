@@ -33,7 +33,7 @@ export default async function LocaleLayout(props: LayoutProps) {
   }
 
   return (
-    <html lang={locale} className="scroll-smooth">
+    <html lang={locale} className="scroll-smooth" suppressHydrationWarning>
       <head>
         <link
           rel="preload"

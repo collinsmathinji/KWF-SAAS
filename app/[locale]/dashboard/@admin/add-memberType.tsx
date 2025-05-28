@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { Loader2, Shield, Check } from "lucide-react"
-import { createMemberType } from "@/lib/members"
+import { createMemberType, fetchMemberType } from "@/lib/members"
 
 interface MemberType {
   name: string
@@ -28,12 +28,15 @@ export default function AddMemberTypeForm({ onClose }: { onClose: () => void }) 
 
   // Auto-close after success with a delay
   useEffect(() => {
+    let timer: NodeJS.Timeout;
     if (isSuccess) {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         onClose();
-      }, 2000);
-      return () => clearTimeout(timer);
+      }, 1500);
     }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [isSuccess, onClose]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -47,7 +50,16 @@ export default function AddMemberTypeForm({ onClose }: { onClose: () => void }) 
         organizationId: formData.organizationId ? Number(formData.organizationId) : null
       }
       
-      await createMemberType(formDataToSubmit)
+      const response = await createMemberType(formDataToSubmit)
+      
+      if (!response) {
+        throw new Error("Failed to create member type")
+      }
+
+      // Refresh member types list
+      if (organization) {
+        await fetchMemberType(organization)
+      }
       
       // Show success state
       setIsSuccess(true)
@@ -57,24 +69,30 @@ export default function AddMemberTypeForm({ onClose }: { onClose: () => void }) 
         description: `Member type "${formData.name}" has been created`,
       })
       
-      // Reset form (though it will close after the delay)
+      // Reset form
       setFormData({
         name: "",
         description: "",
         organizationId: organization ? Number(organization) : null
       })
       
-      // No immediate onClose() - using the effect to handle this with a delay
-      
     } catch (error) {
+      console.error("Error creating member type:", error)
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: error instanceof Error ? error.message : "Something went wrong. Please try again.",
         variant: "destructive",
       })
+    } finally {
       setIsLoading(false)
     }
   }
+
+  const handleClose = () => {
+    if (!isLoading) {
+      onClose();
+    }
+  };
 
   return (
     <div className="bg-blue-50 p-4 flex items-center justify-center">
@@ -140,7 +158,7 @@ export default function AddMemberTypeForm({ onClose }: { onClose: () => void }) 
               <div className="flex gap-4">
                 <Button
                   type="button"
-                  onClick={onClose}
+                  onClick={handleClose}
                   variant="outline"
                   className="w-1/2 border-blue-200 text-blue-600 hover:bg-blue-50"
                   disabled={isLoading}
