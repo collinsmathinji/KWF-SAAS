@@ -401,40 +401,8 @@ export function Pricing() {
             </DialogDescription>
           </DialogHeader>
 
-          {!selectedPlan && (
-            <CustomerForm onSubmit={handleCustomerSubmit} isLoading={isSubmitting} />
-          )}
-
-          {selectedPlan &&
-            typeof selectedPlan.basePrice === "number" && (
-              <Elements
-                stripe={stripePromise}
-                options={{
-                  clientSecret: "",
-                  appearance: {
-                    theme: "stripe",
-                    variables: {
-                      colorPrimary: "#2563eb",
-                      colorBackground: "#ffffff",
-                      colorText: "#1e3a8a",
-                      colorDanger: "#df1b41",
-                      fontFamily: "system-ui, sans-serif",
-                      spacingUnit: "4px",
-                      borderRadius: "8px",
-                    },
-                  },
-                }}
-              >
-                <StripePaymentForm
-                  onSuccess={() => {
-                    setIsPaymentModalOpen(false)
-                    router.push("/signup")
-                  }}
-                  amount={selectedPlan.basePrice * 100}
-                />
-              </Elements>
-            )
-          }
+          {/* Only show the customer form, remove Elements/StripePaymentForm */}
+          <CustomerForm onSubmit={handleCustomerSubmit} isLoading={isSubmitting} />
         </DialogContent>
       </Dialog>
     </section>
@@ -562,4 +530,3 @@ function CustomerForm({ onSubmit, isLoading }: CustomerFormProps) {
     </form>
   )
 }
-

@@ -30,6 +30,12 @@ import { deleteMemberById, getMembers } from "@/lib/members"
 import { fetchMemberType } from "@/lib/members"
 import { getGroups } from "@/lib/group"
 import { useSession } from "next-auth/react"
+import { getStaffRoles } from "@/lib/staffRole"
+import type { StaffRole } from "@/lib/staffRole"
+import { getStaff, deleteStaff as deleteStaffAPI } from "@/lib/staff"
+import { Staff as APIStaff } from "@/lib/staff"
+import { Permission } from "@/types/permissions"
+import type { GroupData } from "@/lib/group"
 
 interface MemberType {
   id: any
@@ -49,40 +55,30 @@ interface Member {
   createdAt: string
 }
 
-interface Group {
-  id: string
-  name: string
-  members?: number
-  status?: string
-  created?: string
-  logo?: string
-  description?: string
-  organizationId?: string
-  groupTypeId: string
-  groupType?: string | null
-  createdAt?: string
-  updatedAt?: string
-}
+interface Group extends GroupData {}
 
-interface StaffRole {
+interface StaffRoleDisplay {
   id: string
+  roleName: string
   name: string
   description: string
-  apiAccess: string[]
+  permissions: Permission[]
   createdAt: string
-  staffCount?: number
+  organizationId: number | null
+  apiAccess: string[]
+  staffCount: number
 }
 
-interface Staff {
-  id: string
-  name: string
-  email: string
-  staffRoleId: string
-  staffRole?: StaffRole
-  hasPortalAccess: boolean
-  isActive: boolean
-  createdAt: string
+interface StaffDisplay extends APIStaff {
+  staffRole?: StaffRoleDisplay
 }
+
+const mapStaffRoleToDisplay = (role: StaffRole): StaffRoleDisplay => ({
+  ...role,
+  name: role.roleName,
+  apiAccess: role.permissions.map(p => `${p.method} ${p.endpoint}`),
+  staffCount: 0 // This would need to be calculated from staff data
+})
 
 // Define columns for all views
 const columns = {
@@ -130,8 +126,8 @@ export default function UserManagementPage() {
   const [showStaffRoleDialog, setShowStaffRoleDialog] = useState(false)
   const [showStaffDialog, setShowStaffDialog] = useState(false)
   const [groups, setGroups] = useState<Group[]>([])
-  const [staff, setStaff] = useState<Staff[]>([])
-  const [staffRoles, setStaffRoles] = useState<StaffRole[]>([])
+  const [staffMembers, setStaffMembers] = useState<StaffDisplay[]>([])
+  const [staffRoles, setStaffRoles] = useState<StaffRoleDisplay[]>([])
   const [groupTypes, setGroupTypes] = useState<MemberType[]>([
     { id: "private", name: "Private", description: "private" },
     { id: "public_open", name: "Public Open", description: "private" },
@@ -151,14 +147,18 @@ export default function UserManagementPage() {
     }
   }
 
-  const deleteStaff = async (staffId: string) => {
+  const deleteStaffMember = async (staffId: string) => {
     try {
-      // Add your delete staff API call here
-      setStaff((prevStaff) => prevStaff.filter((staff) => staff.id !== staffId))
+      await deleteStaffAPI(staffId)
+      setStaffMembers((prev) => prev.filter((staff) => staff.id !== staffId))
       console.log("Staff deleted successfully")
     } catch (error) {
       console.error("Error deleting staff:", error)
     }
+  }
+
+  const setGroupsWithData = (data: GroupData[]) => {
+    setGroups(data as Group[])
   }
 
   useEffect(() => {
@@ -170,134 +170,61 @@ export default function UserManagementPage() {
           setMembershipTypes([])
           setMembers([])
           setGroups([])
-          setStaff([])
+          setStaffMembers([])
           setStaffRoles([])
           return
         }
 
         // Fetch membership types
         const response: any = await fetchMemberType(session.user.organizationId)
-        console.log("Membership types response:", response)
         if (response && Array.isArray(response.data)) {
-          console.log("Setting membership types:", response.data)
           setMembershipTypes(response.data)
         } else {
-          console.error("Unexpected response structure:", response)
           setMembershipTypes([])
         }
 
         // Fetch members
         const membersResponse: any = await getMembers(session.user.organizationId)
-        console.log("Members response:", membersResponse)
         if (membersResponse && Array.isArray(membersResponse.data)) {
-          console.log("Setting members:", membersResponse.data)
           setMembers(membersResponse.data)
         } else {
-          console.error("Unexpected response structure:", membersResponse)
           setMembers([])
         }
 
         // Fetch groups
-        try {
-          const groupsResponse: any = await getGroups(session.user.organizationId)
-          console.log("Groups response:", groupsResponse)
-          if (Array.isArray(groupsResponse)) {
-            const formattedGroups = groupsResponse.map((group: any) => ({
-              ...group,
-              members: group.members || 0,
-              created: group.createdAt || new Date().toISOString(),
-              status: "Active",
-              groupType: group.groupType || "private",
-            }))
-            console.log("Fetched groups:", formattedGroups)
-            setGroups(formattedGroups)
-          } else if (Array.isArray(groupsResponse.data)) {
-            const formattedGroups = groupsResponse.data.map((group: any) => ({
-              ...group,
-              members: group.members || 0,
-              created: group.createdAt || new Date().toISOString(),
-              status: "Active",
-              groupType: group.groupType || "private",
-            }))
-            console.log("Fetched groups:", formattedGroups)
-            setGroups(formattedGroups)
-          } else {
-            setGroups([])
-          }
-        } catch (groupError) {
-          console.error("Error fetching group data:", groupError)
+        const groupsResponse = await getGroups(session.user.organizationId)
+        if (groupsResponse && Array.isArray(groupsResponse)) {
+          setGroupsWithData(groupsResponse)
+        } else {
           setGroups([])
         }
 
-        // Mock staff roles data - replace with actual API call
-        const mockStaffRoles: StaffRole[] = [
-          {
-            id: "1",
-            name: "Admin",
-            description: "Full system access",
-            apiAccess: ["users", "groups", "settings", "analytics"],
-            createdAt: new Date().toISOString(),
-            staffCount: 2,
-          },
-          {
-            id: "2",
-            name: "Manager",
-            description: "Limited management access",
-            apiAccess: ["users", "groups"],
-            createdAt: new Date().toISOString(),
-            staffCount: 3,
-          },
-          {
-            id: "3",
-            name: "Support",
-            description: "Customer support access",
-            apiAccess: ["users"],
-            createdAt: new Date().toISOString(),
-            staffCount: 5,
-          },
-        ]
-        setStaffRoles(mockStaffRoles)
+        // Fetch staff roles and map them
+        const staffRolesResponse = await getStaffRoles(session.user.organizationId)
+        if (staffRolesResponse && Array.isArray(staffRolesResponse)) {
+          const mappedRoles = staffRolesResponse.map(mapStaffRoleToDisplay)
+          setStaffRoles(mappedRoles)
+        } else {
+          setStaffRoles([])
+        }
 
-        // Mock staff data - replace with actual API call
-        const mockStaff: Staff[] = [
-          {
-            id: "1",
-            name: "John Admin",
-            email: "john@company.com",
-            staffRoleId: "1",
-            staffRole: mockStaffRoles[0],
-            hasPortalAccess: true,
-            isActive: true,
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: "2",
-            name: "Jane Manager",
-            email: "jane@company.com",
-            staffRoleId: "2",
-            staffRole: mockStaffRoles[1],
-            hasPortalAccess: true,
-            isActive: true,
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: "3",
-            name: "Bob Support",
-            email: "bob@company.com",
-            staffRoleId: "3",
-            staffRole: mockStaffRoles[2],
-            hasPortalAccess: false,
-            isActive: true,
-            createdAt: new Date().toISOString(),
-          },
-        ]
-        setStaff(mockStaff)
+        // Fetch staff and map with roles
+        const staffResponse = await getStaff(session.user.organizationId)
+        if (staffResponse && Array.isArray(staffResponse)) {
+          const mappedStaff = staffResponse.map(staff => ({
+            ...staff,
+            staffRole: staffRoles.find(role => role.id === staff.staffRoleId)
+          }))
+          setStaffMembers(mappedStaff)
+        } else {
+          setStaffMembers([])
+        }
       } catch (error) {
         console.error("Error fetching data:", error)
         setMembershipTypes([])
         setMembers([])
         setGroups([])
-        setStaff([])
+        setStaffMembers([])
         setStaffRoles([])
       } finally {
         setIsLoading(false)
@@ -327,7 +254,7 @@ export default function UserManagementPage() {
     )
   })
 
-  const filteredStaff = staff.filter((staffMember) => {
+  const filteredStaff = staffMembers.filter((staffMember) => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
@@ -671,7 +598,7 @@ export default function UserManagementPage() {
                   <DropdownMenuItem>Edit</DropdownMenuItem>
                   <DropdownMenuItem>View Details</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive" onClick={() => deleteStaff(staffMember.id)}>
+                  <DropdownMenuItem className="text-destructive" onClick={() => deleteStaffMember(staffMember.id)}>
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -689,6 +616,16 @@ export default function UserManagementPage() {
         </TableRow>
       )
     }
+  }
+
+  const handleStaffCreated = (staff: Staff) => {
+    const staffWithRole: StaffDisplay = {
+      ...staff,
+      organizationId: session?.user?.organizationId || null,
+      staffRole: staffRoles.find(role => role.id === staff.staffRoleId)
+    }
+    setStaffMembers(prev => [...prev, staffWithRole])
+    setShowStaffDialog(false)
   }
 
   return (
@@ -905,11 +842,13 @@ export default function UserManagementPage() {
           </DialogHeader>
           <StaffForm
             onClose={() => setShowStaffDialog(false)}
-            staffRoles={staffRoles}
-            onStaffCreated={(newStaff) => {
-              setStaff((prev) => [...prev, newStaff])
-              setShowStaffDialog(false)
-            }}
+            staffRoles={staffRoles.map(role => ({
+              id: role.id,
+              name: role.name,
+              description: role.description,
+              apiAccess: role.apiAccess
+            }))}
+            onStaffCreated={handleStaffCreated}
           />
         </DialogContent>
       </Dialog>
