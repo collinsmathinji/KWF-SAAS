@@ -76,6 +76,9 @@ function LoginContent() {
       if (session.user.id) {
         localStorage.setItem("userId", session.user.id.toString());
       }
+      if (session.user.isOnboarded !== undefined) {
+        localStorage.setItem('isOnboarded', session.user.isOnboarded.toString());
+      }
     }
   }, [session, status]);
 

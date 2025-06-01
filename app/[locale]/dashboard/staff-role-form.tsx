@@ -22,6 +22,16 @@ interface StaffRoleFormProps {
   onRoleCreated: (role: StaffRole) => void
 }
 
+interface FormData {
+  roleName: string
+  description: string
+  selectedCategories: string[]
+  scope: {
+    field: string
+    value: string
+  }
+}
+
 // Enhanced permission descriptions for non-technical users
 const getHumanFriendlyPermission = (permission: Permission) => {
   const permissionMap: Record<string, Record<string, { 
@@ -239,10 +249,14 @@ const getRiskIcon = (risk: 'low' | 'medium' | 'high') => {
 export default function StaffRoleForm({ onClose, onRoleCreated }: StaffRoleFormProps) {
   const { data: session } = useSession()
   const [currentStep, setCurrentStep] = useState<number>(1)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     roleName: "",
     description: "",
-    selectedCategories: [] as string[],
+    selectedCategories: [],
+    scope: {
+      field: "",
+      value: ""
+    }
   })
   const [availablePermissions, setAvailablePermissions] = useState<Permission[]>([])
   const [selectedPermissions, setSelectedPermissions] = useState<Permission[]>([])
@@ -270,10 +284,22 @@ export default function StaffRoleForm({ onClose, onRoleCreated }: StaffRoleFormP
     fetchPermissions()
   }, [])
 
-  const handleInputChange = (field: string, value: string | string[]) => {
+  type FormDataKeys = keyof Omit<FormData, 'scope'>
+  
+  const handleInputChange = (field: FormDataKeys, value: string | string[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
+    }))
+  }
+
+  const handleScopeChange = (field: 'field' | 'value', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      scope: {
+        ...prev.scope,
+        [field]: value
+      }
     }))
   }
 
@@ -324,7 +350,11 @@ export default function StaffRoleForm({ onClose, onRoleCreated }: StaffRoleFormP
         roleName: formData.roleName,
         description: formData.description,
         permissions: selectedPermissions,
-        organizationId: Number(session.user.organizationId)
+        organizationId: Number(session.user.organizationId),
+        isDeleted: false,
+        createdBy: session.user.email || 'SYSTEM',
+        createdByUserType: 'ADMIN',
+        scope: formData.scope.field && formData.scope.value ? formData.scope : undefined
       })
       
       toast({
@@ -378,22 +408,26 @@ export default function StaffRoleForm({ onClose, onRoleCreated }: StaffRoleFormP
           
           {/* Step Indicator */}
           <div className="flex items-center gap-4">
-            {[1, 2, 3].map((step) => (
-              <div key={step} className="flex items-center">
+            {[
+              "Basic Information",
+              "Select Categories",
+              "Configure Access"
+            ].map((stepName, index) => (
+              <div key={index} className="flex items-center">
                 <div 
                   className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
-                    step === currentStep
+                    index + 1 === currentStep
                       ? 'border-blue-600 bg-blue-600 text-white'
-                      : step < currentStep
+                      : index + 1 < currentStep
                       ? 'border-green-500 bg-green-500 text-white'
                       : 'border-gray-300 text-gray-500'
                   }`}
                 >
-                  {step < currentStep ? '✓' : step}
+                  {index + 1 < currentStep ? '✓' : index + 1}
                 </div>
-                {step < 3 && (
+                {index < 2 && (
                   <div className={`w-24 h-0.5 mx-2 ${
-                    step < currentStep ? 'bg-green-500' : 'bg-gray-300'
+                    index + 1 < currentStep ? 'bg-green-500' : 'bg-gray-300'
                   }`} />
                 )}
               </div>
@@ -401,7 +435,7 @@ export default function StaffRoleForm({ onClose, onRoleCreated }: StaffRoleFormP
           </div>
         </div>
 
-        {/* Main Content - Scrollable Area */}
+        {/* Main Content */}
         <div className="flex-1 overflow-hidden">
           <div className="h-full p-6 overflow-y-auto">
             {currentStep === 1 ? (
@@ -439,7 +473,7 @@ export default function StaffRoleForm({ onClose, onRoleCreated }: StaffRoleFormP
                 </div>
               </div>
             ) : currentStep === 2 ? (
-              // Step 2: Category Selection (Scrollable grid)
+              // Step 2: Category Selection
               <div className="h-full">
                 <div className="mb-6">
                   <h2 className="text-xl font-semibold mb-2">Select Categories</h2>
@@ -486,103 +520,130 @@ export default function StaffRoleForm({ onClose, onRoleCreated }: StaffRoleFormP
                 </ScrollArea>
               </div>
             ) : (
-              // Step 3: Permission Configuration (Scrollable content)
+              // Step 3: Permission Configuration and Scope
               <div className="h-full flex flex-col">
                 <div className="mb-6">
-                  <h2 className="text-xl font-semibold mb-2">Configure Permissions</h2>
+                  <h2 className="text-xl font-semibold mb-2">Configure Access</h2>
                   <p className="text-gray-600">
-                    Select the specific permissions for each selected category.
+                    Select specific permissions and optionally set access scope.
                   </p>
                 </div>
-                <Tabs defaultValue={formData.selectedCategories[0]} className="flex-1 flex flex-col">
+                <Tabs defaultValue="permissions" className="flex-1 flex flex-col">
                   <TabsList className="w-full flex-wrap h-auto p-1 bg-gray-100/80">
-                    {formData.selectedCategories.map((module) => {
-                      const Icon = getModuleIcon(module)
-                      const modulePermissions = groupedPermissions[module] || []
-                      const selectedCount = modulePermissions.filter(p => isPermissionSelected(p)).length
-                      
-                      return (
-                        <TabsTrigger 
-                          key={module} 
-                          value={module}
-                          className="flex items-center gap-2 px-4 py-3"
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span className="font-medium capitalize">
-                            {module}
-                          </span>
-                          {selectedCount > 0 && (
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                              {selectedCount}
-                            </Badge>
-                          )}
-                        </TabsTrigger>
-                      )
-                    })}
+                    <TabsTrigger value="permissions" className="flex items-center gap-2 px-4 py-3">
+                      <Shield className="h-4 w-4" />
+                      <span>Permissions</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="scope" className="flex items-center gap-2 px-4 py-3">
+                      <Building2 className="h-4 w-4" />
+                      <span>Scope</span>
+                    </TabsTrigger>
                   </TabsList>
 
-                  {formData.selectedCategories.map((module) => (
-                    <TabsContent key={module} value={module} className="flex-1 mt-4">
-                      <ScrollArea className="h-[calc(100%-20px)]">
-                        <div className="space-y-4 pr-4">
-                          {groupedPermissions[module]?.map((permission, index) => {
-                            const permInfo = getHumanFriendlyPermission(permission)
-                            const isSelected = isPermissionSelected(permission)
-                            const RiskIcon = getRiskIcon(permInfo.risk)
-                            
-                            return (
-                              <div
-                                key={index}
-                                onClick={() => handlePermissionToggle(permission, !isSelected)}
-                                className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                                  isSelected
-                                    ? 'border-blue-300 bg-blue-50/50'
-                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                }`}
-                              >
-                                <div className="flex items-start gap-4">
-                                  <Checkbox
-                                    checked={isSelected}
-                                    onCheckedChange={(checked) => handlePermissionToggle(permission, checked === true)}
-                                    className="mt-1"
-                                  />
-                                  <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                      <h4 className="font-medium text-gray-900">
-                                        {permInfo.title}
-                                      </h4>
-                                      <div className={`px-2 py-1 rounded text-xs ${
-                                        permission.method === 'GET' ? 'bg-green-100 text-green-700' :
-                                        permission.method === 'POST' ? 'bg-blue-100 text-blue-700' :
-                                        permission.method === 'PUT' ? 'bg-yellow-100 text-yellow-700' :
-                                        'bg-red-100 text-red-700'
-                                      }`}>
-                                        {permission.method}
+                  <TabsContent value="permissions" className="flex-1 mt-4">
+                    <ScrollArea className="h-[calc(100%-20px)]">
+                      <div className="space-y-4 pr-4">
+                        {formData.selectedCategories.map((module) => (
+                          <div key={module} className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-lg font-semibold capitalize">{module}</h3>
+                            </div>
+                            {groupedPermissions[module]?.map((permission, index) => {
+                              const permInfo = getHumanFriendlyPermission(permission)
+                              const isSelected = isPermissionSelected(permission)
+                              const RiskIcon = getRiskIcon(permInfo.risk)
+                              
+                              return (
+                                <div
+                                  key={index}
+                                  onClick={() => handlePermissionToggle(permission, !isSelected)}
+                                  className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                                    isSelected
+                                      ? 'border-blue-300 bg-blue-50/50'
+                                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  <div className="flex items-start gap-4">
+                                    <Checkbox
+                                      checked={isSelected}
+                                      onCheckedChange={(checked) => handlePermissionToggle(permission, checked === true)}
+                                      className="mt-1"
+                                    />
+                                    <div>
+                                      <div className="flex items-center gap-3 mb-2">
+                                        <h4 className="font-medium text-gray-900">
+                                          {permInfo.title}
+                                        </h4>
+                                        <div className={`px-2 py-1 rounded text-xs ${
+                                          permission.method === 'GET' ? 'bg-green-100 text-green-700' :
+                                          permission.method === 'POST' ? 'bg-blue-100 text-blue-700' :
+                                          permission.method === 'PUT' ? 'bg-yellow-100 text-yellow-700' :
+                                          'bg-red-100 text-red-700'
+                                        }`}>
+                                          {permission.method}
+                                        </div>
+                                        <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${getRiskColor(permInfo.risk)}`}>
+                                          <RiskIcon className="h-3 w-3" />
+                                          <span className="capitalize">{permInfo.risk} Risk</span>
+                                        </div>
                                       </div>
-                                      <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${getRiskColor(permInfo.risk)}`}>
-                                        <RiskIcon className="h-3 w-3" />
-                                        <span className="capitalize">{permInfo.risk} Risk</span>
-                                      </div>
+                                      <p className="text-sm text-gray-600">
+                                        {permInfo.description}
+                                      </p>
                                     </div>
-                                    <p className="text-sm text-gray-600">
-                                      {permInfo.description}
-                                    </p>
                                   </div>
                                 </div>
-                              </div>
-                            )
-                          })}
+                              )
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+
+                  <TabsContent value="scope" className="flex-1 mt-4">
+                    <div className="max-w-2xl mx-auto">
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="text-lg font-semibold mb-2">Access Scope (Optional)</h3>
+                          <p className="text-gray-600 mb-4">
+                            Limit this role's access to specific areas or regions. Leave empty for unrestricted access.
+                          </p>
                         </div>
-                      </ScrollArea>
-                    </TabsContent>
-                  ))}
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="scopeField" className="text-base">Scope Field</Label>
+                            <Input
+                              id="scopeField"
+                              placeholder="e.g., countries, departments, regions"
+                              value={formData.scope.field}
+                              onChange={(e) => handleScopeChange('field', e.target.value)}
+                              className="h-12"
+                            />
+                            <p className="text-sm text-gray-500">The type of scope to apply (e.g., countries)</p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="scopeValue" className="text-base">Scope Value</Label>
+                            <Input
+                              id="scopeValue"
+                              placeholder="e.g., US,UK,AU or Sales,Marketing"
+                              value={formData.scope.value}
+                              onChange={(e) => handleScopeChange('value', e.target.value)}
+                              className="h-12"
+                            />
+                            <p className="text-sm text-gray-500">Comma-separated list of allowed values</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
                 </Tabs>
               </div>
             )}
           </div>
         </div>
 
-        {/* Footer - Action Buttons */}
+        {/* Footer */}
         <div className="flex-shrink-0 p-6 border-t bg-gray-50/80 rounded-b-xl">
           <div className="flex justify-between">
             {currentStep > 1 ? (

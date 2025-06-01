@@ -1,15 +1,38 @@
-import { Permission } from "@/types/permissions"
+import { Permission } from "@/src/types/permissions"
 
 export interface StaffRole {
-  id: string
+  id: number
+  organizationId: number
   roleName: string
   description: string
-  permissions: Permission[]
+  isDeleted: boolean
+  createdBy: string
+  createdByUserType: string
+  updatedBy: string | null
   createdAt: string
-  organizationId: number | null
+  updatedAt: string | null
+  permissions?: Permission[]
+  scope?: {
+    field: string
+    value: string
+  }
 }
 
-export async function getStaffRoles(organizationId: string): Promise<StaffRole[]> {
+interface PaginatedResponse<T> {
+  status: string
+  message: string
+  data: {
+    data: T[]
+    paginator: {
+      itemCount: number
+      perPage: number
+      pageCount: number
+      currentPage: number
+    }
+  }
+}
+
+export async function getStaffRoles(organizationId: number): Promise<StaffRole[]> {
   try {
     const response = await fetch("/api/staffRole/list", {
       method: "POST",
@@ -17,33 +40,46 @@ export async function getStaffRoles(organizationId: string): Promise<StaffRole[]
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        query: { organizationId },
-        options: {
-          select: ['id', 'roleName', 'description', 'permissions', 'createdAt', 'organizationId']
-        }
-      }),
+        organizationId,
+        page: 1,
+        perPage: 25
+      })
     })
     
-    const responseData = await response.json()
+    const responseData: PaginatedResponse<StaffRole> = await response.json()
     
-    if (!response.ok) {
+    if (!response.ok || responseData.status !== "SUCCESS") {
       throw new Error(responseData.message || "Failed to fetch staff roles")
     }
     
-    // Store the data in localStorage if needed
-    if (responseData.data) {
-      localStorage.setItem('currentStaffRoles', JSON.stringify(responseData.data))
-    }
-    
-    console.log("Staff roles fetched:", responseData)
-    return responseData.data || []
+    // Transform the data to match our interface
+    const roles = responseData.data.data.map(role => ({
+      ...role,
+      permissions: role.permissions || [],
+      updatedAt: role.updatedAt || null,
+      updatedBy: role.updatedBy || null
+    }))
+
+    return roles
   } catch (error) {
     console.error("Error fetching staff roles:", error)
     throw error
   }
 }
 
-export async function createStaffRole(data: Omit<StaffRole, 'id' | 'createdAt'>): Promise<StaffRole> {
+export async function createStaffRole(data: {
+  roleName: string
+  description: string
+  permissions: Permission[]
+  organizationId: number
+  isDeleted: boolean
+  createdBy: string
+  createdByUserType: string
+  scope?: {
+    field: string
+    value: string
+  }
+}): Promise<StaffRole> {
   try {
     const response = await fetch("/api/staffRole/create", {
       method: "POST",
@@ -53,17 +89,25 @@ export async function createStaffRole(data: Omit<StaffRole, 'id' | 'createdAt'>)
       body: JSON.stringify(data),
     })
     
-    const responseData = await response.json()
+    const responseData: PaginatedResponse<StaffRole> = await response.json()
     
-    if (!response.ok) {
+    if (!response.ok || responseData.status !== "SUCCESS") {
       throw new Error(responseData.message || "Failed to create staff role")
     }
     
-    if (!responseData.data) {
+    if (!responseData.data.data[0]) {
       throw new Error("No data received from server")
     }
     
-    return responseData.data
+    // Transform the response data to match our interface
+    const role: StaffRole = {
+      ...responseData.data.data[0],
+      permissions: responseData.data.data[0].permissions || [],
+      updatedAt: responseData.data.data[0].updatedAt || null,
+      updatedBy: responseData.data.data[0].updatedBy || null
+    }
+    
+    return role
   } catch (error) {
     console.error("Error creating staff role:", error)
     throw error
@@ -72,7 +116,7 @@ export async function createStaffRole(data: Omit<StaffRole, 'id' | 'createdAt'>)
 
 export async function getAvailablePermissions(): Promise<Permission[]> {
   try {
-    const response = await fetch("/api/staffRole/permissions", {
+    const response = await fetch("/api/staffRolePermission/available", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
