@@ -16,8 +16,9 @@ interface OrganizationDetails {
   [key: string]: any;
 }
 
-interface WebStudioProps {
-  organisationDetails: OrganizationDetails;
+type PageProps = {
+  params: { locale: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 interface Project {
@@ -354,7 +355,7 @@ const dummyOrganization: OrganizationDetails = {
   domain: 'creativestudio.com'
 };
 
-const WebStudioPage: React.FC<WebStudioProps> = ({ organisationDetails }) => {
+function WebStudio() {
   const [currentView, setCurrentView] = useState<'edit' | 'preview'>('edit')
   const [projects, setProjects] = useState<Project[]>(dummyProjects)
   const [currentProject, setCurrentProject] = useState<Project | null>(null)
@@ -398,12 +399,12 @@ const WebStudioPage: React.FC<WebStudioProps> = ({ organisationDetails }) => {
   };
 
   const publishProject = () => {
-    if (!currentProject || !organisationDetails?.domain) return;
+    if (!currentProject || !dummyOrganization.domain) return;
 
     const updatedProject = {
       ...currentProject,
       published: true,
-      url: `https://${organisationDetails.domain}/${currentProject.id}`,
+      url: `https://${dummyOrganization.domain}/${currentProject.id}`,
       updatedAt: new Date().toISOString()
     };
 
@@ -439,7 +440,7 @@ const WebStudioPage: React.FC<WebStudioProps> = ({ organisationDetails }) => {
           <div>
             <CardTitle className="text-2xl">Website Builder</CardTitle>
             <CardDescription className="text-lg">
-              Create and manage beautiful websites for {organisationDetails?.name}
+              Create and manage beautiful websites for {dummyOrganization?.name}
             </CardDescription>
           </div>
           {currentProject && (
@@ -657,4 +658,6 @@ const WebStudioPage: React.FC<WebStudioProps> = ({ organisationDetails }) => {
   )
 }
 
-export default WebStudioPage;
+export default function Page({ params, searchParams }: PageProps) {
+  return <WebStudio />;
+}
