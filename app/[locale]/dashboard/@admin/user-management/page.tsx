@@ -845,10 +845,10 @@ export default function UserManagementPage() {
           <StaffForm
             onClose={() => setShowStaffDialog(false)}
             staffRoles={staffRoles.map(role => ({
-              id: role.id,
-              name: role.name,
+              id: role.id.toString(),
+              name: role.roleName,
               description: role.description,
-              apiAccess: role.apiAccess
+              apiAccess: role.permissions?.map(p => `${p.method} ${p.endpoint}`) || []
             }))}
             onStaffCreated={handleStaffCreated}
           />
