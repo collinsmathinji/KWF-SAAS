@@ -16,6 +16,10 @@ interface OrganizationDetails {
   [key: string]: any;
 }
 
+interface WebStudioProps {
+  organisationDetails: OrganizationDetails;
+}
+
 interface Project {
   id: string;
   name: string;
@@ -350,13 +354,12 @@ const dummyOrganization: OrganizationDetails = {
   domain: 'creativestudio.com'
 };
 
-export default function WebStudioPage() {
+export default function WebStudioPage({ organisationDetails }: WebStudioProps) {
   const [currentView, setCurrentView] = useState<'edit' | 'preview'>('edit')
   const [projects, setProjects] = useState<Project[]>(dummyProjects)
   const [currentProject, setCurrentProject] = useState<Project | null>(null)
   const [editingHtml, setEditingHtml] = useState('')
   const [editingCss, setEditingCss] = useState('')
-  const [organizationDetails] = useState<OrganizationDetails | null>(dummyOrganization)
   const [editingProjectName, setEditingProjectName] = useState('')
   const [isEditingName, setIsEditingName] = useState(false)
 
@@ -395,12 +398,12 @@ export default function WebStudioPage() {
   };
 
   const publishProject = () => {
-    if (!currentProject || !organizationDetails?.domain) return;
+    if (!currentProject || !organisationDetails?.domain) return;
 
     const updatedProject = {
       ...currentProject,
       published: true,
-      url: `https://${organizationDetails.domain}/${currentProject.id}`,
+      url: `https://${organisationDetails.domain}/${currentProject.id}`,
       updatedAt: new Date().toISOString()
     };
 
@@ -436,7 +439,7 @@ export default function WebStudioPage() {
           <div>
             <CardTitle className="text-2xl">Website Builder</CardTitle>
             <CardDescription className="text-lg">
-              Create and manage beautiful websites for {organizationDetails?.name}
+              Create and manage beautiful websites for {organisationDetails?.name}
             </CardDescription>
           </div>
           {currentProject && (
