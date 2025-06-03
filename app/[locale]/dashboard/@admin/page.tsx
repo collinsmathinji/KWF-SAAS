@@ -224,7 +224,7 @@ export default function DashboardPage() {
       case "organization":
         return <OrganizationProfile organisationDetails={orgData} />;
       case "webstudio":
-        return <WebStudio organisationDetails={orgData} />;
+        return <WebStudio />;
       default:
         return (
           <div className="text-center text-muted-foreground">

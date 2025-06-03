@@ -16,11 +16,6 @@ interface OrganizationDetails {
   [key: string]: any;
 }
 
-type PageProps = {
-  params: { locale: string };
-  searchParams: { [key: string]: string | string[] | undefined };
-}
-
 interface Project {
   id: string;
   name: string;
@@ -355,12 +350,13 @@ const dummyOrganization: OrganizationDetails = {
   domain: 'creativestudio.com'
 };
 
-function WebStudio() {
+export default function WebStudioPage() {
   const [currentView, setCurrentView] = useState<'edit' | 'preview'>('edit')
   const [projects, setProjects] = useState<Project[]>(dummyProjects)
   const [currentProject, setCurrentProject] = useState<Project | null>(null)
   const [editingHtml, setEditingHtml] = useState('')
   const [editingCss, setEditingCss] = useState('')
+  const [organizationDetails] = useState<OrganizationDetails | null>(dummyOrganization)
   const [editingProjectName, setEditingProjectName] = useState('')
   const [isEditingName, setIsEditingName] = useState(false)
 
@@ -399,12 +395,12 @@ function WebStudio() {
   };
 
   const publishProject = () => {
-    if (!currentProject || !dummyOrganization.domain) return;
+    if (!currentProject || !organizationDetails?.domain) return;
 
     const updatedProject = {
       ...currentProject,
       published: true,
-      url: `https://${dummyOrganization.domain}/${currentProject.id}`,
+      url: `https://${organizationDetails.domain}/${currentProject.id}`,
       updatedAt: new Date().toISOString()
     };
 
@@ -440,7 +436,7 @@ function WebStudio() {
           <div>
             <CardTitle className="text-2xl">Website Builder</CardTitle>
             <CardDescription className="text-lg">
-              Create and manage beautiful websites for {dummyOrganization?.name}
+              Create and manage beautiful websites for {organizationDetails?.name}
             </CardDescription>
           </div>
           {currentProject && (
@@ -656,8 +652,4 @@ function WebStudio() {
       )}
     </div>
   )
-}
-
-export default async function Page() {
-  return <WebStudio />;
 }
