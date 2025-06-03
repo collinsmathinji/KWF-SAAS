@@ -11,7 +11,8 @@ import {
   Users, 
   HeartPulse,
   Landmark, 
-  LogOut 
+  LogOut,
+  Palette 
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { signOut, useSession } from "next-auth/react"
@@ -25,6 +26,7 @@ import SettingsPage from "./settings/page"
 import OrganizationProfile from "./organization"
 import ConnectPage from "./connect/page"
 import EventPage from "./event/page"
+import WebStudio from "./webstudio/page"
 
 // API functions
 import { fetchMemberType } from "@/lib/members"
@@ -79,7 +81,6 @@ export default function DashboardPage() {
       section: "campaigns",
       description: "donations and campaigns",
     },
-    
     {
       icon: <Calendar />,
       label: "Events",
@@ -87,16 +88,22 @@ export default function DashboardPage() {
       description: "Manage organization events",
     },
     {
-          icon: <Calendar />,
-          label: "Calendar",
-          section: "calender",
-          description: "Manage organization events",
-        },
-   {
+      icon: <Calendar />,
+      label: "Calendar",
+      section: "calender",
+      description: "Manage organization events",
+    },
+    {
       icon: <Layers />,
       label: "Organization",
       section: "organization",
       description: "Manage organization settings",
+    },
+    {
+      icon: <Palette />,
+      label: "WebStudio",
+      section: "webstudio",
+      description: "Create and manage your website",
     },
   ]
   
@@ -208,15 +215,16 @@ export default function DashboardPage() {
         return <UserManagementPage />;
       case "campaigns":
         return <OrganizationCampaigns />;
-    
       case "event":
         return <EventPage organisationDetails={orgData} />;
       case "calender":
-              return <EventCalendar />
+        return <EventCalendar />
       case "settings":
         return <SettingsPage organisationDetails={orgData} />;
-        case "organization":
+      case "organization":
         return <OrganizationProfile organisationDetails={orgData} />;
+      case "webstudio":
+        return <WebStudio organisationDetails={orgData} />;
       default:
         return (
           <div className="text-center text-muted-foreground">
