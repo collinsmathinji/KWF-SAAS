@@ -19,43 +19,26 @@ import type { Staff } from "@/lib/staff"
 interface StaffFormProps {
   onClose: () => void
   onStaffCreated: (staff: Staff) => void
+  staffRoles: {
+    id: string
+    name: string
+    description: string
+    apiAccess: string[]
+  }[]
 }
 
-export default function StaffForm({ onClose, onStaffCreated }: StaffFormProps) {
+export default function StaffForm({ onClose, onStaffCreated, staffRoles }: StaffFormProps) {
   const { data: session } = useSession()
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    staffRoleId: 0,
+    staffRoleId: "",
     hasPortalAccess: true
   })
-  const [staffRoles, setStaffRoles] = useState<StaffRole[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [showRoleDetails, setShowRoleDetails] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    const fetchRoles = async () => {
-      if (!session?.user?.organizationId) return
-      
-      try {
-        const roles = await getStaffRoles(Number(session.user.organizationId))
-        setStaffRoles(roles)
-      } catch (error) {
-        console.error("Error fetching staff roles:", error)
-        toast({
-          title: "Error",
-          description: "Failed to fetch staff roles",
-          variant: "destructive",
-        })
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchRoles()
-  }, [session?.user?.organizationId])
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -64,7 +47,7 @@ export default function StaffForm({ onClose, onStaffCreated }: StaffFormProps) {
     }))
   }
 
-  const handleRoleSelect = (roleId: number) => {
+  const handleRoleSelect = (roleId: string) => {
     setFormData(prev => ({
       ...prev,
       staffRoleId: roleId
@@ -86,6 +69,7 @@ export default function StaffForm({ onClose, onStaffCreated }: StaffFormProps) {
     try {
       const newStaff = await createStaff({
         ...formData,
+        staffRoleId: Number(formData.staffRoleId),
         organizationId: Number(session.user.organizationId),
         isActive: true,
         createdBy: session.user.email || "SYSTEM",
@@ -172,7 +156,7 @@ export default function StaffForm({ onClose, onStaffCreated }: StaffFormProps) {
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <h3 className="font-medium">{role.roleName}</h3>
+                <h3 className="font-medium">{role.name}</h3>
                 <p className="text-sm text-gray-500">{role.description}</p>
               </button>
             ))}
@@ -196,27 +180,17 @@ export default function StaffForm({ onClose, onStaffCreated }: StaffFormProps) {
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Permissions</h4>
               <div className="grid grid-cols-2 gap-2">
-                {selectedRole.permissions?.map((permission, index) => (
+                {selectedRole.apiAccess.map((permission, index) => (
                   <div
                     key={index}
                     className="p-2 bg-white rounded border text-sm flex items-center gap-2"
                   >
                     <div className="h-2 w-2 rounded-full bg-green-500" />
-                    <span>{`${permission.method} ${permission.endpoint}`}</span>
+                    <span>{permission}</span>
                   </div>
                 ))}
               </div>
             </div>
-
-            {selectedRole.scope && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">Access Scope</h4>
-                <div className="p-2 bg-white rounded border text-sm">
-                  <span className="font-medium">{selectedRole.scope.field}:</span>{' '}
-                  {selectedRole.scope.value}
-                </div>
-              </div>
-            )}
           </div>
         )}
 

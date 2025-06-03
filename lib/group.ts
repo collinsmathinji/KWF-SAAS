@@ -1,5 +1,5 @@
 // Define the type for the input data
-interface GroupData {
+export interface GroupData {
   name: string;
   logo?: string; // Optional, as it might not always be provided
   description?: string; // Optional

@@ -75,8 +75,10 @@ interface StaffDisplay extends APIStaff {
 
 const mapStaffRoleToDisplay = (role: StaffRole): StaffRoleDisplay => ({
   ...role,
+  id: role.id.toString(),
   name: role.roleName,
-  apiAccess: role.permissions.map(p => `${p.method} ${p.endpoint}`),
+  apiAccess: role.permissions?.map(p => `${p.method} ${p.endpoint}`) || [],
+  permissions: role.permissions || [],
   staffCount: 0 // This would need to be calculated from staff data
 })
 
@@ -150,7 +152,7 @@ export default function UserManagementPage() {
   const deleteStaffMember = async (staffId: string) => {
     try {
       await deleteStaffAPI(staffId)
-      setStaffMembers((prev) => prev.filter((staff) => staff.id !== staffId))
+      setStaffMembers((prev) => prev.filter((staff:any) => staff.id !== staffId))
       console.log("Staff deleted successfully")
     } catch (error) {
       console.error("Error deleting staff:", error)
@@ -176,7 +178,7 @@ export default function UserManagementPage() {
         }
 
         // Fetch membership types
-        const response: any = await fetchMemberType(session.user.organizationId)
+        const response: any = await fetchMemberType(String(session.user.organizationId))
         if (response && Array.isArray(response.data)) {
           setMembershipTypes(response.data)
         } else {
@@ -184,7 +186,7 @@ export default function UserManagementPage() {
         }
 
         // Fetch members
-        const membersResponse: any = await getMembers(session.user.organizationId)
+        const membersResponse: any = await getMembers(String(session.user.organizationId))
         if (membersResponse && Array.isArray(membersResponse.data)) {
           setMembers(membersResponse.data)
         } else {
@@ -192,7 +194,7 @@ export default function UserManagementPage() {
         }
 
         // Fetch groups
-        const groupsResponse = await getGroups(session.user.organizationId)
+        const groupsResponse = await getGroups(String(session.user.organizationId))
         if (groupsResponse && Array.isArray(groupsResponse)) {
           setGroupsWithData(groupsResponse)
         } else {
@@ -200,7 +202,7 @@ export default function UserManagementPage() {
         }
 
         // Fetch staff roles and map them
-        const staffRolesResponse = await getStaffRoles(session.user.organizationId)
+        const staffRolesResponse = await getStaffRoles(Number(session.user.organizationId))
         if (staffRolesResponse && Array.isArray(staffRolesResponse)) {
           const mappedRoles = staffRolesResponse.map(mapStaffRoleToDisplay)
           setStaffRoles(mappedRoles)
@@ -209,11 +211,11 @@ export default function UserManagementPage() {
         }
 
         // Fetch staff and map with roles
-        const staffResponse = await getStaff(session.user.organizationId)
+        const staffResponse = await getStaff(Number(session.user.organizationId))
         if (staffResponse && Array.isArray(staffResponse)) {
           const mappedStaff = staffResponse.map(staff => ({
             ...staff,
-            staffRole: staffRoles.find(role => role.id === staff.staffRoleId)
+            staffRole: staffRoles.find((role:any) => role.id === staff.staffRoleId)
           }))
           setStaffMembers(mappedStaff)
         } else {
@@ -254,7 +256,7 @@ export default function UserManagementPage() {
     )
   })
 
-  const filteredStaff = staffMembers.filter((staffMember) => {
+  const filteredStaff = staffMembers.filter((staffMember:any) => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
@@ -266,7 +268,7 @@ export default function UserManagementPage() {
 
   // Count groups by type
   const groupCounts = groupTypes.map((type) => {
-    const count = groups.filter((g) => g.groupType === type.id).length
+    const count = groups.filter((g:any) => g.groupType === type.id).length
     return {
       ...type,
       members: count,
@@ -480,7 +482,7 @@ export default function UserManagementPage() {
       )
     } else if (view === "groups") {
       return filteredGroups.length > 0 ? (
-        filteredGroups.map((group) => (
+        filteredGroups.map((group:any) => (
           <TableRow key={group.id}>
             {selectedColumns.includes("Group-Logo") && (
               <TableCell className="font-medium">
@@ -555,7 +557,7 @@ export default function UserManagementPage() {
       )
     } else if (view === "staff") {
       return filteredStaff.length > 0 ? (
-        filteredStaff.map((staffMember) => (
+        filteredStaff.map((staffMember:any) => (
           <TableRow key={staffMember.id}>
             {selectedColumns.includes("name") && <TableCell className="font-medium">{staffMember.name}</TableCell>}
             {selectedColumns.includes("email") && <TableCell>{staffMember.email}</TableCell>}
@@ -618,7 +620,7 @@ export default function UserManagementPage() {
     }
   }
 
-  const handleStaffCreated = (staff: Staff) => {
+  const handleStaffCreated = (staff: any) => {
     const staffWithRole: StaffDisplay = {
       ...staff,
       organizationId: session?.user?.organizationId || null,
