@@ -20,11 +20,23 @@ import Overview from "./overview"
 import EventsDisplay from "./eventsDisplay"
 import GroupsExplorer from "./groupExplorer"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
+import { signOut, useSession } from "next-auth/react"
+
 export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("overview")
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(280)
   const [isResizing, setIsResizing] = useState(false)
+  const router = useRouter()
+  const { data: session, status } = useSession()
+
+  // Check authentication status
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push('/login')
+    }
+  }, [status, router])
 
   const menuItems = [
     {
@@ -103,6 +115,33 @@ export default function DashboardPage() {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      // Clear all localStorage items
+      localStorage.removeItem('isOnboarded');
+      localStorage.removeItem('currentOrganization');
+      localStorage.removeItem('organizationId');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('currentMemberType');
+      
+      // Clear the entire localStorage as a safety measure
+      localStorage.clear();
+      
+      // Sign out with force reload to ensure session is cleared
+      await signOut({ 
+        callbackUrl: '/login',
+        redirect: false
+      });
+      
+      // Force a page reload to clear any remaining state
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Force redirect to login even if signOut fails
+      window.location.href = '/login';
+    }
+  };
+
   return (
     <div 
       className="flex min-h-screen bg-blue-50"
@@ -151,7 +190,7 @@ export default function DashboardPage() {
         </nav>
 
         <div className="p-4 border-t pt-4">
-          <button className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50">
+          <button className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50" onClick={handleLogout}>
             <LogOut className="mr-3" /> Logout
           </button>
         </div>

@@ -191,17 +191,28 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     try {
-      // Clear any local storage that might have been set
-      localStorage.removeItem('isOnBoarded');
+      // Clear all localStorage items
+      localStorage.removeItem('isOnboarded');
       localStorage.removeItem('currentOrganization');
+      localStorage.removeItem('organizationId');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('currentMemberType');
       
+      // Clear the entire localStorage as a safety measure
+      localStorage.clear();
+      
+      // Sign out with force reload to ensure session is cleared
       await signOut({ 
         callbackUrl: '/login',
-        redirect: true
+        redirect: false
       });
+      
+      // Force a page reload to clear any remaining state
+      window.location.href = '/login';
     } catch (error) {
       console.error('Logout failed:', error);
-      router.push('/login');
+      // Force redirect to login even if signOut fails
+      window.location.href = '/login';
     }
   };
   

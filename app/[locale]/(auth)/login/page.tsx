@@ -9,6 +9,11 @@ import { Label } from "@/components/ui/label"
 import { AlertCircle, CheckCircle, X, Eye, EyeOff } from "lucide-react"
 import { useSession } from "next-auth/react"
 
+interface UserData {
+  id: number;
+  isOnboarded: number | boolean;
+}
+
 // Simple Error Banner Component that matches the screenshot design
 const ErrorDisplay = ({ error, setError }:any) => {
   const [visible, setVisible] = useState(true);
@@ -49,6 +54,46 @@ const ErrorDisplay = ({ error, setError }:any) => {
   );
 };
 
+// Add function to fetch user data
+const fetchUserData = async (): Promise<UserData> => {
+  try {
+    console.log('Fetching user data...');
+    
+    const response = await fetch(`/api/auth/user/me`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // Important for sending cookies/session
+    });
+
+    console.log('User Data Response Status:', response.status);
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Unauthorized - Please log in again');
+      }
+      throw new Error(`Failed to fetch user data: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('User Data Response:', {
+      status: response.status,
+      ok: response.ok,
+      data: JSON.stringify(data, null, 2)
+    });
+
+    if (!data || !data.data) {
+      throw new Error('Invalid response format from server');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching user data:', error instanceof Error ? error.message : 'Unknown error');
+    throw error;
+  }
+};
+
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -70,16 +115,8 @@ function LoginContent() {
   
   // Add useEffect to handle browser-only code
   useEffect(() => {
-    // This effect will only run in the browser
-    if (status === "authenticated" && session?.user) {
-      // Now we can safely use localStorage
-      if (session.user.id) {
-        localStorage.setItem("userId", session.user.id.toString());
-      }
-      if (session.user.isOnboarded !== undefined) {
-        localStorage.setItem('isOnboarded', session.user.isOnboarded.toString());
-      }
-    }
+  console.log("Session status:", status);
+  console.log("Session data:", session);
   }, [session, status]);
 
   // Check for error from URL params (for redirects with error)
@@ -131,9 +168,40 @@ function LoginContent() {
       // Only show toast and redirect if login was successful
       if (result?.ok) {
         setShowToast(true)
-        // Wait for session to be updated
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        router.push(from)
+        
+        try {
+          console.log("Login successful, waiting for session update...");
+          // Wait for session to be updated
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Fetch additional user data
+          console.log("Fetching additional user data...");
+          const userData = await fetchUserData();
+          console.log("User data fetched:", {
+            userData,
+            onboardedin: userData.isOnboarded,
+            type: typeof userData.isOnboarded
+          });
+        
+          localStorage.setItem('isOnboarded', (userData.isOnboarded === 1 || userData.isOnboarded === true).toString());
+          localStorage.setItem('userId', userData.id?.toString() || '');
+          
+          console.log("Final localStorage state:", {
+            isOnboarded: localStorage.getItem('isOnboarded'),
+            userId: localStorage.getItem('userId')
+          });
+          
+          // Redirect to dashboard
+          console.log("Redirecting to:", from);
+          router.push(from);
+        } catch (error: unknown) {
+          console.error("Error during post-login process:", {
+            message: error instanceof Error ? error.message : 'Unknown error',
+            details: error instanceof Error ? error.stack : undefined
+          });
+          // Still redirect even if fetching additional data fails
+          router.push(from);
+        }
       }
     } catch (err:any) {
       console.error("Login error:", err)

@@ -74,30 +74,55 @@ export const authOptions: NextAuthOptions = {
           });
           
           const data = await res.json();
-          console.log("Login Response from backend:", data);
+          console.log("=== AUTH DEBUG START ===");
+          console.log("Raw API Response:", {
+            status: res.status,
+            ok: res.ok,
+            data: JSON.stringify(data, null, 2)
+          });
           
           if (!res.ok || !data.data?.token) {
-            // Forward the exact error message from the backend
             throw new Error(data.message || "Invalid credentials");
           }
+
+          // Log the exact data structure we're working with
+          console.log("User Data Structure:", {
+            id: data.data.id,
+            email: data.data.email,
+            isOnboarded: {
+              value: data.data.isOnboarded,
+              type: typeof data.data.isOnboarded,
+              rawValue: data.data.isOnboarded
+            }
+          });
+
+          // Explicitly check the isOnboarded value
+          const rawIsOnboarded = data.data.isOnboarded;
+          const isOnboarded = rawIsOnboarded === 1 || rawIsOnboarded === '1' || rawIsOnboarded === true;
           
-          // Return user object
+          console.log("IsOnboarded Conversion:", {
+            raw: rawIsOnboarded,
+            rawType: typeof rawIsOnboarded,
+            converted: isOnboarded
+          });
+          console.log("=== AUTH DEBUG END ===");
+          
+          // Return user object with explicit conversion
           return {
             id: data.data.id.toString(),
             email: data.data.email,
             username: data.data.username,
             userType: data.data.userType.toString(),
             organizationId: data.data.organizationId?.toString() || null,
-            isOnboarded: data.data.isOnboarded || false,
+            isOnboarded: data.data.isOnboarded,
             accessToken: data.data.token,
           };
         } catch (error) {
-          console.error("Error during authorize:", error);
-          // Forward the error message properly
-          if (error instanceof Error) {
-            throw error;
-          }
-          throw new Error("Authentication failed");
+          console.error("Login Error:", {
+            error: error instanceof Error ? error.message : "Unknown error",
+            stack: error instanceof Error ? error.stack : undefined
+          });
+          throw error;
         }
       },
     }),
@@ -106,30 +131,58 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger, session }) {
       // Initial sign in - add user properties to token
       if (user) {
+        console.log("Setting initial JWT token from user:", {
+          user,
+          userType: typeof user.isOnboarded,
+          isOnboardedValue: user.isOnboarded
+        });
+        
         token.id = user.id;
         token.email = user.email;
         token.userType = (user as CustomUser).userType;
         token.organizationId = (user as CustomUser).organizationId;
-        token.isOnboarded = (user as CustomUser).isOnboarded;
+        // Ensure boolean conversion
+        token.isOnboarded = Boolean((user as CustomUser).isOnboarded);
         token.accessToken = (user as CustomUser).accessToken;
+        
+        console.log("Token after user data set:", {
+          tokenIsOnboarded: token.isOnboarded,
+          tokenIsOnboardedType: typeof token.isOnboarded
+        });
       }
       
       // Handle session updates
       if (trigger === "update" && session) {
+        console.log("Updating JWT token from session:", {
+          session,
+          sessionIsOnboardedType: typeof session.isOnboarded
+        });
+        
         // Update any fields that are passed in the session update
         if (session.isOnboarded !== undefined) {
-          token.isOnboarded = session.isOnboarded;
+          // Ensure boolean conversion
+          token.isOnboarded = Boolean(session.isOnboarded);
         }
         if (session.organizationId !== undefined) {
           token.organizationId = session.organizationId;
         }
       }
       
+      console.log("Final JWT token state:", {
+        tokenIsOnboarded: token.isOnboarded,
+        tokenIsOnboardedType: typeof token.isOnboarded
+      });
       return token;
     },
     async session({ session, token }) {
       // Add user properties to the session
       if (token) {
+        console.log("Creating session from token:", {
+          token,
+          tokenIsOnboardedType: typeof token.isOnboarded,
+          tokenIsOnboardedValue: token.isOnboarded
+        });
+        
         session.user = {
           ...session.user,
           id: token.id,
@@ -140,6 +193,12 @@ export const authOptions: NextAuthOptions = {
         };
         // Store the token in the session for API calls
         session.accessToken = token.accessToken;
+        
+        console.log("Final session state:", {
+          sessionUser: session.user,
+          sessionIsOnboardedType: typeof session.user.isOnboarded,
+          sessionIsOnboardedValue: session.user.isOnboarded
+        });
       }
       
       return session;
