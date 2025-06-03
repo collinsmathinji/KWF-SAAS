@@ -8,8 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
-interface WebStudioProps {
-  organisationDetails: any;
+// Define proper types for organization details
+interface OrganizationDetails {
+  id: string;
+  name: string;
+  domain?: string;
+  [key: string]: any;
 }
 
 interface Project {
@@ -75,12 +79,13 @@ const defaultTemplates = [
   }
 ];
 
-export default function WebStudio({ organisationDetails }: WebStudioProps) {
+export default function WebStudioPage({ params }: { params: { locale: string } }) {
   const [currentView, setCurrentView] = useState<'edit' | 'preview'>('edit')
   const [projects, setProjects] = useState<Project[]>([])
   const [currentProject, setCurrentProject] = useState<Project | null>(null)
   const [editingHtml, setEditingHtml] = useState('')
   const [editingCss, setEditingCss] = useState('')
+  const [organizationDetails, setOrganizationDetails] = useState<OrganizationDetails | null>(null)
 
   const createNewProject = (template?: typeof defaultTemplates[0]) => {
     const newProject: Project = {
@@ -115,12 +120,12 @@ export default function WebStudio({ organisationDetails }: WebStudioProps) {
   };
 
   const publishProject = () => {
-    if (!currentProject) return;
+    if (!currentProject || !organizationDetails?.domain) return;
 
     const updatedProject = {
       ...currentProject,
       published: true,
-      url: `https://${organisationDetails?.domain || 'example.com'}/${currentProject.id}`,
+      url: `https://${organizationDetails.domain}/${currentProject.id}`,
       updatedAt: new Date().toISOString()
     };
 
