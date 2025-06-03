@@ -658,6 +658,6 @@ function WebStudio() {
   )
 }
 
-export default function Page({ params, searchParams }: PageProps) {
+export default async function Page() {
   return <WebStudio />;
 }
