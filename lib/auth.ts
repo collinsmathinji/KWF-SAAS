@@ -23,9 +23,9 @@ export interface AuthResponse {
 }
 export async function signup({ name, password,token }: SignupData): Promise<AuthResponse> {
   try {
-    // In your signup function
-console.log("Sending data:", JSON.stringify({ name, password, token }))
-    const response = await fetch("http://localhost:5000/admin/auth/completeSignUp", {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    console.log("Sending data:", JSON.stringify({ name, password, token }))
+    const response = await fetch(`${apiUrl}/admin/auth/completeSignUp`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
