@@ -354,7 +354,7 @@ const dummyOrganization: OrganizationDetails = {
   domain: 'creativestudio.com'
 };
 
-export default function WebStudioPage({ organisationDetails }: WebStudioProps) {
+const WebStudioPage: React.FC<WebStudioProps> = ({ organisationDetails }) => {
   const [currentView, setCurrentView] = useState<'edit' | 'preview'>('edit')
   const [projects, setProjects] = useState<Project[]>(dummyProjects)
   const [currentProject, setCurrentProject] = useState<Project | null>(null)
@@ -656,3 +656,5 @@ export default function WebStudioPage({ organisationDetails }: WebStudioProps) {
     </div>
   )
 }
+
+export default WebStudioPage;
