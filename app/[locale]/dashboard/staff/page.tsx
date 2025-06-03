@@ -1,16 +1,45 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Plus, Users } from "lucide-react"
+import { useSession } from "next-auth/react"
+import { toast } from "@/components/ui/use-toast"
 import StaffRoleList from "../staff-role-list"
 import StaffForm from "../staff-form"
 import type { Staff } from "@/lib/staff"
+import { getStaffRoles } from "@/lib/staffRole"
+import type { StaffRole } from "@/lib/staffRole"
 
 export default function StaffPage() {
+  const { data: session } = useSession()
   const [showStaffDialog, setShowStaffDialog] = useState(false)
   const [staffMembers, setStaffMembers] = useState<Staff[]>([])
+  const [staffRoles, setStaffRoles] = useState<StaffRole[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      if (!session?.user?.organizationId) return
+      
+      try {
+        const roles = await getStaffRoles(Number(session.user.organizationId))
+        setStaffRoles(roles)
+      } catch (error) {
+        console.error("Error fetching staff roles:", error)
+        toast({
+          title: "Error",
+          description: "Failed to fetch staff roles",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchRoles()
+  }, [session?.user?.organizationId])
 
   const handleStaffCreated = (newStaff: Staff) => {
     setStaffMembers(prev => [...prev, newStaff])
@@ -47,6 +76,12 @@ export default function StaffPage() {
           <StaffForm
             onClose={() => setShowStaffDialog(false)}
             onStaffCreated={handleStaffCreated}
+            staffRoles={staffRoles.map(role => ({
+              id: role.id.toString(),
+              name: role.roleName,
+              description: role.description,
+              apiAccess: role.permissions?.map(p => `${p.method} ${p.endpoint}`) || []
+            }))}
           />
         </DialogContent>
       </Dialog>
