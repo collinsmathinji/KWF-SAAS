@@ -220,8 +220,8 @@ const PublicEventsDisplay = () => {
         organizationId: event.organizationId || "",
         quantity: 1,
         mode: "payment",
-        successUrl: `${process.env.NEXT_PUBLIC_API_URL || window.location.origin}/success`,
-        cancelUrl: `${process.env.NEXT_PUBLIC_API_URL || window.location.origin}/events`,
+        successUrl: `${window.location.origin}/success`,
+        cancelUrl: `${ window.location.origin}/events`,
         guests: [],
       })
       setShowCheckout(true)
