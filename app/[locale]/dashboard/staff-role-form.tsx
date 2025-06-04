@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -263,6 +263,12 @@ export default function StaffRoleForm({ onClose, onRoleCreated }: StaffRoleFormP
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const handleClose = useCallback(() => {
+    if (!isLoading && !isSubmitting) {
+      onClose();
+    }
+  }, [isLoading, isSubmitting, onClose]);
+
   useEffect(() => {
     const fetchPermissions = async () => {
       setIsLoading(true)
@@ -399,7 +405,8 @@ export default function StaffRoleForm({ onClose, onRoleCreated }: StaffRoleFormP
             <Button 
               variant="ghost"
               size="sm"
-              onClick={onClose}
+              onClick={handleClose}
+              disabled={isLoading || isSubmitting}
               className="h-8 w-8 rounded-full"
             >
               <X className="h-4 w-4" />
@@ -657,7 +664,7 @@ export default function StaffRoleForm({ onClose, onRoleCreated }: StaffRoleFormP
               </Button>
             ) : (
               <Button
-                onClick={onClose}
+                onClick={handleClose}
                 variant="outline"
               >
                 Cancel

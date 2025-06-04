@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -26,25 +26,29 @@ export default function AddMemberTypeForm({ onClose }: { onClose: () => void }) 
     organizationId: organization ? Number(organization) : null
   })
 
+  const handleClose = useCallback(() => {
+    if (!isLoading) {
+      onClose();
+    }
+  }, [isLoading, onClose]);
+
   // Auto-close after success with a delay
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isSuccess) {
-      timer = setTimeout(() => {
-        onClose();
-      }, 1500);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [isSuccess, onClose]);
+    if (!isSuccess) return;
+    
+    const timer = setTimeout(() => {
+      handleClose();
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, [isSuccess, handleClose]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (isLoading) return;
     setIsLoading(true)
 
     try {
-      // Ensure organizationId is a number when sending to API
       const formDataToSubmit = {
         ...formData,
         organizationId: formData.organizationId ? Number(formData.organizationId) : null
@@ -56,14 +60,10 @@ export default function AddMemberTypeForm({ onClose }: { onClose: () => void }) 
         throw new Error("Failed to create member type")
       }
 
-      // Refresh member types list
-      if (organization) {
-        await fetchMemberType(organization)
-      }
-      
-      // Show success state
+      // Show success state first
       setIsSuccess(true)
       
+      // Show success toast
       toast({
         title: "Success",
         description: `Member type "${formData.name}" has been created`,
@@ -75,6 +75,17 @@ export default function AddMemberTypeForm({ onClose }: { onClose: () => void }) 
         description: "",
         organizationId: organization ? Number(organization) : null
       })
+
+      // Refresh member types list after a short delay
+      if (organization) {
+        setTimeout(async () => {
+          try {
+            await fetchMemberType(organization)
+          } catch (error) {
+            console.error("Error refreshing member types:", error)
+          }
+        }, 100)
+      }
       
     } catch (error) {
       console.error("Error creating member type:", error)
@@ -83,16 +94,11 @@ export default function AddMemberTypeForm({ onClose }: { onClose: () => void }) 
         description: error instanceof Error ? error.message : "Something went wrong. Please try again.",
         variant: "destructive",
       })
+      setIsSuccess(false)
     } finally {
       setIsLoading(false)
     }
   }
-
-  const handleClose = () => {
-    if (!isLoading) {
-      onClose();
-    }
-  };
 
   return (
     <div className="bg-blue-50 p-4 flex items-center justify-center">

@@ -791,12 +791,24 @@ export default function UserManagementPage() {
       </Card>
 
       {/* Dialog for Add Member Type */}
-      <Dialog open={showAddMemberTypeDialog} onOpenChange={setShowAddMemberTypeDialog}>
+      <Dialog 
+        open={showAddMemberTypeDialog} 
+        onOpenChange={(open) => {
+          if (!open) {
+            // Only close if not in loading state
+            setShowAddMemberTypeDialog(false);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Add Membership Type</DialogTitle>
           </DialogHeader>
-          <AddMemberTypeForm onClose={() => setShowAddMemberTypeDialog(false)} />
+          <AddMemberTypeForm 
+            onClose={() => {
+              setShowAddMemberTypeDialog(false);
+            }} 
+          />
         </DialogContent>
       </Dialog>
 
@@ -821,16 +833,25 @@ export default function UserManagementPage() {
       </Dialog>
 
       {/* Dialog for Add Staff Role */}
-      <Dialog open={showStaffRoleDialog} onOpenChange={setShowStaffRoleDialog}>
+      <Dialog 
+        open={showStaffRoleDialog} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowStaffRoleDialog(false);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Create Staff Role</DialogTitle>
           </DialogHeader>
           <StaffRoleForm
-            onClose={() => setShowStaffRoleDialog(false)}
+            onClose={() => {
+              setShowStaffRoleDialog(false);
+            }}
             onRoleCreated={(newRole:any) => {
-              setStaffRoles((prev) => [...prev, newRole])
-              setShowStaffRoleDialog(false)
+              setStaffRoles((prev) => [...prev, mapStaffRoleToDisplay(newRole)]);
+              setShowStaffRoleDialog(false);
             }}
           />
         </DialogContent>

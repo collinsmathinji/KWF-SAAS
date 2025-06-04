@@ -11,6 +11,7 @@ import { Loader2, Mail, UserPlus, Settings } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { createMember } from "@/lib/members"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function AddMemberForm({ 
   onClose, 
@@ -21,6 +22,7 @@ export default function AddMemberForm({
 }) {
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("inviteByEmail")
+  const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const OrganisationId=localStorage.getItem("organizationId")
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviteRole, setInviteRole] = useState("")
@@ -69,10 +71,10 @@ export default function AddMemberForm({
   async function onSubmitFullMember(e: React.FormEvent) {
     e.preventDefault()
     setIsLoading(true)
+    setFormMessage(null)
 
     try {
-     
-      await createMember({
+      const response = await createMember({
         OrganizationId: OrganisationId,
         firstName: formData.firstName,      
         lastName: formData.lastName,
@@ -80,8 +82,13 @@ export default function AddMemberForm({
         email: formData.email,
         phoneNumber:formData.phoneNumber,
         membershipTypeId: formData.membershipType,
-        isPortalAccess: true
+        isPortalAccess: formData.isPortalAccess
       })
+
+      // Since we have a linter error about response.message not existing,
+      // let's just use our custom success message
+      setFormMessage({ type: 'success', text: `Member ${formData.firstName} ${formData.lastName} has been added` })
+
       toast({
         title: "Success",
         description: `Member ${formData.firstName} ${formData.lastName} has been added`,
@@ -97,10 +104,12 @@ export default function AddMemberForm({
         isPortalAccess: false,
       })
       if (onClose) onClose()
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || "Something went wrong. Please try again."
+      setFormMessage({ type: 'error', text: errorMessage })
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -111,10 +120,12 @@ export default function AddMemberForm({
   async function onSubmitInvite(e: React.FormEvent) {
     e.preventDefault()
     setIsLoading(true)
+    setFormMessage(null)
 
     try {
       // Here you would typically make an API call to send the invite
       await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulated API call
+      setFormMessage({ type: 'success', text: `An invitation has been sent to ${inviteEmail}` })
       toast({
         title: "Invitation Sent",
         description: `An invitation has been sent to ${inviteEmail}`,
@@ -123,10 +134,12 @@ export default function AddMemberForm({
       setInviteEmail("")
       setInviteRole("")
       if (onClose) onClose()
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to send invitation. Please try again."
+      setFormMessage({ type: 'error', text: errorMessage })
       toast({
         title: "Error",
-        description: "Failed to send invitation. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -146,6 +159,13 @@ export default function AddMemberForm({
           <CardDescription className="text-blue-600">
             Add a new member or send an invitation to join your organization.
           </CardDescription>
+          {formMessage && (
+            <Alert variant={formMessage.type === 'error' ? "destructive" : "default"} className="mt-2">
+              <AlertDescription>
+                {formMessage.text}
+              </AlertDescription>
+            </Alert>
+          )}
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
