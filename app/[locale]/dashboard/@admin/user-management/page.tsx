@@ -335,7 +335,7 @@ export default function UserManagementPage() {
 
   // Count groups by type
   const groupCounts = groupTypes.map((type) => {
-    const count = groups.filter((g:any) => g.groupType === type.id).length
+    const count = groups.filter((group: any) => group.groupTypeId === type.id).length
     return {
       ...type,
       members: count,
