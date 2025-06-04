@@ -36,12 +36,15 @@ import { getStaff, deleteStaff as deleteStaffAPI } from "@/lib/staff"
 import { Staff as APIStaff } from "@/lib/staff"
 import { Permission } from "@/types/permissions"
 import type { GroupData } from "@/lib/group"
+import { toast } from "@/components/ui/use-toast"
 
 interface MemberType {
   id: any
   name: string
   members?: any
   description: string
+  behavior?: string
+  isActive?: boolean
 }
 
 interface Member {
@@ -130,14 +133,11 @@ export default function UserManagementPage() {
   const [groups, setGroups] = useState<Group[]>([])
   const [staffMembers, setStaffMembers] = useState<StaffDisplay[]>([])
   const [staffRoles, setStaffRoles] = useState<StaffRoleDisplay[]>([])
-  const [groupTypes, setGroupTypes] = useState<MemberType[]>([
-    { id: "private", name: "Private", description: "private" },
-    { id: "public_open", name: "Public Open", description: "private" },
-    { id: "public_closed", name: "Public Closed", description: "private" },
-  ])
+  const [groupTypes, setGroupTypes] = useState<MemberType[]>([])
   const [membershipTypes, setMembershipTypes] = useState<MemberType[]>([])
   const [members, setMembers] = useState<Member[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [loadingGroupTypes, setLoadingGroupTypes] = useState(false)
 
   const deleteMember = async (memberId: string) => {
     try {
@@ -193,11 +193,25 @@ export default function UserManagementPage() {
           setMembers([])
         }
 
-        // Fetch groups
-        const groupsResponse = await getGroups(String(session.user.organizationId))
-        if (groupsResponse && Array.isArray(groupsResponse)) {
-          setGroupsWithData(groupsResponse)
-        } else {
+        // Fetch groups with proper error handling
+        try {
+          const groupsResponse = await getGroups(String(session.user.organizationId))
+          console.log("Groups response:", groupsResponse) // Debug log
+          if (groupsResponse && typeof groupsResponse === 'object' && 'data' in groupsResponse) {
+            setGroupsWithData(groupsResponse.data as GroupData[])
+          } else if (Array.isArray(groupsResponse)) {
+            setGroupsWithData(groupsResponse)
+          } else {
+            console.error("Invalid groups response format:", groupsResponse)
+            setGroups([])
+          }
+        } catch (groupError) {
+          console.error("Error fetching groups:", groupError)
+          toast({
+            title: "Error",
+            description: "Failed to load groups",
+            variant: "destructive",
+          })
           setGroups([])
         }
 
@@ -223,6 +237,11 @@ export default function UserManagementPage() {
         }
       } catch (error) {
         console.error("Error fetching data:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load data",
+          variant: "destructive",
+        })
         setMembershipTypes([])
         setMembers([])
         setGroups([])
@@ -236,6 +255,54 @@ export default function UserManagementPage() {
     fetchData()
   }, [session?.user?.organizationId])
 
+  // Add useEffect to fetch group types
+  useEffect(() => {
+    const fetchGroupTypes = async () => {
+      setLoadingGroupTypes(true)
+      try {
+        const response = await fetch('/api/groupType/list', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch group types')
+        }
+
+        const responseData = await response.json()
+        
+        // Navigate through the nested structure
+        const groupTypesData = responseData.data?.data || []
+
+        // Transform the data to match our needs
+        const validGroupTypes = groupTypesData.map((item: any) => ({
+          id: item.id,  // Keep as string since it's a UUID
+          name: String(item.name),
+          description: item.description || "No description available",
+          behavior: item.behavior,
+          isActive: Boolean(item.isActive)
+        })).filter((type: MemberType) => type.isActive) // Only include active group types
+
+        setGroupTypes(validGroupTypes)
+      } catch (error) {
+        console.error('Error fetching group types:', error)
+        toast({
+          title: "Error",
+          description: "Failed to load group types",
+          variant: "destructive",
+        })
+        // Fallback to empty array instead of default values since we want to match API structure
+        setGroupTypes([])
+      } finally {
+        setLoadingGroupTypes(false)
+      }
+    }
+
+    fetchGroupTypes()
+  }, [])
   // Filter data based on search query
   const filteredMembers = members.filter((member) => {
     if (!searchQuery) return true

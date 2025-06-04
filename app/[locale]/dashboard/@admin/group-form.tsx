@@ -79,7 +79,7 @@ const GroupForm = ({ onClose }: GroupFormProps) => {
     const fetchGroupTypes = async () => {
       setLoadingGroupTypes(true)
       try {
-        const response = await fetch('api/groupType/list', {
+        const response = await fetch('/api/groupType/list', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -185,6 +185,7 @@ const GroupForm = ({ onClose }: GroupFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSuccessMessage("") // Clear any previous success message
 
     if (!validateForm()) {
       toast({
@@ -217,34 +218,47 @@ const GroupForm = ({ onClose }: GroupFormProps) => {
         logo: formData.logo,
         description: formData.description,
         organizationId: Number(formData.organizationId) || 0,
-        groupTypeId: Number(formData.groupType) || 0, // Convert to number to match GroupData type
+        groupTypeId: formData.groupType,
         addedBy: Number(session?.user?.id) || 0,
       }
 
       console.log("Submitting group data:", groupData)
 
-      // Call the createGroup function
-      const response = await createGroup(groupData)
+      try {
+        // Call the createGroup function
+        const response = await createGroup(groupData as any) // Temporary type assertion until API types are updated
+        console.log("Group created successfully:", response)
+        setSuccessMessage("Group created successfully!")
 
-      console.log("Group created successfully:", response)
-      setSuccessMessage("Group created successfully!")
+        toast({
+          title: "Success",
+          description: "Group has been created successfully!",
+        })
 
-      toast({
-        title: "Success",
-        description: "Group has been created successfully!",
-      })
-
-      // Clear form data and close after successful creation
-      setTimeout(() => {
-        if (onClose) {
-          onClose()
-        }
-      }, 1500)
-    } catch (error) {
+        // Clear form data and close after successful creation
+        setTimeout(() => {
+          if (onClose) {
+            onClose()
+          }
+        }, 1500)
+      } catch (apiError: any) {
+        // Handle API-specific errors
+        const errorMessage = apiError.response?.data?.message || apiError.message
+        setSuccessMessage("") // Clear success message
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        })
+      }
+    } catch (error: any) {
+      // Handle other errors
       console.error("Error creating group:", error)
+      const errorMessage = error?.message || "Failed to create group. Please try again."
+      setSuccessMessage("") // Clear success message
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create group. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
