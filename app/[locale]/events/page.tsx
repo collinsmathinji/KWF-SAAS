@@ -1,6 +1,6 @@
 "use client"
 import { Button } from "@/components/ui/button"
-import EventsDisplay from "../dashboard/@user/eventsDisplay"
+import PublicEventsDisplay from "../../components/public/PublicEventsDisplay"
 import { Zap,ChevronRight } from "lucide-react"
 import Link from "next/link"
 
@@ -59,7 +59,7 @@ export default function EventsPage() {
 
       {/* Events Display */}
       <main className="flex-1">
-        <EventsDisplay />
+        <PublicEventsDisplay />
       </main>
 
       {/* Footer */}
