@@ -63,27 +63,27 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Other",
 }
 
-// Status badge colors
+// Status badge colors - Updated to gray/blue palette
 const STATUS_COLORS: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
   active: {
-    bg: "bg-emerald-50 border border-emerald-200",
-    text: "text-emerald-700",
-    icon: <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></div>,
-  },
-  draft: {
-    bg: "bg-slate-50 border border-slate-200",
-    text: "text-slate-700",
-    icon: <div className="w-2 h-2 rounded-full bg-slate-400 mr-2"></div>,
-  },
-  ended: {
     bg: "bg-blue-50 border border-blue-200",
     text: "text-blue-700",
-    icon: <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>,
+    icon: <div className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></div>,
+  },
+  draft: {
+    bg: "bg-gray-50 border border-gray-200",
+    text: "text-gray-700",
+    icon: <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div>,
+  },
+  ended: {
+    bg: "bg-slate-50 border border-slate-200",
+    text: "text-slate-700",
+    icon: <div className="w-2 h-2 rounded-full bg-slate-500 mr-2"></div>,
   },
   pending: {
-    bg: "bg-amber-50 border border-amber-200",
-    text: "text-amber-700",
-    icon: <div className="w-2 h-2 rounded-full bg-amber-500 mr-2"></div>,
+    bg: "bg-blue-50 border border-blue-200",
+    text: "text-blue-600",
+    icon: <div className="w-2 h-2 rounded-full bg-blue-400 mr-2"></div>,
   },
 }
 
@@ -100,19 +100,19 @@ const FormDialog: React.FC<FormDialogProps> = ({ isOpen, onClose, children, isEd
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-8 border-b border-slate-100">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-100">
+        <div className="flex justify-between items-center p-8 border-b border-gray-100">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">
+            <h2 className="text-2xl font-bold text-gray-900">
               {isEditMode ? "Edit Campaign" : "Create New Campaign"}
             </h2>
-            <p className="text-slate-600 mt-1">
+            <p className="text-gray-600 mt-1">
               {isEditMode ? "Update your campaign details" : "Set up a new fundraising campaign"}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl p-2.5 transition-all duration-200"
+            className="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl p-2.5 transition-all duration-200"
           >
             <X size={20} />
           </button>
@@ -123,7 +123,7 @@ const FormDialog: React.FC<FormDialogProps> = ({ isOpen, onClose, children, isEd
   )
 }
 
-// Stats Card Component
+// Stats Card Component - Updated with gray/blue palette
 interface StatsCardProps {
   icon: React.ReactNode
   title: string
@@ -134,12 +134,12 @@ interface StatsCardProps {
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({ icon, title, value, subtitle, bgColor, iconBg }) => (
-  <div className={`${bgColor} rounded-2xl p-6 border border-white/20 shadow-lg`}>
+  <div className={`${bgColor} rounded-2xl p-6 border border-white/10 shadow-lg backdrop-blur-sm`}>
     <div className="flex items-start justify-between">
       <div className="flex-1">
-        <p className="text-white/80 text-sm font-medium mb-2">{title}</p>
+        <p className="text-white/90 text-sm font-medium mb-2">{title}</p>
         <p className="text-white text-3xl font-bold mb-1">{value}</p>
-        {subtitle && <p className="text-white/70 text-sm">{subtitle}</p>}
+        {subtitle && <p className="text-white/80 text-sm">{subtitle}</p>}
       </div>
       <div className={`${iconBg} rounded-xl p-3 ml-4`}>{icon}</div>
     </div>
@@ -285,7 +285,7 @@ const OrganizationCampaigns = () => {
     }
 
     try {
-      const response = await fetch(`/admin/donation/softDelete/${id}`, {
+      const response = await fetch(`/api/donation/softDelete/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -328,7 +328,7 @@ const OrganizationCampaigns = () => {
   // Handle form submission
   const handleFormSubmit = async (formData: any) => {
     try {
-      const response = await fetch("/admin/donation/create", {
+      const response = await fetch("/api/donation/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -362,7 +362,7 @@ const OrganizationCampaigns = () => {
   // Handle update campaign
   const handleUpdateCampaign = async (id: string, updatedData: Partial<Campaign>) => {
     try {
-      const response = await fetch(`/admin/donation/update/${id}`, {
+      const response = await fetch(`/api/donation/update/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -392,17 +392,17 @@ const OrganizationCampaigns = () => {
   // Campaign details view
   if (selectedCampaign) {
     return (
-      <div className="min-h-screen bg-slate-50 py-8">
+      <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-6">
           <button
             onClick={closeCampaignDetails}
-            className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-8 font-medium transition-colors group"
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-8 font-medium transition-colors group"
           >
             <ChevronRight className="rotate-180 mr-2 group-hover:-translate-x-1 transition-transform" size={20} />
             Back to Campaign Dashboard
           </button>
 
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
             <div className="relative h-80">
               <Image
                 src={selectedCampaign.coverImage || "/placeholder.svg?height=320&width=800"}
@@ -458,11 +458,11 @@ const OrganizationCampaigns = () => {
             </div>
 
             <div className="p-8">
-              <div className="prose prose-slate max-w-none mb-10">
-                <p className="text-lg text-slate-700 leading-relaxed">{selectedCampaign.description}</p>
+              <div className="prose prose-gray max-w-none mb-10">
+                <p className="text-lg text-gray-700 leading-relaxed">{selectedCampaign.description}</p>
               </div>
 
-              <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-2xl p-8 mb-10 text-white shadow-xl">
+              <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-3xl p-8 mb-10 text-white shadow-xl">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <div>
                     <h3 className="text-white/90 font-semibold mb-4 text-lg">Fundraising Progress</h3>
@@ -519,47 +519,47 @@ const OrganizationCampaigns = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                 <Link
                   href={`/campaigns/${selectedCampaign.id}/donations`}
-                  className="group bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl p-6 flex items-center transition-all duration-200 hover:shadow-lg"
+                  className="group bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-2xl p-6 flex items-center transition-all duration-200 hover:shadow-lg"
                 >
-                  <div className="h-16 w-16 rounded-2xl bg-emerald-100 flex items-center justify-center mr-5 group-hover:bg-emerald-600 transition-colors">
-                    <DollarSign size={28} className="text-emerald-600 group-hover:text-white transition-colors" />
+                  <div className="h-16 w-16 rounded-2xl bg-blue-100 flex items-center justify-center mr-5 group-hover:bg-blue-600 transition-colors">
+                    <DollarSign size={28} className="text-blue-600 group-hover:text-white transition-colors" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
+                    <h3 className="font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                       Donation History
                     </h3>
-                    <p className="text-slate-600">View all donations and transaction details</p>
+                    <p className="text-gray-600">View all donations and transaction details</p>
                   </div>
-                  <ChevronRight size={20} className="text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                  <ChevronRight size={20} className="text-gray-400 group-hover:text-blue-600 transition-colors" />
                 </Link>
 
                 <Link
                   href={`/campaigns/${selectedCampaign.id}/analytics`}
-                  className="group bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl p-6 flex items-center transition-all duration-200 hover:shadow-lg"
+                  className="group bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-2xl p-6 flex items-center transition-all duration-200 hover:shadow-lg"
                 >
-                  <div className="h-16 w-16 rounded-2xl bg-purple-100 flex items-center justify-center mr-5 group-hover:bg-purple-600 transition-colors">
-                    <PieChart size={28} className="text-purple-600 group-hover:text-white transition-colors" />
+                  <div className="h-16 w-16 rounded-2xl bg-gray-100 flex items-center justify-center mr-5 group-hover:bg-gray-600 transition-colors">
+                    <PieChart size={28} className="text-gray-600 group-hover:text-white transition-colors" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-slate-900 mb-2 group-hover:text-purple-600 transition-colors">
+                    <h3 className="font-bold text-gray-900 mb-2 group-hover:text-gray-600 transition-colors">
                       Analytics & Insights
                     </h3>
-                    <p className="text-slate-600">Track performance and donor insights</p>
+                    <p className="text-gray-600">Track performance and donor insights</p>
                   </div>
-                  <ChevronRight size={20} className="text-slate-400 group-hover:text-purple-600 transition-colors" />
+                  <ChevronRight size={20} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
                 </Link>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={() => handleEditClick(selectedCampaign)}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center"
                 >
                   <Edit size={20} className="mr-3" /> Edit Campaign Details
                 </button>
                 <button
                   onClick={() => handleDeleteCampaign(selectedCampaign.id)}
-                  className="bg-white hover:bg-red-50 text-red-600 border-2 border-red-200 hover:border-red-300 font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center"
+                  className="bg-white hover:bg-gray-50 text-gray-600 border-2 border-gray-200 hover:border-gray-300 font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center"
                 >
                   <Trash2 size={20} className="mr-3" /> Delete Campaign
                 </button>
@@ -573,10 +573,10 @@ const OrganizationCampaigns = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
-          <p className="text-slate-600 mt-6 font-medium text-lg">Loading your campaigns...</p>
+          <div className="w-16 h-16 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="text-gray-600 mt-6 font-medium text-lg">Loading your campaigns...</p>
         </div>
       </div>
     )
@@ -584,11 +584,11 @@ const OrganizationCampaigns = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Error Loading Campaigns</h2>
-          <p className="text-slate-600 mb-6">{error}</p>
+          <AlertCircle className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Campaigns</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={handleRefresh}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
@@ -601,17 +601,17 @@ const OrganizationCampaigns = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10">
+    <div className="min-h-screen bg-gray-50 py-10">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10">
           <div className="mb-6 lg:mb-0">
-            <h1 className="text-4xl font-bold text-slate-900 mb-3">Campaign Management</h1>
-            <p className="text-xl text-slate-600">Monitor and manage all your fundraising campaigns</p>
+            <h1 className="text-4xl font-bold text-gray-900 mb-3">Campaign Management</h1>
+            <p className="text-xl text-gray-600">Monitor and manage all your fundraising campaigns</p>
           </div>
           <div className="flex items-center space-x-4">
             <button
               onClick={handleRefresh}
-              className={`p-3 bg-white text-slate-600 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all duration-200 shadow-sm ${refreshAnimation ? "animate-spin" : ""}`}
+              className={`p-3 bg-white text-gray-600 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all duration-200 shadow-sm ${refreshAnimation ? "animate-spin" : ""}`}
               aria-label="Refresh campaigns"
               title="Refresh campaigns"
             >
@@ -619,21 +619,21 @@ const OrganizationCampaigns = () => {
             </button>
             <button
               onClick={openFormDialog}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center shadow-lg transition-all duration-200"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-xl flex items-center shadow-lg transition-all duration-200"
             >
               <Plus size={20} className="mr-2" /> Create New Campaign
             </button>
           </div>
         </div>
 
-        {/* Enhanced Stats overview */}
+        {/* Enhanced Stats overview - Updated colors */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           <StatsCard
             icon={<TrendingUp className="text-white" size={24} />}
             title="Active Campaigns"
             value={totalStats.activeCount.toString()}
             subtitle={`${campaigns.length} total campaigns`}
-            bgColor="bg-gradient-to-br from-emerald-500 to-emerald-600"
+            bgColor="bg-gradient-to-br from-blue-500 to-blue-600"
             iconBg="bg-white/20"
           />
           <StatsCard
@@ -641,7 +641,7 @@ const OrganizationCampaigns = () => {
             title="Total Raised"
             value={formatCurrency(totalStats.totalRaised)}
             subtitle={`${((totalStats.totalRaised / totalStats.totalGoal) * 100).toFixed(1)}% of total goal`}
-            bgColor="bg-gradient-to-br from-blue-500 to-blue-600"
+            bgColor="bg-gradient-to-br from-gray-600 to-gray-700"
             iconBg="bg-white/20"
           />
           <StatsCard
@@ -649,7 +649,7 @@ const OrganizationCampaigns = () => {
             title="Total Donors"
             value={totalStats.totalDonors.toString()}
             subtitle="Unique contributors"
-            bgColor="bg-gradient-to-br from-purple-500 to-purple-600"
+            bgColor="bg-gradient-to-br from-blue-600 to-blue-700"
             iconBg="bg-white/20"
           />
           <StatsCard
@@ -657,100 +657,81 @@ const OrganizationCampaigns = () => {
             title="Average Donation"
             value={totalStats.totalDonors > 0 ? formatCurrency(totalStats.totalRaised / totalStats.totalDonors) : "$0"}
             subtitle="Per donor contribution"
-            bgColor="bg-gradient-to-br from-indigo-500 to-indigo-600"
+            bgColor="bg-gradient-to-br from-gray-700 to-gray-800"
             iconBg="bg-white/20"
           />
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
-          <div className="p-8 border-b border-slate-100">
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+          <div className="p-8 border-b border-gray-100">
             <div className="flex flex-col lg:flex-row gap-6">
               <div className="relative flex-1">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                  <Search size={20} className="text-slate-400" />
+                  <Search size={20} className="text-gray-400" />
                 </div>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search campaigns by title or description..."
-                  className="w-full p-4 pl-12 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-slate-900 placeholder-slate-500"
+                  className="w-full p-4 pl-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
                 />
               </div>
 
               <div className="relative">
                 <button
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className="flex items-center bg-slate-50 border border-slate-200 rounded-xl py-4 px-6 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 font-medium text-slate-700"
+                  className="flex items-center bg-gray-50 border border-gray-200 rounded-xl py-4 px-6 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 font-medium text-gray-700"
                 >
-                  <Filter size={20} className="text-slate-500 mr-3" />
+                  <Filter size={20} className="text-gray-500 mr-3" />
                   Filter & Sort
-                  <ChevronDown size={18} className="text-slate-500 ml-3" />
+                  <ChevronDown size={18} className="text-gray-500 ml-3" />
                 </button>
 
                 {isFilterOpen && (
-                  <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 z-20">
+                  <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 z-20">
                     <div className="p-6">
                       <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-bold text-slate-900 text-lg">Filter Campaigns</h3>
+                        <h3 className="font-bold text-gray-900 text-lg">Filter Campaigns</h3>
                         <button
                           onClick={() => setIsFilterOpen(false)}
-                          className="text-slate-400 hover:text-slate-600 transition-colors"
+                          className="text-gray-400 hover:text-gray-600 transition-colors"
                         >
                           <X size={20} />
                         </button>
                       </div>
 
-                      <div className="space-y-6">
-                        <div>
-                          <label className="block text-slate-700 font-semibold mb-3">Campaign Status</label>
-                          <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                          >
-                            <option value="all">All Statuses</option>
-                            <option value="active">Active</option>
-                            <option value="draft">Draft</option>
-                            <option value="ended">Ended</option>
-                            <option value="pending">Pending</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-slate-700 font-semibold mb-3">Campaign Category</label>
-                          <select
-                            value={categoryFilter}
-                            onChange={(e) => setCategoryFilter(e.target.value)}
-                            className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                          >
-                            <option value="all">All Categories</option>
-                            {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-                              <option key={value} value={value}>
-                                {label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                      {/* Status Filter */}
+                      <div className="mb-6">
+                        <label className="block text-gray-700 font-medium mb-3">Status</label>
+                        <select
+                          value={statusFilter}
+                          onChange={(e) => setStatusFilter(e.target.value)}
+                          className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                        >
+                          <option value="all">All Statuses</option>
+                          <option value="active">Active</option>
+                          <option value="draft">Draft</option>
+                          <option value="ended">Ended</option>
+                          <option value="pending">Pending</option>
+                        </select>
                       </div>
 
-                      <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-100">
-                        <button
-                          onClick={() => {
-                            setStatusFilter("all")
-                            setCategoryFilter("all")
-                            setSearchTerm("")
-                          }}
-                          className="text-slate-600 hover:text-slate-800 font-medium transition-colors"
+                      {/* Category Filter */}
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-3">Category</label>
+                        <select
+                          value={categoryFilter}
+                          onChange={(e) => setCategoryFilter(e.target.value)}
+                          className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                         >
-                          Clear All Filters
-                        </button>
-                        <button
-                          onClick={() => setIsFilterOpen(false)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl transition-colors"
-                        >
-                          Apply Filters
-                        </button>
+                          <option value="all">All Categories</option>
+                          {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -759,180 +740,116 @@ const OrganizationCampaigns = () => {
             </div>
           </div>
 
-          {filteredCampaigns.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="mb-6 text-slate-300">
-                <Search size={80} className="mx-auto" />
+          {/* Campaign List */}
+          <div className="p-8">
+            {filteredCampaigns.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Search size={32} className="text-gray-400" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">No campaigns found</h3>
+                <p className="text-gray-600">Try adjusting your search or filter criteria</p>
               </div>
-              <h3 className="text-2xl font-bold text-slate-700 mb-3">No campaigns found</h3>
-              <p className="text-slate-500 mb-8 max-w-lg mx-auto text-lg">
-                {searchTerm || statusFilter !== "all" || categoryFilter !== "all"
-                  ? "No campaigns match your current search criteria. Try adjusting your filters or search terms."
-                  : "You haven't created any campaigns yet. Start your first fundraising campaign to begin making an impact."}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {(searchTerm || statusFilter !== "all" || categoryFilter !== "all") && (
-                  <button
-                    onClick={() => {
-                      setSearchTerm("")
-                      setStatusFilter("all")
-                      setCategoryFilter("all")
-                    }}
-                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-6 rounded-xl transition-colors"
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {filteredCampaigns.map((campaign) => (
+                  <div
+                    key={campaign.id}
+                    className="bg-gray-50 rounded-2xl p-6 hover:bg-gray-100 transition-all duration-200 cursor-pointer border border-gray-200"
+                    onClick={() => openCampaignDetails(campaign)}
                   >
-                    Clear All Filters
-                  </button>
-                )}
-                <button
-                  onClick={openFormDialog}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center transition-all duration-200"
-                >
-                  <Plus size={20} className="mr-2" /> Create Your First Campaign
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="text-left py-5 px-8 text-slate-600 font-semibold text-sm uppercase tracking-wider">
-                      Campaign Details
-                    </th>
-                    <th className="text-left py-5 px-8 text-slate-600 font-semibold text-sm uppercase tracking-wider">
-                      Target Goal
-                    </th>
-                    <th className="text-left py-5 px-8 text-slate-600 font-semibold text-sm uppercase tracking-wider">
-                      Progress
-                    </th>
-                    <th className="text-left py-5 px-8 text-slate-600 font-semibold text-sm uppercase tracking-wider">
-                      Category
-                    </th>
-                    <th className="text-left py-5 px-8 text-slate-600 font-semibold text-sm uppercase tracking-wider">
-                      Start Date
-                    </th>
-                    <th className="text-left py-5 px-8 text-slate-600 font-semibold text-sm uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="text-left py-5 px-8 text-slate-600 font-semibold text-sm uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredCampaigns.map((campaign) => (
-                    <tr
-                      key={campaign.id}
-                      className="hover:bg-slate-50 cursor-pointer transition-colors duration-150"
-                      onClick={() => openCampaignDetails(campaign)}
-                    >
-                      <td className="py-6 px-8">
-                        <div className="flex items-center">
-                          <div className="h-16 w-16 rounded-xl bg-slate-200 overflow-hidden flex-shrink-0 mr-5 shadow-sm">
-                            <Image
-                              src={campaign.coverImage || "/placeholder.svg?height=64&width=64"}
-                              alt={campaign.title}
-                              width={64}
-                              height={64}
-                              style={{ objectFit: "cover" }}
-                              className="w-full h-full"
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h3 className="font-bold text-slate-900 text-lg mb-1 truncate">{campaign.title}</h3>
-                            <p className="text-slate-600 text-sm line-clamp-2">{campaign.description}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-6 px-8 font-bold text-slate-900 text-lg">
-                        {formatCurrency(campaign.targetAmount)}
-                      </td>
-                      <td className="py-6 px-8">
-                        <div className="flex items-center">
-                          <div className="w-32 bg-slate-200 rounded-full h-2.5 mr-4">
-                            <div
-                              className="bg-gradient-to-r from-blue-500 to-blue-600 h-2.5 rounded-full transition-all duration-500"
-                              style={{
-                                width: `${calculateProgress(campaign.currentAmount || 0, campaign.targetAmount)}%`,
-                              }}
-                            ></div>
-                          </div>
-                          <span className="text-sm font-semibold text-slate-700 min-w-[3rem]">
-                            {calculateProgress(campaign.currentAmount || 0, campaign.targetAmount)}%
-                          </span>
-                        </div>
-                        <div className="text-xs text-slate-500 mt-1">
-                          {formatCurrency(campaign.currentAmount || 0)} raised
-                        </div>
-                      </td>
-                      <td className="py-6 px-8 text-slate-600 font-medium">
-                        {CATEGORY_LABELS[campaign.category] || campaign.category}
-                      </td>
-                      <td className="py-6 px-8 text-slate-600 font-medium">{formatDate(campaign.startDate)}</td>
-                      <td className="py-6 px-8">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
                         <span
-                          className={`${STATUS_COLORS[campaign.status].bg} ${STATUS_COLORS[campaign.status].text} text-sm font-semibold px-3 py-1.5 rounded-full flex items-center w-fit`}
+                          className={`${STATUS_COLORS[campaign.status].bg} ${STATUS_COLORS[campaign.status].text} text-sm font-semibold px-4 py-2 rounded-full inline-flex items-center`}
                         >
                           {STATUS_COLORS[campaign.status].icon}
                           {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
                         </span>
-                      </td>
-                      <td className="py-6 px-8">
-                        <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleEditClick(campaign)
-                            }}
-                            className="p-2.5 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors"
-                            title="Edit campaign"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          {campaign.status === "active" && (
-                            <Link
-                              href={`/campaigns/${campaign.id}`}
-                              className="p-2.5 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-colors"
-                              title="View live campaign"
-                              target="_blank"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Eye size={18} />
-                            </Link>
-                          )}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteCampaign(campaign.id)
-                            }}
-                            className="p-2.5 text-red-600 hover:bg-red-100 rounded-xl transition-colors"
-                            title="Delete campaign"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditClick(campaign)
+                          }}
+                          className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-200"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteCampaign(campaign.id)
+                          }}
+                          className="p-2 text-gray-500 hover:text-red-600 rounded-lg hover:bg-red-50 transition-all duration-200"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">{campaign.title}</h3>
+
+                    <div className="flex items-center text-gray-600 space-x-4 mb-4">
+                      <span className="flex items-center">
+                        <Calendar size={16} className="mr-2" />
+                        {formatDate(campaign.startDate)}
+                      </span>
+                      <span className="flex items-center">
+                        <Coins size={16} className="mr-2" />
+                        {CATEGORY_LABELS[campaign.category] || campaign.category}
+                      </span>
+                    </div>
+
+                    <div className="mb-4">
+                      <div className="flex items-baseline mb-2">
+                        <span className="text-2xl font-bold text-gray-900">
+                          {formatCurrency(campaign.currentAmount || 0)}
+                        </span>
+                        <span className="text-gray-600 ml-2">of {formatCurrency(campaign.targetAmount)}</span>
+                      </div>
+                      <div className="h-2 w-full bg-gray-200 rounded-full">
+                        <div
+                          className="h-2 bg-blue-600 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${calculateProgress(campaign.currentAmount || 0, campaign.targetAmount)}%`,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-gray-600">
+                      <span className="flex items-center">
+                        <Users size={16} className="mr-2" />
+                        {campaign.donorCount || 0} donors
+                      </span>
+                      {campaign.status === "active" && campaign.endDate && (
+                        <span className="flex items-center">
+                          <Clock size={16} className="mr-2" />
+                          {Math.max(
+                            0,
+                            Math.ceil(
+                              (new Date(campaign.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
+                            ),
+                          )}{" "}
+                          days left
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Campaign form dialog */}
+      {/* Campaign Form Dialog */}
       <FormDialog isOpen={isFormDialogOpen} onClose={closeFormDialog} isEditMode={isEditMode}>
         <CampaignCreationForm
-          onSubmit={async (formData) => {
-            if (isEditMode && editingCampaign) {
-              await handleUpdateCampaign(editingCampaign.id, formData)
-            } else {
-              await handleFormSubmit(formData)
-            }
-          }}
-          initialData={isEditMode ? (editingCampaign ?? undefined) : undefined}
-          isEditMode={isEditMode}
+          onSubmit={isEditMode ? (data) => handleUpdateCampaign(editingCampaign!.id, data) : handleFormSubmit}
+          initialData={editingCampaign || undefined}
         />
       </FormDialog>
     </div>
