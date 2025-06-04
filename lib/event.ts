@@ -27,13 +27,19 @@ export async function createEvent(eventData: EventData): Promise<any> {
       body: JSON.stringify(eventData),
     });
 
+    const responseData = await response.json();
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to create event");
+      // If the response contains a message, use it, otherwise use a default message
+      const errorMessage = responseData.message || responseData.error || "Failed to create event";
+      throw new Error(errorMessage);
     }
 
-    const responseData = await response.json();
-    return responseData;
+    return {
+      success: true,
+      data: responseData.data,
+      message: responseData.message || "Event created successfully"
+    };
   } catch (error) {
     console.error("Error creating event:", error);
     throw error;
