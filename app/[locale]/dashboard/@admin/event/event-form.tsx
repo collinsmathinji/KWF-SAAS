@@ -145,7 +145,7 @@ export default function EventForm({ onClose = () => {}, initialData, isEditMode 
       })
 
       const data = await response.json()
-
+      console.log("Stripe connection response:", data)
       if (data.onboardingUrl) {
         sessionStorage.setItem("pendingEventData", JSON.stringify(formData))
         window.location.href = data.onboardingUrl
