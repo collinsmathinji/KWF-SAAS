@@ -36,7 +36,9 @@ export async function getStaff(organizationId: number): Promise<Staff[]> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        organizationId,
+          query: {
+            organizationId: organizationId
+          },
         page: 1,
         perPage: 25
       }),

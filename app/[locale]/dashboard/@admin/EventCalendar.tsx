@@ -111,6 +111,9 @@ export function EventCalendar() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+             query: {
+            organizationId: session.user.organizationId,
+          },
             filter: {
               isDeleted: false,
               status: "active",
