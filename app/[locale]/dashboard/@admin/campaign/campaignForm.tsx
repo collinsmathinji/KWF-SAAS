@@ -394,7 +394,7 @@ const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({ initialData
         ...formData,
         targetAmount: Number.parseFloat(formData.targetAmount),
         gallery: formData.gallery.length ? formData.gallery : undefined,
-        status: isEditMode ? initialData?.status : "draft",
+        status: isEditMode ? initialData?.status : "active",
         donationType: formData.donationType,
         organizationId: session?.user?.organizationId,
         donorCount: isEditMode ? initialData?.donorCount : 0,
