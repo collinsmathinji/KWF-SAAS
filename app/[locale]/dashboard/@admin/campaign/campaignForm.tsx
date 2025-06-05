@@ -150,7 +150,7 @@ const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({ initialData
   }, [])
 
   // Handle Stripe connection
-  const handleStripeConnect = async () => {
+   const handleStripeConnect = async () => {
     try {
       const response = await fetch("/api/organization/stripe/createAccount", {
         method: "POST",
@@ -160,17 +160,20 @@ const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({ initialData
       })
 
       const data = await response.json()
-
-      if (data.onboardingUrl) {
+      console.log("Stripe connection response:", data)
+      // Always redirect if onboardingUrl is present
+      if (data.data?.onboardingUrl) {
         sessionStorage.setItem("pendingCampaignData", JSON.stringify(formData))
-        window.location.href = data.onboardingUrl
+        window.location.href = data.data.onboardingUrl
+        return
       }
+      // Optionally, show a message if onboardingUrl is missing
+      setStripeError(data.message || "No onboarding URL returned from Stripe.")
     } catch (error) {
       setStripeError("Failed to initiate Stripe connection")
       console.error("Error connecting to Stripe:", error)
     }
   }
-
   // Stripe connection required screen
   if (!isLoadingStripe && !hasStripeAccount) {
     return (
