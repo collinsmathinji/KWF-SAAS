@@ -211,8 +211,8 @@ const OrganizationCampaigns = () => {
         // Initialize currentAmount and donorCount with realistic mock data
         const campaignsWithDefaults = (data.data.rows || []).map((campaign: any) => ({
           ...campaign,
-          currentAmount: Math.floor(Math.random() * campaign.targetAmount * 0.8),
-          donorCount: Math.floor(Math.random() * 50) + 1,
+          currentAmount:0,
+          donorCount: 0,
         }))
         setCampaigns(campaignsWithDefaults)
       } else {
