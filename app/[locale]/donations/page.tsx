@@ -180,7 +180,7 @@ export default function PublicDonationsPage() {
           organizationId: selectedDonation.organizationId, // Make sure this is available in your Donation interface
           mode: "payment",
           donationAmount: donationAmount,
-          successUrl: `${window.location.origin}/donations/thank-you`,
+          successUrl: `${window.location.origin}/donations/success`,
           cancelUrl: `${window.location.origin}/donations`,
           guests: [
             {
