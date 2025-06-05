@@ -24,12 +24,13 @@ const upcomingEvents = [
   { id: 3, name: "Business Meetup", date: "2024-03-10", attendees: 80 },
 ]
 
-const recentDonations = [
-  { id: 1, donor: "John Doe", amount: 500, date: "2024-02-14", type: "Monthly" },
-  { id: 2, donor: "Jane Smith", amount: 1000, date: "2024-02-13", type: "One-time" },
-  { id: 3, donor: "Bob Wilson", amount: 250, date: "2024-02-12", type: "Monthly" },
-  { id: 4, donor: "Alice Brown", amount: 750, date: "2024-02-11", type: "One-time" },
-]
+const recentDonations: {
+  id: number;
+  donor: string;
+  amount: number;
+  date: string;
+  type: string;
+}[] = []
 
 interface MetricCardProps {
   icon: React.ReactNode
