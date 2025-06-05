@@ -42,7 +42,7 @@ export async function uploadOrganizationLogo(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("File", file);
   
-  const response = await fetch("http://localhost:5000/admin/uploads/single", {
+  const response = await fetch("/api/uploads/single", {
     method: "POST",
     body: formData,
   });
