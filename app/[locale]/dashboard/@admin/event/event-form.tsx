@@ -146,10 +146,14 @@ export default function EventForm({ onClose = () => {}, initialData, isEditMode 
 
       const data = await response.json()
       console.log("Stripe connection response:", data)
-      if (data.onboardingUrl) {
+      // Always redirect if onboardingUrl is present
+      if (data.data?.onboardingUrl) {
         sessionStorage.setItem("pendingEventData", JSON.stringify(formData))
-        window.location.href = data.onboardingUrl
+        window.location.href = data.data.onboardingUrl
+        return
       }
+      // Optionally, show a message if onboardingUrl is missing
+      setStripeError(data.message || "No onboarding URL returned from Stripe.")
     } catch (error) {
       setStripeError("Failed to initiate Stripe connection")
       console.error("Error connecting to Stripe:", error)
