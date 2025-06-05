@@ -54,6 +54,10 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [showSubscriptionWarning, setShowSubscriptionWarning] = useState(false)
+  const [formErrors, setFormErrors] = useState<{
+    email?: string;
+    general?: string;
+  }>({})
 
   // Auto-close effect after success
   useEffect(() => {
@@ -93,15 +97,13 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!session?.user?.organizationId) {
-      toast({
-        title: "Error",
-        description: "No organization ID found",
-        variant: "destructive"
-      })
+      setFormErrors({ general: "No organization ID found" })
       return
     }
 
     setIsSubmitting(true)
+    setFormErrors({})
+    
     try {
       const newStaff = await createStaff({
         ...formData,
@@ -113,46 +115,44 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
         createdByUserType: "ADMIN"
       })
 
-      // Show success state
       setIsSuccess(true)
-      
-      // Show success toast with the response message
       toast({
         title: "Success",
         description: `Staff member ${formData.firstName} ${formData.lastName} has been created successfully`
       })
 
       onStaffCreated(newStaff)
-      
-      // Form will auto-close after 1.5 seconds due to the useEffect
     } catch (error: any) {
       console.error("Error creating staff:", error)
       
-      // Handle different types of error responses
       let errorMessage = "Failed to create staff member"
       
       if (error.response?.data?.message) {
-        // Backend error message
         errorMessage = error.response.data.message
+        // Set specific field errors
+        if (errorMessage.includes("email already exists")) {
+          setFormErrors({ email: "A staff member with this email already exists" })
+        }
       } else if (error.message) {
-        // Standard error message
         errorMessage = error.message
       }
 
-      // Show error toast with appropriate styling
+      setFormErrors(prev => ({
+        ...prev,
+        general: errorMessage
+      }))
+
       toast({
         title: "Error",
         description: errorMessage,
         variant: "destructive",
-        // Add longer duration for subscription-related errors
         duration: errorMessage.includes("subscription") ? 5000 : 3000
       })
 
-      // If it's a subscription error, you might want to show it in the form as well
       if (errorMessage.includes("subscription")) {
         setFormData(prev => ({
           ...prev,
-          isAdminAccess: false // Reset admin access toggle
+          isAdminAccess: false
         }))
       }
 
@@ -187,6 +187,13 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
         </div>
       ) : (
         <>
+          {formErrors.general && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{formErrors.general}</AlertDescription>
+            </Alert>
+          )}
+          
           <Tabs defaultValue="personal" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="personal">Personal Info</TabsTrigger>
@@ -226,7 +233,11 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   placeholder="Enter email address"
                   required
+                  className={formErrors.email ? "border-red-500" : ""}
                 />
+                {formErrors.email && (
+                  <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
+                )}
               </div>
 
               <div className="space-y-2">

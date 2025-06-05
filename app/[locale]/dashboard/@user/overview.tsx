@@ -10,26 +10,50 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { LineChart } from "recharts"
 
-// Sample data
-const groupsData = [
-  { name: "Technology", members: 450, active: 380, events: 12 },
-  { name: "Business", members: 320, active: 290, events: 8 },
-  { name: "Design", members: 280, active: 230, events: 10 },
-  { name: "Marketing", members: 190, active: 150, events: 6 },
-]
+// Data interfaces
+interface GroupData {
+  name: string
+  members: number
+  active: number
+  events: number
+}
 
-const upcomingEvents = [
-  { id: 1, name: "Tech Conference", date: "2024-03-01", attendees: 120 },
-  { id: 2, name: "Design Workshop", date: "2024-03-05", attendees: 45 },
-  { id: 3, name: "Business Meetup", date: "2024-03-10", attendees: 80 },
-]
+interface EventData {
+  id: number
+  name: string
+  date: string
+  attendees: number
+}
+
+interface DonationData {
+  id: number
+  donor: string
+  amount: number
+  date: string
+  type: string
+}
+
+// Empty initial states
+const groupsData: {
+  name: string
+  members: number
+  active: number
+  events: number
+}[] = []
+
+const upcomingEvents: {
+  id: number
+  name: string
+  date: string
+  attendees: number
+}[] = []
 
 const recentDonations: {
-  id: number;
-  donor: string;
-  amount: number;
-  date: string;
-  type: string;
+  id: number
+  donor: string
+  amount: number
+  date: string
+  type: string
 }[] = []
 
 interface MetricCardProps {
@@ -78,25 +102,23 @@ export default function Overview() {
 
       {/* Main Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard icon={<Users className="h-4 w-4" />} title="Total Contacts" value="8,234" change={12.5} />
+        <MetricCard icon={<Users className="h-4 w-4" />} title="Total Contacts" value="0" />
         <MetricCard
           icon={<UserPlus className="h-4 w-4" />}
           title="Registered Members"
-          value="5,335"
-          change={8.2}
+          value="0"
           description="Including portal access members"
         />
         <MetricCard
           icon={<Building2 className="h-4 w-4" />}
           title="Total Groups"
-          value="42"
-          description="24 active groups"
+          value="0"
+          description="0 active groups"
         />
         <MetricCard
           icon={<CircleDollarSign className="h-4 w-4" />}
           title="Monthly Revenue"
-          value="$42,500"
-          change={15.7}
+          value="$0"
         />
       </div>
 
@@ -107,16 +129,9 @@ export default function Overview() {
           <CardDescription>Total members over the last 6 months</CardDescription>
         </CardHeader>
         <CardContent>
-          <LineChart
-            data={[
-              { name: "Sep", total: 3200 },
-              { name: "Oct", total: 3800 },
-              { name: "Nov", total: 4300 },
-              { name: "Dec", total: 4800 },
-              { name: "Jan", total: 5100 },
-              { name: "Feb", total: 5335 },
-            ]}
-          />
+          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+            No membership data available
+          </div>
         </CardContent>
       </Card>
 
@@ -145,15 +160,23 @@ export default function Overview() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {groupsData.map((group) => (
-                    <TableRow key={group.name}>
-                      <TableCell className="font-medium">{group.name}</TableCell>
-                      <TableCell>{group.members}</TableCell>
-                      <TableCell>{group.active}</TableCell>
-                      <TableCell>{group.events}</TableCell>
-                      <TableCell>{Math.round((group.active / group.members) * 100)}%</TableCell>
+                  {groupsData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                        No groups data available
+                      </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    groupsData.map((group) => (
+                      <TableRow key={group.name}>
+                        <TableCell className="font-medium">{group.name}</TableCell>
+                        <TableCell>{group.members}</TableCell>
+                        <TableCell>{group.active}</TableCell>
+                        <TableCell>{group.events}</TableCell>
+                        <TableCell>{Math.round((group.active / group.members) * 100)}%</TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -176,13 +199,21 @@ export default function Overview() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {upcomingEvents.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell className="font-medium">{event.name}</TableCell>
-                      <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
-                      <TableCell>{event.attendees}</TableCell>
+                  {upcomingEvents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center text-muted-foreground">
+                        No upcoming events
+                      </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    upcomingEvents.map((event) => (
+                      <TableRow key={event.id}>
+                        <TableCell className="font-medium">{event.name}</TableCell>
+                        <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{event.attendees}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -206,14 +237,22 @@ export default function Overview() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentDonations.map((donation) => (
-                    <TableRow key={donation.id}>
-                      <TableCell className="font-medium">{donation.donor}</TableCell>
-                      <TableCell>${donation.amount.toLocaleString()}</TableCell>
-                      <TableCell>{donation.type}</TableCell>
-                      <TableCell>{new Date(donation.date).toLocaleDateString()}</TableCell>
+                  {recentDonations.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        No recent donations
+                      </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    recentDonations.map((donation) => (
+                      <TableRow key={donation.id}>
+                        <TableCell className="font-medium">{donation.donor}</TableCell>
+                        <TableCell>${donation.amount.toLocaleString()}</TableCell>
+                        <TableCell>{donation.type}</TableCell>
+                        <TableCell>{new Date(donation.date).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
