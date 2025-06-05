@@ -33,8 +33,19 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
     firstName: "",
     lastName: "",
     email: "",
+    phoneNo: "",
+    address: "",
+    gender: "",
+    position: "",
+    isAdminAccess: false,
     staffRoleId: "",
-    hasPortalAccess: true
+    nextOfKin: {
+      fullName: "",
+      phoneNo: "",
+      email: "",
+      relationship: "",
+      address: ""
+    }
   })
   const [isLoading, setIsLoading] = useState(false)
   const [showRoleDetails, setShowRoleDetails] = useState(true)
@@ -72,6 +83,7 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
         staffRoleId: Number(formData.staffRoleId),
         organizationId: Number(session.user.organizationId),
         isActive: true,
+        hasPortalAccess: formData.isAdminAccess,
         createdBy: session.user.email || "SYSTEM",
         createdByUserType: "ADMIN"
       })
@@ -143,6 +155,53 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="phoneNo">Phone Number</Label>
+          <Input
+            id="phoneNo"
+            value={formData.phoneNo}
+            onChange={(e) => handleInputChange("phoneNo", e.target.value)}
+            placeholder="Enter phone number"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="address">Address</Label>
+          <Input
+            id="address"
+            value={formData.address}
+            onChange={(e) => handleInputChange("address", e.target.value)}
+            placeholder="Enter address"
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="gender">Gender</Label>
+            <Select onValueChange={(value) => handleInputChange("gender", value)} value={formData.gender}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="position">Position</Label>
+            <Input
+              id="position"
+              value={formData.position}
+              onChange={(e) => handleInputChange("position", e.target.value)}
+              placeholder="Enter position"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
           <Label>Staff Role</Label>
           <div className="grid grid-cols-2 gap-4">
             {staffRoles.map(role => (
@@ -194,17 +253,78 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
           </div>
         )}
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Next of Kin Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="nextOfKinFullName">Full Name</Label>
+              <Input
+                id="nextOfKinFullName"
+                value={formData.nextOfKin.fullName}
+                onChange={(e) => handleInputChange("nextOfKin", { ...formData.nextOfKin, fullName: e.target.value })}
+                placeholder="Enter next of kin's full name"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="nextOfKinPhone">Phone Number</Label>
+                <Input
+                  id="nextOfKinPhone"
+                  value={formData.nextOfKin.phoneNo}
+                  onChange={(e) => handleInputChange("nextOfKin", { ...formData.nextOfKin, phoneNo: e.target.value })}
+                  placeholder="Enter next of kin's phone number"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="nextOfKinEmail">Email</Label>
+                <Input
+                  id="nextOfKinEmail"
+                  type="email"
+                  value={formData.nextOfKin.email}
+                  onChange={(e) => handleInputChange("nextOfKin", { ...formData.nextOfKin, email: e.target.value })}
+                  placeholder="Enter next of kin's email"
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nextOfKinRelationship">Relationship</Label>
+              <Input
+                id="nextOfKinRelationship"
+                value={formData.nextOfKin.relationship}
+                onChange={(e) => handleInputChange("nextOfKin", { ...formData.nextOfKin, relationship: e.target.value })}
+                placeholder="Enter relationship"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nextOfKinAddress">Address</Label>
+              <Input
+                id="nextOfKinAddress"
+                value={formData.nextOfKin.address}
+                onChange={(e) => handleInputChange("nextOfKin", { ...formData.nextOfKin, address: e.target.value })}
+                placeholder="Enter next of kin's address"
+                required
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="hasPortalAccess">Portal Access</Label>
+            <Label htmlFor="isAdminAccess">Admin Access</Label>
             <Switch
-              id="hasPortalAccess"
-              checked={formData.hasPortalAccess}
-              onCheckedChange={(checked) => handleInputChange("hasPortalAccess", checked)}
+              id="isAdminAccess"
+              checked={formData.isAdminAccess}
+              onCheckedChange={(checked) => handleInputChange("isAdminAccess", checked)}
             />
           </div>
           <p className="text-sm text-gray-500">
-            Allow this staff member to access the portal
+            Grant administrative access to this staff member
           </p>
         </div>
       </div>
