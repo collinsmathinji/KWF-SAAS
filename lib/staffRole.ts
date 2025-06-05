@@ -40,7 +40,7 @@ export async function getStaffRoles(organizationId: number): Promise<StaffRole[]
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        organizationId,
+       query: { organizationId },
         page: 1,
         perPage: 25
       })
