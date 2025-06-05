@@ -15,6 +15,7 @@ import { getStaffRoles } from "@/lib/staffRole"
 import type { StaffRole } from "@/lib/staffRole"
 import { createStaff } from "@/lib/staff"
 import type { Staff } from "@/lib/staff"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface StaffFormProps {
   onClose: () => void
@@ -118,65 +119,71 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-6 min-h-[600px] overflow-y-auto">
+      <Tabs defaultValue="personal" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="personal">Personal Info</TabsTrigger>
+          <TabsTrigger value="employment">Employment</TabsTrigger>
+          <TabsTrigger value="nextOfKin">Next of Kin</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="personal" className="space-y-4 mt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
+                placeholder="Enter first name"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
+                placeholder="Enter last name"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="firstName">First Name</Label>
+            <Label htmlFor="email">Email Address</Label>
             <Input
-              id="firstName"
-              value={formData.firstName}
-              onChange={(e) => handleInputChange("firstName", e.target.value)}
-              placeholder="Enter first name"
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              placeholder="Enter email address"
               required
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="lastName">Last Name</Label>
+            <Label htmlFor="phoneNo">Phone Number</Label>
             <Input
-              id="lastName"
-              value={formData.lastName}
-              onChange={(e) => handleInputChange("lastName", e.target.value)}
-              placeholder="Enter last name"
+              id="phoneNo"
+              value={formData.phoneNo}
+              onChange={(e) => handleInputChange("phoneNo", e.target.value)}
+              placeholder="Enter phone number"
+              required
             />
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="email">Email Address</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            placeholder="Enter email address"
-            required
-          />
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) => handleInputChange("address", e.target.value)}
+              placeholder="Enter address"
+              required
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="phoneNo">Phone Number</Label>
-          <Input
-            id="phoneNo"
-            value={formData.phoneNo}
-            onChange={(e) => handleInputChange("phoneNo", e.target.value)}
-            placeholder="Enter phone number"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="address">Address</Label>
-          <Input
-            id="address"
-            value={formData.address}
-            onChange={(e) => handleInputChange("address", e.target.value)}
-            placeholder="Enter address"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="gender">Gender</Label>
             <Select onValueChange={(value) => handleInputChange("gender", value)} value={formData.gender}>
@@ -189,6 +196,9 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
               </SelectContent>
             </Select>
           </div>
+        </TabsContent>
+
+        <TabsContent value="employment" className="space-y-4 mt-4">
           <div className="space-y-2">
             <Label htmlFor="position">Position</Label>
             <Input
@@ -199,65 +209,76 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
               required
             />
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label>Staff Role</Label>
-          <div className="grid grid-cols-2 gap-4">
-            {staffRoles.map(role => (
-              <button
-                key={role.id}
-                type="button"
-                onClick={() => handleRoleSelect(role.id)}
-                className={`p-4 rounded-lg border-2 text-left transition-all ${
-                  formData.staffRoleId === role.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <h3 className="font-medium">{role.name}</h3>
-                <p className="text-sm text-gray-500">{role.description}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {selectedRole && showRoleDetails && (
-          <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium">Role Details</h3>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowRoleDetails(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+          <div className="space-y-2">
+            <Label>Staff Role</Label>
+            <div className="grid grid-cols-2 gap-4">
+              {staffRoles.map(role => (
+                <button
+                  key={role.id}
+                  type="button"
+                  onClick={() => handleRoleSelect(role.id)}
+                  className={`p-4 rounded-lg border-2 text-left transition-all ${
+                    formData.staffRoleId === role.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <h3 className="font-medium">{role.name}</h3>
+                  <p className="text-sm text-gray-500">{role.description}</p>
+                </button>
+              ))}
             </div>
-            
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium">Permissions</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {selectedRole.apiAccess.map((permission, index) => (
-                  <div
-                    key={index}
-                    className="p-2 bg-white rounded border text-sm flex items-center gap-2"
-                  >
-                    <div className="h-2 w-2 rounded-full bg-green-500" />
-                    <span>{permission}</span>
-                  </div>
-                ))}
+          </div>
+
+          {selectedRole && showRoleDetails && (
+            <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Role Details</h3>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowRoleDetails(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Permissions</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {selectedRole.apiAccess.map((permission, index) => (
+                    <div
+                      key={index}
+                      className="p-2 bg-white rounded border text-sm flex items-center gap-2"
+                    >
+                      <div className="h-2 w-2 rounded-full bg-green-500" />
+                      <span>{permission}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Next of Kin Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="isAdminAccess">Admin Access</Label>
+              <Switch
+                id="isAdminAccess"
+                checked={formData.isAdminAccess}
+                onCheckedChange={(checked) => handleInputChange("isAdminAccess", checked)}
+              />
+            </div>
+            <p className="text-sm text-gray-500">
+              Grant administrative access to this staff member
+            </p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="nextOfKin" className="space-y-4 mt-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="nextOfKinFullName">Full Name</Label>
               <Input
@@ -311,25 +332,11 @@ export default function StaffForm({ onClose, onStaffCreated, staffRoles }: Staff
                 required
               />
             </div>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="isAdminAccess">Admin Access</Label>
-            <Switch
-              id="isAdminAccess"
-              checked={formData.isAdminAccess}
-              onCheckedChange={(checked) => handleInputChange("isAdminAccess", checked)}
-            />
           </div>
-          <p className="text-sm text-gray-500">
-            Grant administrative access to this staff member
-          </p>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
 
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 pt-4 border-t">
         <Button type="button" variant="outline" onClick={onClose}>
           Cancel
         </Button>
