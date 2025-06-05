@@ -238,48 +238,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
           }
         } catch (error) {
           console.error("Failed to fetch events:", error)
-          // Fallback to sample events data if API fails
-          const currentDate = new Date()
-          const sampleEvents: Event[] = [
-            {
-              id: 1,
-              name: "Annual Conference",
-              startDate: new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth(),
-                currentDate.getDate() + 15,
-              ).toISOString(),
-              isPaid: true,
-              price: "$99",
-              status: "Upcoming",
-              attendees: 120,
-            },
-            {
-              id: 2,
-              name: "Community Workshop",
-              startDate: new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth(),
-                currentDate.getDate() + 7,
-              ).toISOString(),
-              isPaid: false,
-              status: "Open",
-              attendees: 45,
-            },
-            {
-              id: 3,
-              name: "Monthly Meetup",
-              startDate: new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth(),
-                currentDate.getDate() + 3,
-              ).toISOString(),
-              isPaid: false,
-              status: "Open",
-              attendees: 30,
-            },
-          ]
-          setEvents(sampleEvents)
+          setEvents([])
         }
 
         // Calculate metrics based on fetched data
@@ -320,43 +279,18 @@ export default function Overview({ organisationDetails }: { organisationDetails:
             ? ((memberCountsByMonth[memberCountsByMonth.length - 1].total - memberCountsByMonth[memberCountsByMonth.length - 2].total) /
                 memberCountsByMonth[memberCountsByMonth.length - 2].total) *
               100
-            : 4.6
+            : 0
 
-        // Create current date instance for donations
-        const currentDate = new Date()
-
-        // Simulate donations data (could come from an API)
-        const mockDonations: Donation[] = [
-          {
-            id: 1,
-            donor: membersData[0]?.firstName + " " + membersData[0]?.lastName || "John Doe",
-            amount: 500,
-            date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 5).toISOString(),
-            type: "Monthly",
-          },
-          {
-            id: 2,
-            donor: membersData[1]?.firstName + " " + membersData[1]?.lastName || "Jane Smith",
-            amount: 1000,
-            date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 8).toISOString(),
-            type: "One-time",
-          },
-          {
-            id: 3,
-            donor: membersData[2]?.firstName + " " + membersData[2]?.lastName || "Bob Wilson",
-            amount: 250,
-            date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 10).toISOString(),
-            type: "Monthly",
-          },
-          {
-            id: 4,
-            donor: membersData[3]?.firstName + " " + membersData[3]?.lastName || "Alice Brown",
-            amount: 750,
-            date: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 12).toISOString(),
-            type: "One-time",
-          },
-        ]
-        setDonations(mockDonations)
+        // Fetch donations data
+        try {
+          const donationsResponse = await fetch(`/api/donations?organizationId=${session.user.organizationId}`)
+          if (!donationsResponse.ok) throw new Error('Failed to fetch donations')
+          const donationsData = await donationsResponse.json()
+          setDonations(donationsData.data || [])
+        } catch (error) {
+          console.error("Error fetching donations:", error)
+          setDonations([])
+        }
 
         // First ensure we have valid numbers or fallback to default values
         const totalMembers = Array.isArray(membersData) ? membersData.length : 0
@@ -373,7 +307,7 @@ export default function Overview({ organisationDetails }: { organisationDetails:
           events: totalEvents,
         })
 
-        // Update metrics with real data and add fallbacks
+        // Update metrics with real data
         setMetrics({
           totalContacts: totalMembers,
           registeredMembers: totalMembers,
@@ -381,10 +315,9 @@ export default function Overview({ organisationDetails }: { organisationDetails:
           totalGroups: totalGroups,
           activeGroups: totalActiveGroups,
           totalEvents: totalEvents,
-          monthlyDonation: mockDonations.reduce(
-            (sum, donation) => (donation.type === "Monthly" ? sum + donation.amount : sum),
-            0,
-          ),
+          monthlyDonation: donations
+            .filter((donation: Donation) => donation.type === "Monthly")
+            .reduce((sum: number, donation: Donation) => sum + donation.amount, 0),
           memberGrowth: Number.parseFloat(growthPercentage.toFixed(1)),
         })
       } catch (error) {
