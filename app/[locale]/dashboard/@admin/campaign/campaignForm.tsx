@@ -161,9 +161,9 @@ const CampaignCreationForm: React.FC<CampaignCreationFormProps> = ({ initialData
 
       const data = await response.json()
 
-      if (data.url) {
+      if (data.onboardingUrl) {
         sessionStorage.setItem("pendingCampaignData", JSON.stringify(formData))
-        window.location.href = data.url
+        window.location.href = data.onboardingUrl
       }
     } catch (error) {
       setStripeError("Failed to initiate Stripe connection")
