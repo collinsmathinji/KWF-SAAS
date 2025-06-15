@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import { Permission } from "@/types/permissions";
 
 declare module "next-auth" {
   interface Session {
@@ -10,6 +11,7 @@ declare module "next-auth" {
       isOnboarded: boolean;
       name?: string;
       image?: string;
+      rolePermissions?: Permission[];
     };
     accessToken: string;
   }
@@ -22,6 +24,7 @@ declare module "next-auth" {
     organizationId: string | null;
     isOnboarded: boolean;
     accessToken: string;
+    rolePermissions?: Permission[];
   }
 }
 
@@ -33,5 +36,6 @@ declare module "next-auth/jwt" {
     organizationId: string | null;
     isOnboarded: boolean;
     accessToken: string;
+    rolePermissions?: Permission[];
   }
 } 

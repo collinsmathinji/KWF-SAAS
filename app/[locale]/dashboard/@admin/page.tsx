@@ -32,14 +32,33 @@ import WebStudio from "./webstudio/page"
 import { fetchMemberType } from "@/lib/members"
 import { getOrganizationById } from "@/lib/organization"
 import { EventCalendar } from "./EventCalendar"
+import { MenuItem as PermissionMenuItem, filterMenuItemsByPermissions } from "@/lib/permissions"
+import { LucideIcon } from "lucide-react"
+import type { Permission } from "@/src/types/permissions"
 
 // Types
 type UserType = "admin" | "user" | null;
 type MenuItemType = {
-  icon: React.ReactNode;
+  icon: LucideIcon;
   label: string;
   section: string;
   description: string;
+  requiredPermission?: {
+    module: string;
+    method: string;
+    endpoint?: string;
+  };
+};
+
+type CustomSessionUser = {
+  id: string;
+  email: string;
+  userType: string;
+  organizationId: string | null;
+  isOnboarded: boolean;
+  name?: string;
+  image?: string;
+  rolePermissions?: Array<{ module: string; method: string }>;
 };
 
 interface OrganizationDetails {
@@ -58,52 +77,60 @@ export default function DashboardPage() {
   const [actualUserType, setActualUserType] = useState<UserType>(null)
   const [viewAs, setViewAs] = useState<UserType>(null)
   const [organizationDetails, setOrganizationDetails] = useState<any>(null)
+  const [filteredMenuItems, setFilteredMenuItems] = useState<MenuItemType[]>([])
   
   const router = useRouter()
   const { data: session, status } = useSession()
   
   const menuItems: MenuItemType[] = [
     {
-      icon: <LayoutDashboard />,
+      icon: LayoutDashboard,
       label: "Dashboard",
       section: "overview",
       description: "Platform overview and key metrics",
+      requiredPermission: { module: "dashboard", method: "GET" }
     },
     {
-      icon: <Users />,
+      icon: Users,
       label: "User Management",
       section: "users",
       description: "Manage users and access",
+      requiredPermission: { module: "user", method: "GET" }
     },
     {
-      icon: <HeartPulse />,
+      icon: HeartPulse,
       label: "Campaign",
       section: "campaigns",
       description: "donations and campaigns",
+      requiredPermission: { module: "campaign", method: "GET" }
     },
     {
-      icon: <Calendar />,
+      icon: Calendar,
       label: "Events",
       section: "event",
       description: "Manage organization events",
+      requiredPermission: { module: "event", method: "GET" }
     },
     {
-      icon: <Calendar />,
+      icon: Calendar,
       label: "Calendar",
       section: "calender",
       description: "Manage organization events",
+      requiredPermission: { module: "event", method: "GET" }
     },
     {
-      icon: <Layers />,
+      icon: Layers,
       label: "Organization",
       section: "organization",
       description: "Manage organization settings",
+      requiredPermission: { module: "organization", method: "GET" }
     },
     {
-      icon: <Palette />,
+      icon: Palette,
       label: "WebStudio",
       section: "webstudio",
       description: "Create and manage your website",
+      requiredPermission: { module: "webstudio", method: "GET" }
     },
   ]
   
@@ -118,20 +145,22 @@ export default function DashboardPage() {
       }
 
       if (status === "authenticated" && session?.user) {
-        const userType = session.user.userType;
-        const onboardingStatus=localStorage.getItem('isOnboarded')
-        const orgId = session.user.organizationId;
-        const createdBy= session.user.id 
+        const user = session.user as CustomSessionUser;
+        const userType = user.userType;
+        const onboardingStatus = localStorage.getItem('isOnboarded')
+        const orgId = user.organizationId;
         console.log("User type from session:", userType);
         console.log("Onboarding status from session:", onboardingStatus);
         console.log("Organization ID from session:", orgId);
         
         // Set user type based on the value
         let userTypeValue: UserType = null;
-        if (userType === '2') {
+        if (userType === '1' || userType === 'STAFF') {
           userTypeValue = "admin";
-        } else if (userType === '1') {
+        } else if (userType === '2') {
           userTypeValue = "user";
+          router.push('/dashboard');
+          return;
         }
         
         setActualUserType(userTypeValue);
@@ -151,6 +180,25 @@ export default function DashboardPage() {
           }
         } catch (error) {
           console.error("Error fetching organization details:", error);
+        }
+
+        // Handle menu item filtering based on permissions
+        if (userTypeValue === "admin") {
+          console.log("User permissions:", user.rolePermissions);
+          if (user.rolePermissions && user.rolePermissions.length > 0) {
+            // Staff: filter by permissions
+            const userPermissions = user.rolePermissions;
+            const filtered = filterMenuItemsByPermissions(menuItems as PermissionMenuItem[], userPermissions as Permission[]) as MenuItemType[];
+            setFilteredMenuItems(filtered);
+
+            // Set active section to first available menu item if current section is not accessible
+            if (!filtered.find(item => item.section === activeSection)) {
+              setActiveSection(filtered[0]?.section || "overview");
+            }
+          } else {
+            // Full admin: see everything
+            setFilteredMenuItems(menuItems);
+          }
         }
         
         setIsLoading(false);
@@ -305,31 +353,26 @@ export default function DashboardPage() {
         </div>
 
         <nav className="flex-grow">
-          {menuItems.map((item) => (
+          {filteredMenuItems.map((item) => (
             <div
               key={item.section}
-              onClick={() => {
-                setActiveSection(item.section)
-                setSidebarOpen(false)
-              }}
-              className={`group cursor-pointer p-3 rounded-lg ${
+              className={`group flex items-center px-4 py-2 text-sm font-medium rounded-md cursor-pointer ${
                 activeSection === item.section
-                  ? "bg-blue-50 text-blue-600 border-blue-200"
-                  : "hover:bg-blue-50 text-gray-600 hover:text-blue-600"
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
+              onClick={() => setActiveSection(item.section)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  {React.cloneElement(item.icon as React.ReactElement, {
+                  {React.createElement(item.icon, {
                     className: `mr-3 w-5 h-5 ${
                       activeSection === item.section ? "text-blue-600" : "text-gray-400 group-hover:text-blue-600"
-                    }`,
+                    }`
                   })}
-                  <span className="font-medium">{item.label}</span>
+                  <span>{item.label}</span>
                 </div>
-                {activeSection === item.section && <div className="h-1.5 w-1.5 bg-blue-600 rounded-full"></div>}
               </div>
-              <p className="text-xs text-gray-400 mt-1">{item.description}</p>
             </div>
           ))}
           <div className="mt-4 border-t pt-4 space-y-2">

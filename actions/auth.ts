@@ -10,6 +10,7 @@ interface CustomUser {
   organizationId: string | null;
   isOnboarded: boolean;
   accessToken: string;
+  rolePermissions?: Array<{ module: string; method: string; endpoint: string }>;
 }
 
 // Extend the default session type
@@ -23,6 +24,7 @@ declare module "next-auth" {
       isOnboarded: boolean;
       name?: string;
       image?: string;
+      rolePermissions?: Array<{ module: string; method: string; endpoint: string }>;
     };
     accessToken: string;
   }
@@ -35,6 +37,7 @@ declare module "next-auth" {
     organizationId: string | null;
     isOnboarded: boolean;
     accessToken: string;
+    rolePermissions?: Array<{ module: string; method: string; endpoint: string }>;
   }
 }
 
@@ -47,6 +50,7 @@ declare module "next-auth/jwt" {
     organizationId: string | null;
     isOnboarded: boolean;
     accessToken: string;
+    rolePermissions?: Array<{ module: string; method: string; endpoint: string }>;
   }
 }
 
@@ -116,6 +120,7 @@ export const authOptions: NextAuthOptions = {
             organizationId: data.data.organizationId?.toString() || null,
             isOnboarded: data.data.isOnboarded,
             accessToken: data.data.token,
+            rolePermissions: data.data.rolePermissions || []
           };
         } catch (error) {
           console.error("Login Error:", {
@@ -144,6 +149,7 @@ export const authOptions: NextAuthOptions = {
         // Ensure boolean conversion
         token.isOnboarded = Boolean((user as CustomUser).isOnboarded);
         token.accessToken = (user as CustomUser).accessToken;
+        token.rolePermissions = (user as CustomUser).rolePermissions;
         
         console.log("Token after user data set:", {
           tokenIsOnboarded: token.isOnboarded,
@@ -190,6 +196,7 @@ export const authOptions: NextAuthOptions = {
           userType: token.userType,
           organizationId: token.organizationId,
           isOnboarded: token.isOnboarded,
+          rolePermissions: token.rolePermissions,
         };
         // Store the token in the session for API calls
         session.accessToken = token.accessToken;
