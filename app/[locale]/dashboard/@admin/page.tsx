@@ -356,41 +356,38 @@ export default function DashboardPage() {
           {filteredMenuItems.map((item) => (
             <div
               key={item.section}
-              className={`group flex items-center px-4 py-2 text-sm font-medium rounded-md cursor-pointer ${
-                activeSection === item.section
-                  ? "bg-blue-50 text-blue-600"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`}
+              className={`group flex flex-col items-start w-full px-4 py-3 my-2 rounded-lg shadow-sm transition-colors cursor-pointer bg-white border border-blue-100
+                ${activeSection === item.section
+                  ? "bg-blue-100 border-blue-400 text-blue-800 font-semibold"
+                  : "hover:bg-blue-50 hover:border-blue-200 text-gray-700"}
+              `}
+              style={{ minHeight: 48 }}
               onClick={() => setActiveSection(item.section)}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  {React.createElement(item.icon, {
-                    className: `mr-3 w-5 h-5 ${
-                      activeSection === item.section ? "text-blue-600" : "text-gray-400 group-hover:text-blue-600"
-                    }`
-                  })}
-                  <span>{item.label}</span>
-                </div>
+              <div className="flex items-center">
+                {React.createElement(item.icon, {
+                  className: `mr-3 w-6 h-6 ${activeSection === item.section ? "text-blue-700" : "text-gray-400 group-hover:text-blue-600"}`
+                })}
+                <span className="text-base font-medium">{item.label}</span>
               </div>
+              <span className="ml-9 mt-1 text-xs text-gray-500 font-normal">{item.description}</span>
             </div>
           ))}
-          <div className="mt-4 border-t pt-4 space-y-2">
+          <div className="mt-6 border-t pt-6 space-y-3">
             <button 
-              className="w-full flex items-center p-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600"  
+              className="w-full flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors text-base"  
               onClick={() => {
                 setActiveSection('settings')
                 setSidebarOpen(false)
               }}
             >
-              <Settings className="mr-3 w-5 h-5" /> Settings
+              <Settings className="mr-3 w-6 h-6" /> Settings
             </button>
-            
             <button 
-              className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50"
+              className="w-full flex items-center px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors text-base"
               onClick={handleLogout}
             >
-              <LogOut className="mr-3 w-5 h-5" /> Log Out
+              <LogOut className="mr-3 w-6 h-6" /> Log Out
             </button>
           </div>
         </nav>
