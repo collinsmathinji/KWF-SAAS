@@ -99,7 +99,7 @@ const PublicEventsDisplay = () => {
     async function loadEvents() {
       try {
         setLoading(true)
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/event/list`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/event/list`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
